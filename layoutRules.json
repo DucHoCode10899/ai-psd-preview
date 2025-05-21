@@ -1,0 +1,1119 @@
+{
+  "channels": [
+    {
+      "id": "facebook",
+      "name": "Facebook",
+      "layouts": [
+        {
+          "aspectRatio": "1:1",
+          "width": 1080,
+          "height": 1080,
+          "options": [
+            {
+              "name": "Center Aligned 1:1",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": false,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": false,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": true
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.6
+                  },
+                  "domain": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "middle-top-center",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.15,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-center-20",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.4
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            },
+            {
+              "name": "Default Template 1:1",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-right",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "middle-bottom-center",
+                    "maxWidthPercent": 0.75,
+                    "maxHeightPercent": 0.75
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.15,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            },
+            {
+              "name": "Center Aligned 1:1 (S25 Slim)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.5
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "left-center-20",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "right-center-20",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.14
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "aspectRatio": "16:9",
+          "width": 1920,
+          "height": 1080,
+          "options": [
+            {
+              "name": "Center Aligned 16:9",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": false,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": false,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": true
+                },
+                "positioning": {
+                  "background": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "top-center-40",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.5
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-40",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.2
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-center-30",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.3
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "right-center",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            },
+            {
+              "name": "Default Template 16:9",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "bottom-center-40",
+                    "maxWidthPercent": 0.75,
+                    "maxHeightPercent": 0.75
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.12,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.55,
+                    "maxHeightPercent": 0.12
+                  },
+                  "sub-content-2": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  },
+                  "cta": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  },
+                  "disclaimer": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "aspectRatio": "4:5",
+          "width": 1080,
+          "height": 1350,
+          "options": [
+            {
+              "name": "Center Aligned 4:5",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": false,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": false,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": true
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.3
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.4
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.8,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-center-20",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.25
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            },
+            {
+              "name": "Default Template 4:5",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "bottom-center-40",
+                    "maxWidthPercent": 0.8,
+                    "maxHeightPercent": 0.85
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.55,
+                    "maxHeightPercent": 0.12
+                  },
+                  "sub-content-2": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  },
+                  "cta": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  },
+                  "disclaimer": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  }
+                }
+              }
+            },
+            {
+              "name": "Center Aligned 4:5 (S25 Slim)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.5
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-center-10",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.14
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "aspectRatio": "9:16",
+          "width": 1080,
+          "height": 1920,
+          "options": [
+            {
+              "name": "Center Aligned 9:16",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": false,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": false,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": true
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.3
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.8,
+                    "maxHeightPercent": 0.4
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "middle-top-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-center-30",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.3
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.1
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            },
+            {
+              "name": "Default Template 9:16",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.48
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-20",
+                    "maxWidthPercent": 0.7,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.55,
+                    "maxHeightPercent": 0.12
+                  },
+                  "sub-content-2": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  },
+                  "cta": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  },
+                  "disclaimer": {
+                    "position": "center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.5
+                  }
+                }
+              }
+            },
+            {
+              "name": "Center Aligned 9:16 (S25 Slim)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.5
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.2,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-center-10",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "instagram",
+      "name": "Instagram",
+      "layouts": [
+        {
+          "aspectRatio": "1:1",
+          "width": 1080,
+          "height": 1080,
+          "options": [
+            {
+              "name": "Instagram 1:1 (Square)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": true,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.7
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center",
+                    "maxWidthPercent": 0.7,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "aspectRatio": "4:5",
+          "width": 1080,
+          "height": 1350,
+          "options": [
+            {
+              "name": "Instagram 4:5 (Post)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": true,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.6
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.7,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-1": {
+                    "position": "top-right",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.12
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.08
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "aspectRatio": "9:16",
+          "width": 1080,
+          "height": 1920,
+          "options": [
+            {
+              "name": "Instagram 9:16 (Reels)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": true,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.5
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "middle-bottom-center",
+                    "maxWidthPercent": 0.7,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-1": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.12
+                  },
+                  "disclaimer": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.08
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "layouts": [
+        {
+          "aspectRatio": "16:9",
+          "width": 1920,
+          "height": 1080,
+          "options": [
+            {
+              "name": "YouTube 16:9 (Thumbnail)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.9
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.7,
+                    "maxHeightPercent": 0.18
+                  },
+                  "sub-content-1": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "right-center",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tiktok",
+      "name": "TikTok",
+      "layouts": [
+        {
+          "aspectRatio": "9:16",
+          "width": 1080,
+          "height": 1920,
+          "options": [
+            {
+              "name": "TikTok 9:16",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": true,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "center",
+                    "maxWidthPercent": 0.85,
+                    "maxHeightPercent": 0.6
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.7,
+                    "maxHeightPercent": 0.12
+                  },
+                  "sub-content-1": {
+                    "position": "top-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.4,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "middle-bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.12
+                  },
+                  "disclaimer": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.08
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
