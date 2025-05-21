@@ -79,14 +79,6 @@ interface LayoutRuleResponse {
   }>;
 }
 
-// Available social media channels
-const CHANNELS = [
-  { id: "all", name: "Show All" },
-  { id: "facebook", name: "Facebook" },
-  { id: "instagram", name: "Instagram" },
-  { id: "twitter", name: "Twitter" },
-];
-
 export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayoutGeneratorProps) {
   const [availableChannels, setAvailableChannels] = useState<Channel[]>([]);
   const [availableLayouts, setAvailableLayouts] = useState<LayoutRatio[]>([]);
@@ -96,7 +88,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [generatedLayout, setGeneratedLayout] = useState<GeneratedLayout | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedFilterChannel, setSelectedFilterChannel] = useState("all");
   const [downloading, setDownloading] = useState(false);
   const [safezoneWidth, setSafezoneWidth] = useState(10);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -292,6 +283,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     processLayers();
   }, [psdBuffer, psdLayers]);
 
+  // Filter options by selected channel
+  const filteredOptions = availableOptions;
+
   // Filter aspect ratios by selected channel and compatible ratios
   const filteredAspectRatios = availableLayouts.filter(layout => {
     // Skip layouts that have the same aspect ratio as the source
@@ -303,14 +297,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
     
     return true;
-  });
-
-  // Filter options by selected channel
-  const filteredOptions = availableOptions.filter(option => {
-    if (selectedFilterChannel === "all") {
-      return true; // Show all options when "Show All" is selected
-    }
-    return option.name.toLowerCase().includes(selectedFilterChannel.toLowerCase());
   });
 
   // Render the layout on canvas
@@ -774,14 +760,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
-  // Reset the layout
-  const handleResetLayout = () => {
-    setGeneratedLayout(null);
-    setSelectedChannelId(null);
-    setSelectedAspectRatio(null);
-    setSelectedOption(null);
-  };
-
   // Reset custom positions for current layout
   const handleResetCurrentLayout = () => {
     if (!generatedLayout) return;
@@ -799,11 +777,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     setSelectedAspectRatio(null);
     setSelectedOption(null);
     setGeneratedLayout(null);
-  };
-
-  // Handle filter channel change
-  const handleFilterChannelChange = (value: string) => {
-    setSelectedFilterChannel(value);
   };
 
   // Handle aspect ratio selection
