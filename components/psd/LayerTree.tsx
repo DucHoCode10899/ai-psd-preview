@@ -50,7 +50,9 @@ export function LayerTree({
   layerVisibility: initialLayerVisibility,
 }: LayerTreeProps) {
   const [expandedState, setExpandedState] = useState<Record<string, boolean>>({});
-  const [visibilityState, setVisibilityState] = useState<Record<string, boolean>>({});
+  const [visibilityState, setVisibilityState] = useState<Record<string, boolean>>(
+    initialLayerVisibility || {}
+  );
   const [labelState, setLabelState] = useState<Record<string, string>>({});
   const [highlightedLayer, setHighlightedLayer] = useState<string | null>(null);
   const [draggedLayer, setDraggedLayer] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export function LayerTree({
   // Initialize layers state from props or localStorage
   useEffect(() => {
     setLayersState(layerData);
-  }, [layers]);
+  }, [layerData]);
 
   // Initialize state from sessionStorage on mount
   useEffect(() => {
@@ -93,38 +95,33 @@ export function LayerTree({
       setExpandedState(initialState);
     }
 
-    // Initialize visibility state from props or storage
-    if (initialLayerVisibility) {
-      setVisibilityState(initialLayerVisibility);
-    } else {
-      const storedVisibilityState = sessionStorage.getItem("psd_layer_visibility");
-      if (storedVisibilityState) {
-        try {
-          setVisibilityState(JSON.parse(storedVisibilityState));
-        } catch (err) {
-          console.error("Error parsing visibility state from sessionStorage", err);
+    // Initialize visibility state from layerData
+    const initialVisibilityState: Record<string, boolean> = {};
+    const initializeVisibility = (layers: PsdLayerMetadata[]) => {
+      layers.forEach(layer => {
+        initialVisibilityState[layer.id] = layer.visible;
+        if (layer.type === 'group' && layer.children) {
+          initializeVisibility(layer.children);
         }
-      } else {
-        // Initialize with layer's default visibility
-        const initialState: Record<string, boolean> = {};
-        const allLayers = flattenLayers(layerData);
-        allLayers.forEach((layer) => {
-          initialState[layer.id] = layer.visible;
-        });
-        setVisibilityState(initialState);
-      }
-    }
+      });
+    };
+    
+    initializeVisibility(Array.isArray(layerData) ? layerData : [layerData]);
+    setVisibilityState(prev => ({
+      ...prev,
+      ...initialVisibilityState
+    }));
 
     // Load label state
-    const storedLabelState = sessionStorage.getItem("psd_layer_labels");
+    const storedLabelState = localStorage.getItem("psd_layer_labels");
     if (storedLabelState) {
       try {
         setLabelState(JSON.parse(storedLabelState));
-      } catch (err) {
-        console.error("Error parsing label state from sessionStorage", err);
+      } catch (error) {
+        console.error('Error parsing layer labels:', error);
       }
     }
-  }, [layerData, initialLayerVisibility]);
+  }, [layerData]);
 
   // Listen for new file uploads to reset the label state
   useEffect(() => {

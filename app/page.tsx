@@ -23,11 +23,12 @@ export default function Home() {
 
   // Handle reset all data
   const handleReset = () => {
-    // Clear all storage
-    localStorage.removeItem('psd_structure');
-    sessionStorage.removeItem('psd_buffer');
-    sessionStorage.removeItem('psd_filename');
-    sessionStorage.removeItem('psd_layer_labels');
+    // Clear all localStorage items except isAuthenticate
+    Object.keys(localStorage).forEach(key => {
+      if (key !== 'isAuthenticate') {
+        localStorage.removeItem(key);
+      }
+    });
 
     // Reset all state
     setUploadedFile(null);
@@ -40,14 +41,12 @@ export default function Home() {
 
   // Load stored PSD data
   useEffect(() => {
-    // Check for stored PSD structure and buffer
+    // Check for stored PSD structure and filename
     const storedStructure = localStorage.getItem('psd_structure');
-    const storedPsdBuffer = sessionStorage.getItem('psd_buffer');
-    const storedFileName = sessionStorage.getItem('psd_filename');
+    const storedFileName = localStorage.getItem('psd_filename');
 
-    if (storedStructure && storedPsdBuffer && storedFileName) {
+    if (storedStructure && storedFileName) {
       try {
-        // Restore PSD structure
         const parsedStructure = JSON.parse(storedStructure);
         setPsdStructure(parsedStructure);
 
@@ -58,26 +57,25 @@ export default function Home() {
         });
         setLayerVisibility(initialVisibility);
 
-        // Restore PSD buffer
-        const binaryString = window.atob(storedPsdBuffer);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        setPsdBuffer(bytes.buffer);
-
-        // Restore file object
-        const file = new File([bytes.buffer], storedFileName, {
-          type: 'image/psd'
+        toast.info('Please re-upload your PSD file to continue editing');
+        
+      } catch (error: unknown) {
+        console.error('Error restoring PSD structure:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        toast.error('Failed to restore session: ' + errorMessage);
+        
+        // Clear all localStorage items except isAuthenticate
+        Object.keys(localStorage).forEach(key => {
+          if (key !== 'isAuthenticate') {
+            localStorage.removeItem(key);
+          }
         });
-        setUploadedFile(file);
-      } catch (error) {
-        console.error('Error restoring PSD data:', error);
-        // Clear invalid storage data
-        localStorage.removeItem('psd_structure');
-        sessionStorage.removeItem('psd_buffer');
-        sessionStorage.removeItem('psd_filename');
+        
+        // Reset state
+        setUploadedFile(null);
+        setPsdStructure(null);
+        setPsdBuffer(null);
+        setLayerVisibility({});
       }
     }
   }, []);
@@ -89,21 +87,12 @@ export default function Home() {
     const buffer = await file.arrayBuffer();
     setPsdBuffer(buffer);
 
-    // Store in session storage
+    // Store filename in local storage
     try {
-      // Store filename
-      sessionStorage.setItem('psd_filename', file.name);
-      
-      // Store buffer as base64
-      const bytes = new Uint8Array(buffer);
-      let binary = '';
-      for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      const base64 = window.btoa(binary);
-      sessionStorage.setItem('psd_buffer', base64);
+      localStorage.setItem('psd_filename', file.name);
     } catch (error) {
-      console.error('Error storing PSD data:', error);
+      console.error('Error storing filename:', error);
+      toast.error('Failed to store filename');
     }
   };
 

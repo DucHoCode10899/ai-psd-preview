@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Canvas as FabricCanvas, Image as FabricImage, Point } from "fabric";
 import { toast } from "sonner";
 import type { Layer as PsdLayer, Node } from "@webtoon/psd";
@@ -40,6 +40,37 @@ export function SynchronizedPsdPreview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
+
+  // Define resizeCanvasToContainer first
+  const resizeCanvasToContainer = useCallback(() => {
+    if (!fabricCanvasRef.current || !psdFile || !canvasContainerRef.current) return;
+    
+    const canvas = fabricCanvasRef.current;
+    const container = canvasContainerRef.current;
+    
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    const scaleX = containerWidth / psdFile.width;
+    const scaleY = containerHeight / psdFile.height;
+    const scale = Math.min(scaleX, scaleY, 1);
+    
+    canvas.setDimensions({
+      width: containerWidth,
+      height: containerHeight
+    });
+    
+    canvas.setZoom(scale);
+    
+    const centerX = (containerWidth - psdFile.width * scale) / 2;
+    const centerY = (containerHeight - psdFile.height * scale) / 2;
+    
+    canvas.setViewportTransform([
+      scale, 0, 0, scale, centerX, centerY
+    ]);
+    
+    canvas.renderAll();
+  }, [psdFile]);
 
   // Parse PSD and create layer previews
   useEffect(() => {
@@ -164,7 +195,6 @@ export function SynchronizedPsdPreview({
           
           setupPanAndZoom(canvas);
           resizeCanvasToContainer();
-          
         } catch (err) {
           console.error("Error initializing canvas:", err);
           toast.error("Failed to initialize canvas");
@@ -179,7 +209,7 @@ export function SynchronizedPsdPreview({
         fabricCanvasRef.current.dispose();
       }
     };
-  }, [layers, psdFile]);
+  }, [layers, psdFile, resizeCanvasToContainer]);
 
   const setupPanAndZoom = (canvas: FabricCanvas) => {
     let isPanning = false;
@@ -228,37 +258,8 @@ export function SynchronizedPsdPreview({
       );
     });
   };
-  
-  const resizeCanvasToContainer = () => {
-    if (!fabricCanvasRef.current || !psdFile || !canvasContainerRef.current) return;
-    
-    const canvas = fabricCanvasRef.current;
-    const container = canvasContainerRef.current;
-    
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    
-    const scaleX = containerWidth / psdFile.width;
-    const scaleY = containerHeight / psdFile.height;
-    const scale = Math.min(scaleX, scaleY, 1);
-    
-    canvas.setDimensions({
-      width: containerWidth,
-      height: containerHeight
-    });
-    
-    canvas.setZoom(scale);
-    
-    const centerX = (containerWidth - psdFile.width * scale) / 2;
-    const centerY = (containerHeight - psdFile.height * scale) / 2;
-    
-    canvas.setViewportTransform([
-      scale, 0, 0, scale, centerX, centerY
-    ]);
-    
-    canvas.renderAll();
-  };
 
+  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       if (fabricCanvasRef.current) {
@@ -268,7 +269,7 @@ export function SynchronizedPsdPreview({
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [resizeCanvasToContainer]);
 
   return (
     <div className="w-full h-full relative">

@@ -31,12 +31,17 @@ export function FileUpload({ onFileUpload, onPsdParsed }: FileUploadProps) {
         }
       } catch (error) {
         console.error('Error parsing stored file info:', error);
-        localStorage.removeItem('psdFileInfo');
+        // Clear all localStorage items except isAuthenticate
+        Object.keys(localStorage).forEach(key => {
+          if (key !== 'isAuthenticate') {
+            localStorage.removeItem(key);
+          }
+        });
       }
     }
   }, [onFileUpload]);
 
-  const parsePsd = async (uploadedFile: File) => {
+  const parsePsd = useCallback(async (uploadedFile: File) => {
     setParsing(true);
     setParseError(null);
     
@@ -53,7 +58,7 @@ export function FileUpload({ onFileUpload, onPsdParsed }: FileUploadProps) {
     } finally {
       setParsing(false);
     }
-  };
+  }, [onPsdParsed]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0];
@@ -78,20 +83,18 @@ export function FileUpload({ onFileUpload, onPsdParsed }: FileUploadProps) {
       // Parse the PSD file
       await parsePsd(uploadedFile);
     }
-  }, [onFileUpload, onPsdParsed]);
+  }, [onFileUpload, parsePsd]);
 
   const clearFile = () => {
     setFile(null);
     setParseError(null);
     
-    // Clear localStorage items
-    localStorage.removeItem('psdFileInfo');
-    localStorage.removeItem('psd_structure');
-    
-    // Clear sessionStorage items
-    sessionStorage.removeItem('psd_tree_expanded');
-    sessionStorage.removeItem('psd_layer_visibility');
-    sessionStorage.removeItem('psd_layer_labels');
+    // Clear all localStorage items except isAuthenticate
+    Object.keys(localStorage).forEach(key => {
+      if (key !== 'isAuthenticate') {
+        localStorage.removeItem(key);
+      }
+    });
     
     // Dispatch event to notify other components
     const clearEvent = new CustomEvent('psd_file_cleared');
