@@ -12,6 +12,7 @@ import {
   GripVertical,
   Tag,
   Check,
+  Users,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { 
@@ -20,6 +21,35 @@ import {
   PopoverTrigger 
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useSegmentationRules } from '@/hooks/useSegmentationRules';
+
+// Update type to use string instead of union
+type SegmentationType = string;
+
+interface PersonalizationRule {
+  type: SegmentationType;
+  value: string;
+}
+
+interface LayerPersonalization {
+  isPersonalized: boolean;
+  rules: PersonalizationRule[];
+}
+
+// Remove the hardcoded SEGMENTATION_OPTIONS since we'll use the API
 
 // Predefined label options
 const LABEL_OPTIONS = [
@@ -61,6 +91,13 @@ export function LayerTree({
   const [layersState, setLayersState] = useState<PsdLayerMetadata[] | null>(null);
   const [labelPopoverOpen, setLabelPopoverOpen] = useState<string | null>(null);
   
+  // New state for personalization
+  const [personalizationRules, setPersonalizationRules] = useState<Record<string, LayerPersonalization>>({});
+  const [personalizationModalOpen, setPersonalizationModalOpen] = useState(false);
+  const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
+  const [selectedSegmentationType, setSelectedSegmentationType] = useState<string>('gender');
+  const [selectedSegmentationValue, setSelectedSegmentationValue] = useState<string>('');
+
   // Ref to store all layer elements for drag and drop 
   const layerRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
 
@@ -94,6 +131,43 @@ export function LayerTree({
       });
       setExpandedState(initialState);
     }
+
+    // Load personalization rules
+    const storedPersonalizationRules = localStorage.getItem("psd_personalization_rules");
+    let initialRules: Record<string, LayerPersonalization> = {};
+    
+    // First set default state for all layers
+    const initializeDefaultState = (layers: PsdLayerMetadata[]) => {
+      layers.forEach(layer => {
+        initialRules[layer.id] = {
+          isPersonalized: false,
+          rules: []
+        };
+        if (layer.type === 'group' && layer.children) {
+          initializeDefaultState(layer.children);
+        }
+      });
+    };
+    
+    // Initialize all layers with default state
+    if (layerData) {
+      initializeDefaultState(Array.isArray(layerData) ? layerData : [layerData]);
+    }
+    
+    // Then overlay stored rules if they exist
+    if (storedPersonalizationRules) {
+      try {
+        const storedRules = JSON.parse(storedPersonalizationRules);
+        initialRules = {
+          ...initialRules,
+          ...storedRules
+        };
+      } catch (error) {
+        console.error('Error parsing personalization rules:', error);
+      }
+    }
+    
+    setPersonalizationRules(initialRules);
 
     // Initialize visibility state from layerData
     const initialVisibilityState: Record<string, boolean> = {};
@@ -174,6 +248,43 @@ export function LayerTree({
       window.dispatchEvent(event);
     }
   }, [layersState]);
+
+  // Save personalization rules to localStorage when they change
+  useEffect(() => {
+    const hasRules = Object.values(personalizationRules).some(
+      layer => layer.isPersonalized && layer.rules.length > 0
+    );
+
+    if (hasRules) {
+      localStorage.setItem("psd_personalization_rules", JSON.stringify(personalizationRules));
+    } else if (Object.keys(personalizationRules).length > 0) {
+      // If we have layers but no rules, clean up storage
+      localStorage.removeItem("psd_personalization_rules");
+    }
+    
+    // Dispatch an event to notify other components
+    const event = new CustomEvent("psd_personalization_change", {
+      detail: {
+        rules: personalizationRules,
+        hasPersonalization: hasRules
+      }
+    });
+    window.dispatchEvent(event);
+  }, [personalizationRules]);
+
+  // Listen for new file uploads to reset the personalization state
+  useEffect(() => {
+    const handleNewFileUpload = () => {
+      setPersonalizationRules({});
+      localStorage.removeItem("psd_personalization_rules");
+    };
+
+    window.addEventListener("psd_new_file_uploaded", handleNewFileUpload);
+    
+    return () => {
+      window.removeEventListener("psd_new_file_uploaded", handleNewFileUpload);
+    };
+  }, []);
 
   // Load layers from localStorage
   function loadLayersFromStorage(): PsdLayerMetadata[] | null {
@@ -564,6 +675,205 @@ export function LayerTree({
     setLabelPopoverOpen(null);
   }, []);
 
+  // Get segmentation rules from the hook
+  const {
+    getSegmentationTypes,
+    getValuesForType,
+  } = useSegmentationRules();
+
+  // Handle personalization click
+  const handlePersonalizationClick = useCallback((e: React.MouseEvent, layerId: string) => {
+    e.stopPropagation();
+    
+    // Initialize personalization state for this layer if it doesn't exist
+    if (!personalizationRules[layerId]) {
+      setPersonalizationRules(prev => ({
+        ...prev,
+        [layerId]: {
+          isPersonalized: false,
+          rules: []
+        }
+      }));
+    }
+    
+    setSelectedLayer(layerId);
+    setPersonalizationModalOpen(true);
+  }, [personalizationRules]);
+
+  // Update the personalization modal content to use the new segmentation system
+  const renderPersonalizationModal = () => {
+    if (!selectedLayer) return null;
+
+    const currentRules = personalizationRules[selectedLayer] || {
+      isPersonalized: false,
+      rules: []
+    };
+
+    return (
+      <Dialog open={personalizationModalOpen} onOpenChange={setPersonalizationModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Layer Personalization</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant={currentRules.isPersonalized ? "default" : "outline"}
+                onClick={() => {
+                  const updatedRules = {
+                    ...personalizationRules,
+                    [selectedLayer]: {
+                      ...currentRules,
+                      isPersonalized: !currentRules.isPersonalized
+                    }
+                  };
+                  setPersonalizationRules(updatedRules);
+                  localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
+                }}
+              >
+                {currentRules.isPersonalized ? "Personalized" : "Not Personalized"}
+              </Button>
+            </div>
+
+            {currentRules.isPersonalized && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Type</label>
+                    <Select
+                      value={selectedSegmentationType}
+                      onValueChange={setSelectedSegmentationType}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getSegmentationTypes().map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Value</label>
+                    <Select
+                      value={selectedSegmentationValue}
+                      onValueChange={setSelectedSegmentationValue}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select value" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getValuesForType(selectedSegmentationType).map((value) => (
+                          <SelectItem key={value.id} value={value.id}>
+                            {value.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (!selectedSegmentationType || !selectedSegmentationValue) return;
+
+                      const currentRules = personalizationRules[selectedLayer] || {
+                        isPersonalized: true,
+                        rules: []
+                      };
+
+                      // Add new rule
+                      const updatedRules = {
+                        ...personalizationRules,
+                        [selectedLayer]: {
+                          ...currentRules,
+                          rules: [
+                            ...currentRules.rules,
+                            {
+                              type: selectedSegmentationType,
+                              value: selectedSegmentationValue
+                            }
+                          ]
+                        }
+                      };
+
+                      setPersonalizationRules(updatedRules);
+                      localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
+                      
+                      // Reset selections
+                      setSelectedSegmentationValue('');
+                    }}
+                  >
+                    Add Rule
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      const updatedRules = {
+                        ...personalizationRules,
+                        [selectedLayer]: {
+                          isPersonalized: false,
+                          rules: []
+                        }
+                      };
+                      setPersonalizationRules(updatedRules);
+                      localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
+                    }}
+                  >
+                    Clear Rules
+                  </Button>
+                </div>
+
+                {/* Display current rules */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Current Rules:</label>
+                  <div className="space-y-1">
+                    {currentRules.rules.map((rule, index) => {
+                      const type = getSegmentationTypes().find(t => t.id === rule.type);
+                      const value = getValuesForType(rule.type).find(v => v.id === rule.value);
+                      
+                      return (
+                        <div key={index} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
+                          <span>
+                            {type?.label}: {value?.label}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const updatedRules = {
+                                ...personalizationRules,
+                                [selectedLayer]: {
+                                  ...currentRules,
+                                  rules: currentRules.rules.filter((_, i) => i !== index)
+                                }
+                              };
+                              setPersonalizationRules(updatedRules);
+                              localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   // Render layer tree nodes recursively
   const renderLayerNodes = (
     layers: PsdLayerMetadata[] | null,
@@ -651,6 +961,16 @@ export function LayerTree({
                   {labelOption.name}
                 </span>
               )}
+              {personalizationRules[layer.id]?.rules.length > 0 && (
+                <div className="mt-1 text-xs text-gray-500">
+                  {personalizationRules[layer.id].rules.map((rule, index) => (
+                    <span key={index} className="mr-2">
+                      {rule.type}: <strong>{rule.value}</strong>
+                      {index < personalizationRules[layer.id].rules.length - 1 ? "," : ""}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             
             <Popover open={labelPopoverOpen === layer.id} onOpenChange={(open) => setLabelPopoverOpen(open ? layer.id : null)}>
@@ -702,6 +1022,20 @@ export function LayerTree({
                 )}
               </PopoverContent>
             </Popover>
+
+            <div 
+              className="flex-shrink-0 ml-2 p-1 hover:bg-gray-200 rounded-sm"
+              onClick={(e) => handlePersonalizationClick(e, layer.id)}
+            >
+              <Users className={cn(
+                "h-4 w-4",
+                personalizationRules[layer.id]?.isPersonalized
+                  ? personalizationRules[layer.id]?.rules.length
+                    ? "text-purple-500"
+                    : "text-amber-500"
+                  : "text-gray-400"
+              )} />
+            </div>
           </div>
 
           {isGroup && isExpanded && layer.children && (
@@ -744,6 +1078,8 @@ export function LayerTree({
       <div className="overflow-y-auto flex-grow p-1">
         {layersState && renderLayerNodes(layersState)}
       </div>
+
+      {renderPersonalizationModal()}
     </div>
   );
 } 

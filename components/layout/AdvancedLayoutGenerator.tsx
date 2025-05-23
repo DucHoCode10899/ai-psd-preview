@@ -29,6 +29,20 @@ import { Label } from "@/components/ui/label";
 import { PositionKeyword } from '@/utils/position-calculator';
 import { toast, Toaster } from 'sonner';
 import type { Node, Layer as PsdLayer } from "@webtoon/psd";
+import { useSegmentationRules } from '@/hooks/useSegmentationRules';
+
+// Personalization types
+type SegmentationType = string;
+
+interface PersonalizationRule {
+  type: SegmentationType;
+  value: string;
+}
+
+interface LayerPersonalization {
+  isPersonalized: boolean;
+  rules: PersonalizationRule[];
+}
 
 interface AdvancedLayoutGeneratorProps {
   psdLayers: PsdLayerMetadata[] | null;
@@ -90,8 +104,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   const [isGenerating, setIsGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [safezoneWidth, setSafezoneWidth] = useState(10);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [margin, setMargin] = useState(5);
+  const [margin] = useState(5);
   const [sourceRatio, setSourceRatio] = useState<string | null>(null);
   const [layerImages, setLayerImages] = useState<Map<string, ImageData>>(new Map());
   const [customPositions, setCustomPositions] = useState<Record<string, Record<string, { 
@@ -102,13 +115,22 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     height: number; 
     angle?: number;
   }>>>({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [animateElements, setAnimateElements] = useState(true);
+  const [animateElements] = useState(true);
+  
+  // New personalization states
+  const [selectedSegmentationType, setSelectedSegmentationType] = useState<string>('gender');
+  const [selectedSegmentationValue, setSelectedSegmentationValue] = useState<string>("");
   
   // Canvas refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<Canvas | null>(null);
   
+  // Add the segmentation rules hook with only used functions
+  const { 
+    getValuesForType,
+    getSegmentationTypes
+  } = useSegmentationRules();
+
   // Load available channels
   useEffect(() => {
     const fetchLayoutRules = async () => {
@@ -709,10 +731,33 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     
   }, [generatedLayout, layerImages, customPositions, safezoneWidth, margin, isGenerating, animateElements]);
 
-  // Generate a layout using the advanced generator
+  // Modify handleGenerateLayout to consider personalization
   const handleGenerateLayout = async () => {
-    if (!psdLayers || !selectedAspectRatio || !selectedOption) {
-      toast.error('Please select all options first');
+    if (!psdLayers || !selectedAspectRatio || !selectedOption || !selectedSegmentationType || !selectedSegmentationValue) {
+      toast.error('Please select all options including segmentation');
+      return;
+    }
+    
+    // Fetch latest personalization rules from localStorage
+    const storedRules = localStorage.getItem("psd_personalization_rules");
+    let personalizationRules: Record<string, LayerPersonalization>;
+    
+    try {
+      if (!storedRules) {
+        console.error('No personalization rules found in localStorage');
+        toast.error('No personalization rules found. Please configure layer personalization first.');
+        return;
+      }
+      
+      personalizationRules = JSON.parse(storedRules);
+      if (typeof personalizationRules !== 'object' || personalizationRules === null) {
+        console.error('Invalid rules structure:', personalizationRules);
+        toast.error('Invalid personalization rules structure');
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing personalization rules:', error);
+      toast.error('Error loading personalization rules');
       return;
     }
     
@@ -722,16 +767,88 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     const hasLabeledLayers = Object.keys(labels).length > 0;
     
     if (!hasLabeledLayers) {
-      toast.error('No labeled layers detected.Please label your Master PSD layers before generating a layout.');
+      toast.error('No labeled layers detected. Please label your Master PSD layers before generating a layout.');
       return;
     }
     
     setIsGenerating(true);
     console.log('Generating layout for aspect ratio:', selectedAspectRatio, 'option:', selectedOption, 'with layers:', psdLayers.length);
+    console.log('Current segmentation:', selectedSegmentationType, selectedSegmentationValue);
+    console.log('Active personalization rules:', personalizationRules);
     
     try {
-      // Generate the layout with current settings
-      const layout = generateLayout(psdLayers, selectedOption, {
+      // First group layers by their label
+      const layersByLabel = new Map<string, Array<typeof psdLayers[0]>>();
+      
+      psdLayers.forEach(layer => {
+        const layerId = layer.id;
+        const label = labels[layerId] || labels[`layer_${layerId}`];
+        if (label) {
+          if (!layersByLabel.has(label)) {
+            layersByLabel.set(label, []);
+          }
+          layersByLabel.get(label)?.push(layer);
+        }
+      });
+
+      // Helper function to check if a layer's rules match current segmentation
+      const doesLayerMatchRules = (layerId: string) => {
+        const layerRules = personalizationRules[layerId] || 
+                          personalizationRules[`layer_${layerId}`];
+
+        // If no personalization, layer is always visible
+        if (!layerRules?.isPersonalized) return true;
+
+        // Check if rules match current segmentation
+        const relevantRules = layerRules.rules.filter(rule => 
+          rule.type === selectedSegmentationType
+        );
+
+        // If no rules for this segmentation type, hide layer
+        if (relevantRules.length === 0) return false;
+
+        // Check if any rules match current value
+        return relevantRules.some(rule => rule.value === selectedSegmentationValue);
+      };
+
+      // Process each label group and randomly select one matching layer
+      const processedLayers = Array.from(layersByLabel.entries()).flatMap(([label, layers]) => {
+        // Filter layers that match current personalization rules
+        const matchingLayers = layers.filter(layer => doesLayerMatchRules(layer.id));
+        
+        console.log(`Processing ${label} group: ${layers.length} total layers, ${matchingLayers.length} matching current rules`);
+        
+        if (matchingLayers.length === 0) {
+          // If no layers match rules, mark all as invisible
+          console.log(`No matching layers for ${label}, hiding all`);
+          return layers.map(layer => ({ ...layer, visible: false }));
+        }
+
+        // Randomly select one layer from matching layers
+        const selectedIndex = Math.floor(Math.random() * matchingLayers.length);
+        const selectedLayer = matchingLayers[selectedIndex];
+        console.log(`Selected layer ${selectedLayer.name} for ${label} group`);
+        
+        // Return all layers, but only selected one is visible
+        return layers.map(layer => ({
+          ...layer,
+          visible: matchingLayers.includes(layer) && 
+                  matchingLayers.indexOf(layer) === selectedIndex
+        }));
+      });
+
+      // Log processed layers for debugging
+      console.log('\nFinal layer visibility after random selection:');
+      processedLayers.forEach(layer => {
+        console.log(`- ${layer.name} (${layer.id}): ${layer.visible ? 'Visible' : 'Hidden'}`);
+      });
+
+      // Filter out invisible layers before generating layout
+      const visibleLayers = processedLayers.filter(layer => layer.visible);
+      console.log('\nLayers being used in layout:', visibleLayers.map(l => l.name).join(', '));
+
+      // Generate the layout with visible layers only
+      const layout = generateLayout(visibleLayers, selectedOption, {
         safezone: safezoneWidth,
         margin: margin
       });
@@ -743,7 +860,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       }
       
       console.log('Generated layout:', layout.name, 'with elements:', layout.elements.length);
-      console.log('Layer images map size:', layerImages.size);
+      console.log('Elements in layout:', layout.elements.map(e => e.name).join(', '));
       
       // Set the generated layout
       setGeneratedLayout(layout);
@@ -1021,6 +1138,51 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             </Select>
           </div>
 
+          {/* New segmentation type selection */}
+          <div>
+            <Label className="text-sm font-medium mb-2">Segmentation Type</Label>
+            <Select 
+              value={selectedSegmentationType} 
+              onValueChange={(value: string) => {
+                setSelectedSegmentationType(value);
+                setSelectedSegmentationValue(''); // Reset value when type changes
+              }}
+              disabled={!selectedOption}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select segmentation type" />
+              </SelectTrigger>
+              <SelectContent>
+                {getSegmentationTypes().map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* New segmentation value selection */}
+          <div>
+            <Label className="text-sm font-medium mb-2">Segmentation Value</Label>
+            <Select 
+              value={selectedSegmentationValue} 
+              onValueChange={setSelectedSegmentationValue}
+              disabled={!selectedOption || !selectedSegmentationType}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select value" />
+              </SelectTrigger>
+              <SelectContent>
+                {getValuesForType(selectedSegmentationType).map((value) => (
+                  <SelectItem key={value.id} value={value.id}>
+                    {value.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
           <Label htmlFor="safezone-width" className="text-sm font-medium mb-2">
             Safezone
@@ -1043,7 +1205,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           </div>
 
           {/* Generate button */}
-          {selectedChannelId && selectedAspectRatio && selectedOption && (
+          {selectedChannelId && selectedAspectRatio && selectedOption && selectedSegmentationType && selectedSegmentationValue && (
             <Button 
               onClick={handleGenerateLayout} 
               disabled={!selectedOption || isGenerating}
