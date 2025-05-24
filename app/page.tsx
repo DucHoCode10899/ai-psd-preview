@@ -132,7 +132,7 @@ export default function Home() {
           <ResizablePanel
             defaultSize={60}
             minSize={15}
-            maxSize={30}
+            maxSize={35}
             className="bg-white h-full"
           >
             <div className="h-full overflow-y-auto">
@@ -182,7 +182,7 @@ export default function Home() {
             {psdStructure ? (
               <ResizablePanelGroup direction="horizontal" className="h-full">
                 {/* PSD Preview panel */}
-                <ResizablePanel defaultSize={80}>
+                <ResizablePanel defaultSize={40}>
                   <div className="h-full flex flex-col overflow-hidden">
                     <div className="flex-1">
                       <div className="p-3">
@@ -208,7 +208,7 @@ export default function Home() {
                 <ResizableHandle withHandle />
 
                 {/* Layout Generator panel */}
-                <ResizablePanel defaultSize={100} className="overflow-auto">
+                <ResizablePanel defaultSize={60} className="overflow-auto">
                   <div className="p-3 h-full overflow-y-auto">
                     <div className="border rounded-lg p-4 bg-white">
                       <h2 className="text-lg font-semibold mb-4">Layout Generator</h2>

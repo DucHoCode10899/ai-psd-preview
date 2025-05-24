@@ -17,6 +17,11 @@ import {
   Square as SquareIcon,
   Link,
   Link2Off,
+  Plus,
+  Trash2,
+  Move,
+  Settings2,
+  Info
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { 
@@ -83,6 +88,51 @@ interface LayerTreeProps {
   onLayerReorder?: (sourceId: string, targetId: string, position: 'before' | 'after' | 'inside') => void;
   layerVisibility?: Record<string, boolean>;
 }
+
+// Add StepsIndicator component
+const StepsIndicator = () => {
+  return (
+    <div className="p-4 border-b bg-gray-50">
+      <div className="flex items-center justify-between space-x-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
+              <Tag className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="ml-2 flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">Label Layers</p>
+              <p className="text-xs text-gray-500">Assign semantic labels to organize your layers</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
+              <Users className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-2 flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700">Personalization</p>
+              <p className="text-xs text-gray-500">Add rules for dynamic content</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
+              <Link className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-2 flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700">Sync</p>
+              <p className="text-xs text-gray-500">Link layers for synchronized behavior</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export function LayerTree({
   layers,
@@ -721,165 +771,243 @@ export function LayerTree({
       rules: []
     };
 
+    const selectedLayerData = layersState?.find(layer => layer.id === selectedLayer);
+    const layerName = selectedLayerData?.name || "Selected Layer";
+
     return (
       <Dialog open={personalizationModalOpen} onOpenChange={setPersonalizationModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Layer Personalization</DialogTitle>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-purple-500" />
+              Layer Personalization
+            </DialogTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              Personalizing: <span className="font-medium text-gray-700">{layerName}</span>
+            </p>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant={currentRules.isPersonalized ? "default" : "outline"}
-                onClick={() => {
-                  const updatedRules = {
-                    ...personalizationRules,
-                    [selectedLayer]: {
-                      ...currentRules,
-                      isPersonalized: !currentRules.isPersonalized
-                    }
-                  };
-                  setPersonalizationRules(updatedRules);
-                  localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
-                }}
-              >
-                {currentRules.isPersonalized ? "Personalized" : "Not Personalized"}
-              </Button>
-            </div>
 
-            {currentRules.isPersonalized && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Type</label>
-                    <Select
-                      value={selectedSegmentationType}
-                      onValueChange={setSelectedSegmentationType}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getSegmentationTypes().map((type) => (
-                          <SelectItem key={type.id} value={type.id}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Value</label>
-                    <Select
-                      value={selectedSegmentationValue}
-                      onValueChange={setSelectedSegmentationValue}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select value" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getValuesForType(selectedSegmentationType).map((value) => (
-                          <SelectItem key={value.id} value={value.id}>
-                            {value.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          <div className="py-6">
+            {/* Step 1: Enable/Disable Personalization */}
+            <div className="space-y-6">
+              <div className="flex items-start gap-4 pb-6 border-b">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-purple-600">1</span>
                 </div>
-
-                <div className="flex justify-between">
+                <div className="flex-grow">
+                  <h3 className="text-sm font-semibold mb-2">Enable Personalization</h3>
+                  <p className="text-sm text-gray-500 mb-3">
+                    Turn on personalization to make this layer&apos;s content dynamic based on rules.
+                  </p>
                   <Button
-                    variant="outline"
+                    variant={currentRules.isPersonalized ? "default" : "outline"}
                     onClick={() => {
-                      if (!selectedSegmentationType || !selectedSegmentationValue) return;
-
-                      const currentRules = personalizationRules[selectedLayer] || {
-                        isPersonalized: true,
-                        rules: []
-                      };
-
-                      // Add new rule
                       const updatedRules = {
                         ...personalizationRules,
                         [selectedLayer]: {
                           ...currentRules,
-                          rules: [
-                            ...currentRules.rules,
-                            {
-                              type: selectedSegmentationType,
-                              value: selectedSegmentationValue
-                            }
-                          ]
-                        }
-                      };
-
-                      setPersonalizationRules(updatedRules);
-                      localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
-                      
-                      // Reset selections
-                      setSelectedSegmentationValue('');
-                    }}
-                  >
-                    Add Rule
-                  </Button>
-
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      const updatedRules = {
-                        ...personalizationRules,
-                        [selectedLayer]: {
-                          isPersonalized: false,
-                          rules: []
+                          isPersonalized: !currentRules.isPersonalized
                         }
                       };
                       setPersonalizationRules(updatedRules);
                       localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
                     }}
+                    className={cn(
+                      "transition-all",
+                      currentRules.isPersonalized && "bg-purple-600 hover:bg-purple-700"
+                    )}
                   >
-                    Clear Rules
+                    {currentRules.isPersonalized ? (
+                      <span className="flex items-center gap-2">
+                        <Check className="h-4 w-4" />
+                        Personalization Enabled
+                      </span>
+                    ) : (
+                      "Enable Personalization"
+                    )}
                   </Button>
                 </div>
+              </div>
 
-                {/* Display current rules */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Current Rules:</label>
-                  <div className="space-y-1">
-                    {currentRules.rules.map((rule, index) => {
-                      const type = getSegmentationTypes().find(t => t.id === rule.type);
-                      const value = getValuesForType(rule.type).find(v => v.id === rule.value);
-                      
-                      return (
-                        <div key={index} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
-                          <span>
-                            {type?.label}: {value?.label}
-                          </span>
+              {currentRules.isPersonalized && (
+                <>
+                  {/* Step 2: Add Rules */}
+                  <div className="flex items-start gap-4 pb-6 border-b">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-purple-600">2</span>
+                    </div>
+                    <div className="flex-grow space-y-4">
+                      <div>
+                        <h3 className="text-sm font-semibold mb-2">Add Personalization Rules</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                          Define how this layer should change based on different conditions.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700">Rule Type</label>
+                          <Select
+                            value={selectedSegmentationType}
+                            onValueChange={setSelectedSegmentationType}
+                          >
+                            <SelectTrigger className="bg-white w-full">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent className="w-full">
+                              {getSegmentationTypes().map((type) => (
+                                <SelectItem key={type.id} value={type.id}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700">Rule Value</label>
+                          <Select
+                            value={selectedSegmentationValue}
+                            onValueChange={setSelectedSegmentationValue}
+                          >
+                            <SelectTrigger className="bg-white w-full">
+                              <SelectValue placeholder="Select value" />
+                            </SelectTrigger>
+                            <SelectContent className="w-full">
+                              {getValuesForType(selectedSegmentationType).map((value) => (
+                                <SelectItem key={value.id} value={value.id}>
+                                  {value.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (!selectedSegmentationType || !selectedSegmentationValue) return;
+
+                          const currentRules = personalizationRules[selectedLayer] || {
+                            isPersonalized: true,
+                            rules: []
+                          };
+
+                          // Add new rule
+                          const updatedRules = {
+                            ...personalizationRules,
+                            [selectedLayer]: {
+                              ...currentRules,
+                              rules: [
+                                ...currentRules.rules,
+                                {
+                                  type: selectedSegmentationType,
+                                  value: selectedSegmentationValue
+                                }
+                              ]
+                            }
+                          };
+
+                          setPersonalizationRules(updatedRules);
+                          localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
+                          
+                          // Reset selections
+                          setSelectedSegmentationValue('');
+                        }}
+                        className="w-full"
+                        disabled={!selectedSegmentationType || !selectedSegmentationValue}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Rule
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Review Rules */}
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-purple-600">3</span>
+                    </div>
+                    <div className="flex-grow space-y-3">
+                      <div>
+                        <h3 className="text-sm font-semibold mb-2">Active Rules</h3>
+                        <p className="text-sm text-gray-500 mb-3">
+                          Review and manage the personalization rules for this layer.
+                        </p>
+                      </div>
+
+                      {currentRules.rules.length > 0 ? (
+                        <div className="space-y-2">
+                          {currentRules.rules.map((rule: PersonalizationRule, index: number) => {
+                            const type = getSegmentationTypes().find(t => t.id === rule.type);
+                            const value = getValuesForType(rule.type).find(v => v.id === rule.value);
+                            
+                            return (
+                              <div key={index} className="flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                  <span className="text-sm">
+                                    <span className="font-medium">{type?.label}:</span>
+                                    {" "}
+                                    {value?.label}
+                                  </span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    const updatedRules = {
+                                      ...personalizationRules,
+                                      [selectedLayer]: {
+                                        ...currentRules,
+                                        rules: currentRules.rules.filter((_: PersonalizationRule, i: number) => i !== index)
+                                      }
+                                    };
+                                    setPersonalizationRules(updatedRules);
+                                    localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
+                                  }}
+                                  className="text-gray-500 hover:text-red-500"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                          
                           <Button
                             variant="ghost"
-                            size="sm"
                             onClick={() => {
                               const updatedRules = {
                                 ...personalizationRules,
                                 [selectedLayer]: {
-                                  ...currentRules,
-                                  rules: currentRules.rules.filter((_, i) => i !== index)
+                                  isPersonalized: false,
+                                  rules: []
                                 }
                               };
                               setPersonalizationRules(updatedRules);
                               localStorage.setItem("psd_personalization_rules", JSON.stringify(updatedRules));
                             }}
+                            className="text-red-500 hover:text-red-600 w-full mt-4"
                           >
-                            Remove
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Clear All Rules
                           </Button>
                         </div>
-                      );
-                    })}
+                      ) : (
+                        <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed">
+                          <div className="text-gray-500">
+                            <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No rules added yet</p>
+                            <p className="text-xs mt-1">Add a rule above to personalize this layer&apos;s content</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -1002,78 +1130,130 @@ export function LayerTree({
   // Render bulk personalization modal
   const renderBulkPersonalizationModal = () => (
     <Dialog open={bulkPersonalizationModalOpen} onOpenChange={setBulkPersonalizationModalOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Bulk Personalize Layers</DialogTitle>
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <Users className="h-5 w-5 text-purple-500" />
+            Bulk Personalize Layers
+          </DialogTitle>
+          <p className="text-sm text-gray-500 mt-1">
+            Selected layers: <span className="font-medium text-gray-700">{selectedLayers.size}</span>
+          </p>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="text-sm text-gray-500">
-            Selected layers: {selectedLayers.size}
-          </div>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Type</label>
-                <Select
-                  value={selectedSegmentationType}
-                  onValueChange={setSelectedSegmentationType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getSegmentationTypes().map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Value</label>
-                <Select
-                  value={selectedSegmentationValue}
-                  onValueChange={setSelectedSegmentationValue}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select value" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getValuesForType(selectedSegmentationType).map((value) => (
-                      <SelectItem key={value.id} value={value.id}>
-                        {value.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <div className="py-6">
+          <div className="space-y-6">
+            {/* Step 1: Enable Personalization */}
+            <div className="flex items-start gap-4 pb-6 border-b">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                <span className="text-sm font-semibold text-purple-600">1</span>
+              </div>
+              <div className="flex-grow">
+                <h3 className="text-sm font-semibold mb-2">Configure Rule</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Define a personalization rule that will be applied to all selected layers.
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Rule Type</label>
+                    <Select
+                      value={selectedSegmentationType}
+                      onValueChange={setSelectedSegmentationType}
+                    >
+                      <SelectTrigger className="bg-white w-full">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        {getSegmentationTypes().map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Rule Value</label>
+                    <Select
+                      value={selectedSegmentationValue}
+                      onValueChange={setSelectedSegmentationValue}
+                    >
+                      <SelectTrigger className="bg-white w-full">
+                        <SelectValue placeholder="Select value" />
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        {getValuesForType(selectedSegmentationType).map((value) => (
+                          <SelectItem key={value.id} value={value.id}>
+                            {value.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (!selectedSegmentationType || !selectedSegmentationValue) return;
-                  
-                  const rules = [{
-                    type: selectedSegmentationType,
-                    value: selectedSegmentationValue
-                  }];
-                  
-                  applyBulkPersonalization(true, rules);
-                }}
-              >
-                Apply to All Selected
-              </Button>
+            {/* Step 2: Review and Apply */}
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                <span className="text-sm font-semibold text-purple-600">2</span>
+              </div>
+              <div className="flex-grow space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Review and Apply</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Apply the personalization rule to all selected layers or clear existing rules.
+                  </p>
+                </div>
 
-              <Button
-                variant="destructive"
-                onClick={() => applyBulkPersonalization(false, [])}
-              >
-                Clear All Rules
-              </Button>
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => {
+                      if (!selectedSegmentationType || !selectedSegmentationValue) return;
+                      
+                      const rules = [{
+                        type: selectedSegmentationType,
+                        value: selectedSegmentationValue
+                      }];
+                      
+                      applyBulkPersonalization(true, rules);
+                    }}
+                    disabled={!selectedSegmentationType || !selectedSegmentationValue}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Apply to All Selected
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    onClick={() => applyBulkPersonalization(false, [])}
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear All Rules
+                  </Button>
+                </div>
+
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex gap-2 text-amber-800">
+                    <div className="flex-shrink-0">
+                      <Users className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Bulk Operation Notice</p>
+                      <p className="text-sm mt-1">
+                        This action will modify personalization settings for all {selectedLayers.size} selected layers. 
+                        Any existing rules on these layers will be replaced.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1162,86 +1342,157 @@ export function LayerTree({
       if (!open) resetLinkForm();
       setLinkModalOpen(open);
     }}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Link Layers</DialogTitle>
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <Link className="h-5 w-5 text-blue-500" />
+            Link Layers
+          </DialogTitle>
+          <p className="text-sm text-gray-500 mt-1">
+            Create synchronized behavior between layers
+          </p>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Source Layer</label>
-              <Select
-                value={linkSourceLayer || ''}
-                onValueChange={setLinkSourceLayer}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select layer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {layersState && flattenLayers(layersState).map(layer => (
-                    <SelectItem key={layer.id} value={layer.id}>
-                      {layer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+        <div className="py-6">
+          <div className="space-y-6">
+            {/* Step 1: Select Layers */}
+            <div className="flex items-start gap-4 pb-6 border-b">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-sm font-semibold text-blue-600">1</span>
+              </div>
+              <div className="flex-grow">
+                <h3 className="text-sm font-semibold mb-2">Choose Layers to Link</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Select the source and target layers you want to connect.
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Source Layer</label>
+                    <Select
+                      value={linkSourceLayer || ''}
+                      onValueChange={setLinkSourceLayer}
+                    >
+                      <SelectTrigger className="bg-white w-full">
+                        <SelectValue placeholder="Select layer" />
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        {layersState && flattenLayers(layersState).map(layer => (
+                          <SelectItem key={layer.id} value={layer.id}>
+                            {layer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Target Layer</label>
+                    <Select
+                      value={linkTargetLayer || ''}
+                      onValueChange={setLinkTargetLayer}
+                    >
+                      <SelectTrigger className="bg-white w-full">
+                        <SelectValue placeholder="Select layer" />
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        {layersState && flattenLayers(layersState)
+                          .filter(layer => layer.id !== linkSourceLayer)
+                          .map(layer => (
+                            <SelectItem key={layer.id} value={layer.id}>
+                              {layer.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Target Layer</label>
-              <Select
-                value={linkTargetLayer || ''}
-                onValueChange={setLinkTargetLayer}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select layer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {layersState && flattenLayers(layersState)
-                    .filter(layer => layer.id !== linkSourceLayer)
-                    .map(layer => (
-                      <SelectItem key={layer.id} value={layer.id}>
-                        {layer.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+
+            {/* Step 2: Configure Link */}
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-sm font-semibold text-blue-600">2</span>
+              </div>
+              <div className="flex-grow space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Configure Link Behavior</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Define how the linked layers should interact with each other.
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Link Type</label>
+                    <Select
+                      value={linkType}
+                      onValueChange={(value) => setLinkType(value as LayerLink['type'])}
+                    >
+                      <SelectTrigger className="bg-white w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        <SelectItem value="sync-visibility">
+                          <div className="flex items-center gap-2">
+                            <Eye className="h-4 w-4" />
+                            <span>Sync Visibility</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="sync-position">
+                          <div className="flex items-center gap-2">
+                            <Move className="h-4 w-4" />
+                            <span>Sync Position</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="custom">
+                          <div className="flex items-center gap-2">
+                            <Settings2 className="h-4 w-4" />
+                            <span>Custom</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Description (Optional)</label>
+                    <input
+                      type="text"
+                      value={linkDescription}
+                      onChange={(e) => setLinkDescription(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md bg-white"
+                      placeholder="Enter link description"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleCreateLink}
+                  disabled={!linkSourceLayer || !linkTargetLayer}
+                  className="w-full"
+                >
+                  <Link className="h-4 w-4 mr-2" />
+                  Create Link
+                </Button>
+
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex gap-2 text-blue-800">
+                    <div className="flex-shrink-0">
+                      <Info className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">About Layer Links</p>
+                      <p className="text-sm mt-1">
+                        Linked layers will automatically sync their behavior based on the selected link type. 
+                        You can manage these links later from the layer tree.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Link Type</label>
-            <Select
-              value={linkType}
-              onValueChange={(value) => setLinkType(value as LayerLink['type'])}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sync-visibility">Sync Visibility</SelectItem>
-                <SelectItem value="sync-position">Sync Position</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description (Optional)</label>
-            <input
-              type="text"
-              value={linkDescription}
-              onChange={(e) => setLinkDescription(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
-              placeholder="Enter link description"
-            />
-          </div>
-
-          <Button
-            onClick={handleCreateLink}
-            disabled={!linkSourceLayer || !linkTargetLayer}
-          >
-            Create Link
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -1392,6 +1643,7 @@ export function LayerTree({
               )}
               {personalizationRules[layer.id]?.rules.length > 0 && (
                 <div className="mt-1 text-xs text-gray-500">
+                  <Users className="h-3 w-3 inline-block mr-1 text-purple-500" />
                   {personalizationRules[layer.id].rules.map((rule, index) => (
                     <span key={index} className="mr-2">
                       {rule.type}: <strong>{rule.value}</strong>
@@ -1503,6 +1755,7 @@ export function LayerTree({
 
   return (
     <div className="layer-tree border rounded-md overflow-hidden flex flex-col h-full">
+      <StepsIndicator />
       <div className="p-2 border-b bg-gray-50">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm">Layers</h3>
