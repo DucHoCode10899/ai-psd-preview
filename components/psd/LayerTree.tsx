@@ -1321,7 +1321,119 @@ export function LayerTree({
     );
   };
 
-  // Render link modal
+  // Add new state for expanded sync sections
+  const [expandedSyncSections, setExpandedSyncSections] = useState<Record<string, boolean>>({});
+
+  // Toggle sync section expansion
+  const toggleSyncExpanded = (layerId: string) => {
+    setExpandedSyncSections(prev => ({
+      ...prev,
+      [layerId]: !prev[layerId]
+    }));
+  };
+
+  // Get available layers for syncing (not already synced)
+  const getAvailableTargetLayers = (sourceLayerId: string) => {
+    if (!layersState) return [];
+    
+    const allLayers = flattenLayers(Array.isArray(layersState) ? layersState : []);
+    const existingLinks = new Set(layerLinks.flatMap(link => [link.sourceId, link.targetId]));
+    
+    return allLayers.filter(layer => 
+      layer.id !== sourceLayerId && // Not the source layer
+      !existingLinks.has(layer.id) // Not already linked
+    );
+  };
+
+  // Update renderLayerLinks function
+  const renderLayerLinks = (layerId: string) => {
+    const links = getLayerLinks(layerId);
+    if (links.length === 0) return null;
+
+    const isExpanded = expandedSyncSections[layerId] ?? true; // Default to expanded
+
+    return (
+      <div className="ml-8 mt-1">
+        <div 
+          className="flex items-center gap-1 text-xs text-gray-500 mb-1 cursor-pointer hover:text-gray-700"
+          onClick={() => toggleSyncExpanded(layerId)}
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" />
+          )}
+          <Link className="h-3.5 w-3.5" />
+          <span className="font-medium">{links.length} Layer {links.length === 1 ? 'Sync' : 'Syncs'}</span>
+        </div>
+
+        {isExpanded && (
+          <div className="space-y-2">
+            {links.map((link, index) => {
+              const otherLayerId = link.sourceId === layerId ? link.targetId : link.sourceId;
+              const otherLayer = layersState && flattenLayers(layersState).find(l => l.id === otherLayerId);
+              const isSource = link.sourceId === layerId;
+              
+              return (
+                <div key={index} className="relative">
+                  {/* Vertical line from parent */}
+                  <div className="absolute left-[-12px] top-0 w-[2px] h-full bg-blue-200" />
+                  
+                  {/* Horizontal line to child */}
+                  <div className="absolute left-[-12px] top-[10px] w-[12px] h-[2px] bg-blue-200" />
+                  
+                  <div className="flex items-center bg-blue-50 rounded-md p-2 border border-blue-200">
+                    <div className="flex items-center gap-2 flex-grow min-w-0">
+                      {/* Link type icon */}
+                      {link.type === 'sync-visibility' ? (
+                        <Eye className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                      ) : link.type === 'sync-position' ? (
+                        <Move className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                      ) : (
+                        <Settings2 className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                      )}
+                      
+                      {/* Link direction indicator */}
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="font-medium truncate">
+                          {isSource ? 'Controls' : 'Controlled by'}:
+                        </span>
+                        <span className="text-blue-700 truncate font-medium">
+                          {otherLayer?.name}
+                        </span>
+                      </div>
+
+                      {/* Link type and description */}
+                      {(link.type !== 'custom' || link.description) && (
+                        <div className="flex items-center gap-1 ml-2 text-xs text-gray-500">
+                          <span>•</span>
+                          <span>{link.type === 'sync-visibility' ? 'Visibility' : 
+                                link.type === 'sync-position' ? 'Position' : 
+                                link.description}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Remove link button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 ml-2 hover:bg-blue-100 hover:text-blue-700"
+                      onClick={() => handleRemoveLink(link.sourceId, link.targetId)}
+                    >
+                      <Link2Off className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Update the target layer selection in renderLinkModal
   const renderLinkModal = () => (
     <Dialog open={linkModalOpen} onOpenChange={(open) => {
       if (!open) resetLinkForm();
@@ -1375,18 +1487,17 @@ export function LayerTree({
                     <Select
                       value={linkTargetLayer || ''}
                       onValueChange={setLinkTargetLayer}
+                      disabled={!linkSourceLayer}
                     >
                       <SelectTrigger className="bg-white w-full">
-                        <SelectValue placeholder="Select layer" />
+                        <SelectValue placeholder={linkSourceLayer ? "Select layer" : "Select source layer first"} />
                       </SelectTrigger>
                       <SelectContent className="w-full">
-                        {layersState && flattenLayers(layersState)
-                          .filter(layer => layer.id !== linkSourceLayer)
-                          .map(layer => (
-                            <SelectItem key={layer.id} value={layer.id}>
-                              {layer.name}
-                            </SelectItem>
-                          ))}
+                        {linkSourceLayer && getAvailableTargetLayers(linkSourceLayer).map(layer => (
+                          <SelectItem key={layer.id} value={layer.id}>
+                            {layer.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1482,44 +1593,6 @@ export function LayerTree({
       </DialogContent>
     </Dialog>
   );
-
-  // Update layer node rendering to show links
-  const renderLayerLinks = (layerId: string) => {
-    const links = getLayerLinks(layerId);
-    if (links.length === 0) return null;
-
-    return (
-      <div className="ml-8 mt-1 space-y-1">
-        {links.map((link, index) => {
-          const otherLayerId = link.sourceId === layerId ? link.targetId : link.sourceId;
-          const otherLayer = layersState && flattenLayers(layersState).find(l => l.id === otherLayerId);
-          
-          return (
-            <div key={index} className="flex items-center text-xs text-gray-500">
-              <Link className="h-3 w-3 mr-1" />
-              <span>Linked to {otherLayer?.name}</span>
-              <span className="mx-1">•</span>
-              <span>{link.type}</span>
-              {link.description && (
-                <>
-                  <span className="mx-1">•</span>
-                  <span>{link.description}</span>
-                </>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-4 w-4 ml-1 p-0"
-                onClick={() => handleRemoveLink(link.sourceId, link.targetId)}
-              >
-                <Link2Off className="h-3 w-3" />
-              </Button>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
 
   // Render layer tree nodes recursively
   const renderLayerNodes = (
