@@ -1196,8 +1196,20 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             visible: layer.id === selectedLayer.id
           }));
         } else {
-          // If no personalization, just use the first layer in each group
-          const selectedLayer = layers[0];
+          // If no personalization, randomly select a layer from each group
+          const visibleLayers = layers.filter(layer => {
+            // Check if layer is marked as visible in the PSD
+            const isVisible = typeof layer.visible === 'undefined' || layer.visible === true;
+            return isVisible;
+          });
+
+          if (visibleLayers.length === 0) {
+            // If no visible layers, mark all as invisible
+            return layers.map(layer => ({ ...layer, visible: false }));
+          }
+
+          // Randomly select from visible layers
+          const selectedLayer = visibleLayers[Math.floor(Math.random() * visibleLayers.length)];
           return layers.map(layer => ({
             ...layer,
             visible: layer.id === selectedLayer.id
