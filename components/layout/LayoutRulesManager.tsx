@@ -1254,83 +1254,94 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
         </div>
 
         {/* Right Sidebar - Label Settings */}
-        {currentLabelSettings && (
-          <div className="w-[300px] flex flex-col border-l overflow-y-auto">
-            <div className="p-4 space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">Label Settings</h3>
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: getLabelColor(selectedLabel || '') }} />
-              </div>
-              
-              {/* Visibility */}
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="visibility"
-                  checked={currentLabelSettings.visible}
-                  onCheckedChange={handleVisibilityToggle}
-                />
-                <Label htmlFor="visibility">Visible in layout</Label>
-              </div>
-
-              {/* Position */}
-              <div className="space-y-2">
-                <Label>Position</Label>
-                <Select 
-                  value={currentLabelSettings.position} 
-                  onValueChange={handlePositionChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POSITION_OPTIONS.map(pos => (
-                      <SelectItem key={pos} value={pos}>
-                        {pos}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Size Constraints */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Maximum Width (%)</Label>
-                  <div className="flex items-center space-x-2">
-                    <Slider
-                      value={[currentLabelSettings.maxWidthPercent]}
-                      onValueChange={([value]) => handleSizeChange('width', value)}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <div className="w-12 text-right">
-                      {Math.round(currentLabelSettings.maxWidthPercent)}%
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Maximum Height (%)</Label>
-                  <div className="flex items-center space-x-2">
-                    <Slider
-                      value={[currentLabelSettings.maxHeightPercent]}
-                      onValueChange={([value]) => handleSizeChange('height', value)}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <div className="w-12 text-right">
-                      {Math.round(currentLabelSettings.maxHeightPercent)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div className="w-[300px] flex flex-col border-l overflow-y-auto">
+          <div className="p-4 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Label Settings</h3>
+              {selectedLabel && (
+                <div className="w-4 h-4 rounded" style={{ backgroundColor: getLabelColor(selectedLabel) }} />
+              )}
             </div>
+            
+            {currentLabelSettings ? (
+              <>
+                {/* Visibility */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="visibility"
+                    checked={currentLabelSettings.visible}
+                    onCheckedChange={handleVisibilityToggle}
+                  />
+                  <Label htmlFor="visibility">Visible in layout</Label>
+                </div>
+
+                {/* Position */}
+                <div className="space-y-2">
+                  <Label>Position</Label>
+                  <Select 
+                    value={currentLabelSettings.position} 
+                    onValueChange={handlePositionChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {POSITION_OPTIONS.map(pos => (
+                        <SelectItem key={pos} value={pos}>
+                          {pos}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Size Constraints */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Maximum Width (%)</Label>
+                    <div className="flex items-center space-x-2">
+                      <Slider
+                        value={[currentLabelSettings.maxWidthPercent]}
+                        onValueChange={([value]) => handleSizeChange('width', value)}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <div className="w-12 text-right">
+                        {Math.round(currentLabelSettings.maxWidthPercent)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Maximum Height (%)</Label>
+                    <div className="flex items-center space-x-2">
+                      <Slider
+                        value={[currentLabelSettings.maxHeightPercent]}
+                        onValueChange={([value]) => handleSizeChange('height', value)}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <div className="w-12 text-right">
+                        {Math.round(currentLabelSettings.maxHeightPercent)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                {!selectedChannelId && "Select a channel to start"}
+                {selectedChannelId && !selectedAspectRatio && "Select an aspect ratio"}
+                {selectedChannelId && selectedAspectRatio && !selectedOption && "Select a layout"}
+                {selectedChannelId && selectedAspectRatio && selectedOption && !selectedLabel && "Select a label to edit its settings"}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
