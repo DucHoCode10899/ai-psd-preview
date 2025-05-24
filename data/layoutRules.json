@@ -17,7 +17,7 @@
                   "logo": false,
                   "main-subject": true,
                   "domain": false,
-                  "product-name": false,
+                  "product-name": true,
                   "sub-content-1": true,
                   "sub-content-2": false,
                   "cta": false,
@@ -45,7 +45,7 @@
                     "maxHeightPercent": 0.1
                   },
                   "product-name": {
-                    "position": "middle-top-center",
+                    "position": "top-center-20",
                     "maxWidthPercent": 0.6,
                     "maxHeightPercent": 0.15,
                     "alignment": "center",

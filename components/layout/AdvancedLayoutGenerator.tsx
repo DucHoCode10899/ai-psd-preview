@@ -93,6 +93,19 @@ interface LayoutRuleResponse {
   }>;
 }
 
+interface LayerLink {
+  sourceId: string;
+  targetId: string;
+  type: 'sync-visibility' | 'sync-position' | 'custom';
+  description?: string;
+}
+
+interface SyncLayerSet {
+  mainLayer: string;  // ID of the main layer (e.g., main-subject)
+  syncedLayers: string[][];  // Array of alternative synced layer groups
+  label: string;  // The label of the main layer
+}
+
 export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayoutGeneratorProps) {
   const [availableChannels, setAvailableChannels] = useState<Channel[]>([]);
   const [availableLayouts, setAvailableLayouts] = useState<LayoutRatio[]>([]);
@@ -130,6 +143,212 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     getValuesForType,
     getSegmentationTypes
   } = useSegmentationRules();
+
+  const [generationDescription, setGenerationDescription] = useState<string>('');
+
+  // Add new state for multiple layouts
+  const [multipleLayouts, setMultipleLayouts] = useState<GeneratedLayout[]>([]);
+
+  // Add new function to generate all sync layouts
+  const handleGenerateAllSyncLayouts = async () => {
+    if (!psdLayers || !selectedAspectRatio || !selectedOption || !selectedSegmentationType || !selectedSegmentationValue) {
+      toast.error('Please select all options including segmentation');
+      return;
+    }
+
+    // Load necessary data from storage
+    const layerLabels = sessionStorage.getItem('psd_layer_labels');
+    const storedLinks = localStorage.getItem('psd_layer_links');
+    const storedRules = localStorage.getItem('psd_personalization_rules');
+
+    if (!layerLabels || !storedLinks || !storedRules) {
+      toast.error('Missing required layer data');
+      return;
+    }
+
+    try {
+      const labels = JSON.parse(layerLabels);
+      const links = JSON.parse(storedLinks) as LayerLink[];
+      const personalizationRules = JSON.parse(storedRules);
+
+      setIsGenerating(true);
+      const description = [];
+
+      // Find all sync sets with alternatives
+      const sets = findSyncSets(psdLayers, labels, links);
+      console.log('Found sync sets with alternatives:', sets);
+      
+      if (sets.length === 0) {
+        toast.error('No synchronized sets found');
+        setIsGenerating(false);
+        return;
+      }
+
+      description.push(`Found ${sets.length} synchronized sets:`);
+      sets.forEach(set => {
+        const mainLayerName = psdLayers.find(l => l.id === set.mainLayer)?.name || set.mainLayer;
+        description.push(`- ${set.label}: Main layer ${mainLayerName} with alternatives:`);
+        set.syncedLayers.forEach((group, index) => {
+          const syncedLayerNames = group.map(id => 
+            psdLayers.find(l => l.id === id)?.name || id
+          );
+          description.push(`  Alternative ${index + 1}: ${syncedLayerNames.join(', ')}`);
+        });
+      });
+
+      // Group sets by label
+      const setsByLabel = new Map<string, typeof sets>();
+      sets.forEach(set => {
+        if (!setsByLabel.has(set.label)) {
+          setsByLabel.set(set.label, []);
+        }
+        setsByLabel.get(set.label)?.push(set);
+      });
+
+      // Get all valid sets for each label
+      const validSetsByLabel = new Map<string, typeof sets>();
+      setsByLabel.forEach((labelSets, labelKey) => {
+        const validSets = labelSets.filter(set =>
+          doesLayerMatchRules(set.mainLayer, personalizationRules) &&
+          set.syncedLayers.flat().every(id => doesLayerMatchRules(id, personalizationRules))
+        );
+        if (validSets.length > 0) {
+          validSetsByLabel.set(labelKey, validSets);
+        }
+      });
+
+      // Generate all possible combinations
+      const layouts: GeneratedLayout[] = [];
+      const generateCombinations = (
+        currentLabel: string | undefined,
+        selectedSets: Map<string, { mainLayer: string; selectedGroup: string[] }>,
+        remainingLabels: string[]
+      ) => {
+        if (!currentLabel) {
+          // Base case: generate layout from current combination
+          const visibleLayerIds = new Set<string>();
+          const processedLayerIds = new Set<string>();
+          const excludedLayerIds = new Set<string>();
+
+          // Mark excluded layers from all sync sets
+          sets.forEach(set => {
+            set.syncedLayers.flat().forEach(id => {
+              excludedLayerIds.add(id.replace('layer_', ''));
+              excludedLayerIds.add(`layer_${id.replace('layer_', '')}`);
+            });
+          });
+
+          // Add selected sync sets to visible layers
+          selectedSets.forEach(({ mainLayer, selectedGroup }) => {
+            const selectedLayerIds = new Set([
+              mainLayer,
+              ...selectedGroup,
+              mainLayer.replace('layer_', ''),
+              ...selectedGroup.map(id => id.replace('layer_', ''))
+            ]);
+            selectedLayerIds.forEach(id => {
+              processedLayerIds.add(id);
+              visibleLayerIds.add(id);
+            });
+          });
+
+          // Add non-synced layers
+          const layersByLabel = new Map<string, PsdLayerMetadata[]>();
+          psdLayers.forEach(layer => {
+            const layerId = layer.id;
+            const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
+            const layerLabel = labels[normalizedId] || labels[layerId];
+            if (layerLabel && !selectedSets.has(layerLabel)) {
+              if (!layersByLabel.has(layerLabel)) {
+                layersByLabel.set(layerLabel, []);
+              }
+              layersByLabel.get(layerLabel)?.push(layer);
+            }
+          });
+
+          // Process non-synced layers
+          layersByLabel.forEach((layers) => {
+            const unprocessedLayers = layers.filter(layer => !processedLayerIds.has(layer.id));
+            const availableLayers = unprocessedLayers.filter(layer =>
+              !excludedLayerIds.has(layer.id) && !excludedLayerIds.has(`layer_${layer.id}`)
+            );
+            const matchingLayers = availableLayers.filter(layer => doesLayerMatchRules(layer.id, personalizationRules));
+
+            if (matchingLayers.length > 0) {
+              const selectedLayer = matchingLayers[Math.floor(Math.random() * matchingLayers.length)];
+              visibleLayerIds.add(selectedLayer.id);
+            }
+          });
+
+          // Generate layout with current visible layers
+          const visibleLayers = psdLayers.filter(layer =>
+            visibleLayerIds.has(layer.id) || visibleLayerIds.has(`layer_${layer.id}`)
+          );
+
+          const layout = generateLayout(visibleLayers, selectedOption, {
+            safezone: safezoneWidth,
+            margin: margin
+          });
+
+          if (layout) {
+            layouts.push(layout);
+          }
+          return;
+        }
+
+        // Get valid sets for current label
+        const validSets = validSetsByLabel.get(currentLabel) || [];
+        const nextLabel = remainingLabels[0];
+        const nextRemainingLabels = remainingLabels.slice(1);
+
+        // Try each valid set and each alternative group
+        validSets.forEach(set => {
+          set.syncedLayers.forEach(group => {
+            const newSelectedSets = new Map(selectedSets);
+            newSelectedSets.set(currentLabel, { mainLayer: set.mainLayer, selectedGroup: group });
+            generateCombinations(nextLabel, newSelectedSets, nextRemainingLabels);
+          });
+        });
+      };
+
+      // Start generating combinations
+      const labelKeys = Array.from(validSetsByLabel.keys());
+      generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
+
+      description.push(`\nGenerated ${layouts.length} layout combinations`);
+      setGenerationDescription(description.join('\n'));
+      setMultipleLayouts(layouts);
+      setGeneratedLayout(layouts[0]); // Show first layout initially
+
+      setTimeout(() => {
+        setIsGenerating(false);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error generating all sync layouts:', error);
+      toast.error('Error generating layouts');
+      setIsGenerating(false);
+    }
+  };
+
+  // Add layout navigation controls
+  const [currentLayoutIndex, setCurrentLayoutIndex] = useState(0);
+
+  const showNextLayout = () => {
+    if (multipleLayouts.length > 0) {
+      const nextIndex = (currentLayoutIndex + 1) % multipleLayouts.length;
+      setCurrentLayoutIndex(nextIndex);
+      setGeneratedLayout(multipleLayouts[nextIndex]);
+    }
+  };
+
+  const showPreviousLayout = () => {
+    if (multipleLayouts.length > 0) {
+      const prevIndex = (currentLayoutIndex - 1 + multipleLayouts.length) % multipleLayouts.length;
+      setCurrentLayoutIndex(prevIndex);
+      setGeneratedLayout(multipleLayouts[prevIndex]);
+    }
+  };
 
   // Load available channels
   useEffect(() => {
@@ -499,7 +718,8 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           borderColor: '#3b82f6',
           borderScaleFactor: 1,
           angle: customPosition?.angle || 0,
-          opacity: animateElements ? 0 : (isGenerating ? 0.7 : 1)
+          // opacity: animateElements ? 0 : (isGenerating ? 0.7 : 1)
+          opacity: 1
         });
         
         // Add custom properties
@@ -554,7 +774,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               top: top,
               opacity: 1
             }, {
-              duration: 800,
+              duration: 300,
               onChange: canvas.renderAll.bind(canvas),
               easing: fabricUtil.ease.easeOutCubic
             });
@@ -731,58 +951,128 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     
   }, [generatedLayout, layerImages, customPositions, safezoneWidth, margin, isGenerating, animateElements]);
 
-  // Modify handleGenerateLayout to consider personalization
+  // Function to find all sync sets in the layers with support for multiple alternatives
+  const findSyncSets = (layers: PsdLayerMetadata[], labels: Record<string, string>, links: LayerLink[]): SyncLayerSet[] => {
+    const sets: SyncLayerSet[] = [];
+    const processedLayers = new Set<string>();
+
+    // Helper to get layer ID with or without 'layer_' prefix
+    const normalizeLayerId = (id: string) => id.startsWith('layer_') ? id : `layer_${id}`;
+
+    // First, group links by source layer
+    const linksBySource = new Map<string, LayerLink[]>();
+    links.forEach(link => {
+      if (link.type === 'sync-visibility') {
+        const sourceId = normalizeLayerId(link.sourceId);
+        if (!linksBySource.has(sourceId)) {
+          linksBySource.set(sourceId, []);
+        }
+        linksBySource.get(sourceId)?.push(link);
+      }
+    });
+
+    // Process each layer
+    layers.forEach(layer => {
+      const layerId = normalizeLayerId(layer.id);
+      const label = labels[layerId] || labels[layer.id];
+
+      // Skip if already processed or no label
+      if (processedLayers.has(layerId) || !label) return;
+
+      // Find all synchronized layers for this layer
+      const sourceLinks = linksBySource.get(layerId) || [];
+      
+      if (sourceLinks.length > 0) {
+        // Group target layers by their labels to identify alternatives
+        const targetsByLabel = new Map<string, string[]>();
+        
+        sourceLinks.forEach(link => {
+          const targetId = normalizeLayerId(link.targetId);
+          const targetLayer = layers.find(l => normalizeLayerId(l.id) === targetId);
+          if (targetLayer) {
+            const targetLabel = labels[targetId] || labels[targetLayer.id];
+            if (targetLabel) {
+              if (!targetsByLabel.has(targetLabel)) {
+                targetsByLabel.set(targetLabel, []);
+              }
+              targetsByLabel.get(targetLabel)?.push(targetId);
+            }
+          }
+        });
+
+        // Convert grouped targets into alternative combinations
+        const syncedLayerGroups: string[][] = [];
+        
+        // For each unique target label, create a separate group
+        targetsByLabel.forEach((targets) => {
+          // Each target in this group is an alternative
+          targets.forEach(target => {
+            syncedLayerGroups.push([target]);
+          });
+        });
+
+        if (syncedLayerGroups.length > 0) {
+          sets.push({
+            mainLayer: layerId,
+            syncedLayers: syncedLayerGroups,
+            label
+          });
+
+          // Mark main layer as processed
+          processedLayers.add(layerId);
+          // Mark all target layers as processed
+          syncedLayerGroups.flat().forEach(id => processedLayers.add(id));
+        }
+      }
+    });
+
+    return sets;
+  };
+
+  // Move doesLayerMatchRules outside of handleGenerateSyncLayout
+  const doesLayerMatchRules = (layerId: string, personalizationRules: Record<string, LayerPersonalization>) => {
+    const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
+    const layerRules = personalizationRules[normalizedId] || personalizationRules[layerId];
+
+    if (!layerRules?.isPersonalized) return true;
+
+    const relevantRules = layerRules.rules.filter((rule: PersonalizationRule) => 
+      rule.type === selectedSegmentationType
+    );
+
+    if (relevantRules.length === 0) return false;
+
+    return relevantRules.some((rule: PersonalizationRule) => rule.value === selectedSegmentationValue);
+  };
+
+  // Modify handleGenerateLayout to use the shared doesLayerMatchRules function
   const handleGenerateLayout = async () => {
     if (!psdLayers || !selectedAspectRatio || !selectedOption || !selectedSegmentationType || !selectedSegmentationValue) {
       toast.error('Please select all options including segmentation');
       return;
     }
-    
-    // Fetch latest personalization rules from localStorage
-    const storedRules = localStorage.getItem("psd_personalization_rules");
-    let personalizationRules: Record<string, LayerPersonalization>;
-    
-    try {
-      if (!storedRules) {
-        console.error('No personalization rules found in localStorage');
-        toast.error('No personalization rules found. Please configure layer personalization first.');
-        return;
-      }
-      
-      personalizationRules = JSON.parse(storedRules);
-      if (typeof personalizationRules !== 'object' || personalizationRules === null) {
-        console.error('Invalid rules structure:', personalizationRules);
-        toast.error('Invalid personalization rules structure');
-        return;
-      }
-    } catch (error) {
-      console.error('Error parsing personalization rules:', error);
-      toast.error('Error loading personalization rules');
-      return;
-    }
-    
-    // Check if there are any labeled layers in sessionStorage
+
+    // Load necessary data from storage
     const layerLabels = sessionStorage.getItem('psd_layer_labels');
-    const labels = layerLabels ? JSON.parse(layerLabels) : {};
-    const hasLabeledLayers = Object.keys(labels).length > 0;
-    
-    if (!hasLabeledLayers) {
-      toast.error('No labeled layers detected. Please label your Master PSD layers before generating a layout.');
+    const storedRules = localStorage.getItem('psd_personalization_rules');
+
+    if (!layerLabels || !storedRules) {
+      toast.error('Missing required layer data');
       return;
     }
-    
-    setIsGenerating(true);
-    console.log('Generating layout for aspect ratio:', selectedAspectRatio, 'option:', selectedOption, 'with layers:', psdLayers.length);
-    console.log('Current segmentation:', selectedSegmentationType, selectedSegmentationValue);
-    console.log('Active personalization rules:', personalizationRules);
-    
+
     try {
-      // First group layers by their label
-      const layersByLabel = new Map<string, Array<typeof psdLayers[0]>>();
-      
+      const labels = JSON.parse(layerLabels);
+      const personalizationRules = JSON.parse(storedRules);
+
+      setIsGenerating(true);
+
+      // Group layers by label
+      const layersByLabel = new Map<string, PsdLayerMetadata[]>();
       psdLayers.forEach(layer => {
         const layerId = layer.id;
-        const label = labels[layerId] || labels[`layer_${layerId}`];
+        const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
+        const label = labels[normalizedId] || labels[layerId];
         if (label) {
           if (!layersByLabel.has(label)) {
             layersByLabel.set(label, []);
@@ -791,85 +1081,42 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         }
       });
 
-      // Helper function to check if a layer's rules match current segmentation
-      const doesLayerMatchRules = (layerId: string) => {
-        const layerRules = personalizationRules[layerId] || 
-                          personalizationRules[`layer_${layerId}`];
-
-        // If no personalization, layer is always visible
-        if (!layerRules?.isPersonalized) return true;
-
-        // Check if rules match current segmentation
-        const relevantRules = layerRules.rules.filter(rule => 
-          rule.type === selectedSegmentationType
-        );
-
-        // If no rules for this segmentation type, hide layer
-        if (relevantRules.length === 0) return false;
-
-        // Check if any rules match current value
-        return relevantRules.some(rule => rule.value === selectedSegmentationValue);
-      };
-
-      // Process each label group and randomly select one matching layer
-      const processedLayers = Array.from(layersByLabel.entries()).flatMap(([label, layers]) => {
-        // Filter layers that match current personalization rules
-        const matchingLayers = layers.filter(layer => doesLayerMatchRules(layer.id));
-        
-        console.log(`Processing ${label} group: ${layers.length} total layers, ${matchingLayers.length} matching current rules`);
+      // Process each label group independently
+      const processedLayers = Array.from(layersByLabel.entries()).flatMap(([, layers]) => {
+        const matchingLayers = layers.filter(layer => doesLayerMatchRules(layer.id, personalizationRules));
         
         if (matchingLayers.length === 0) {
-          // If no layers match rules, mark all as invisible
-          console.log(`No matching layers for ${label}, hiding all`);
           return layers.map(layer => ({ ...layer, visible: false }));
         }
 
-        // Randomly select one layer from matching layers
-        const selectedIndex = Math.floor(Math.random() * matchingLayers.length);
-        const selectedLayer = matchingLayers[selectedIndex];
-        console.log(`Selected layer ${selectedLayer.name} for ${label} group`);
-        
-        // Return all layers, but only selected one is visible
+        const selectedLayer = matchingLayers[Math.floor(Math.random() * matchingLayers.length)];
         return layers.map(layer => ({
           ...layer,
-          visible: matchingLayers.includes(layer) && 
-                  matchingLayers.indexOf(layer) === selectedIndex
+          visible: layer.id === selectedLayer.id
         }));
       });
 
-      // Log processed layers for debugging
-      console.log('\nFinal layer visibility after random selection:');
-      processedLayers.forEach(layer => {
-        console.log(`- ${layer.name} (${layer.id}): ${layer.visible ? 'Visible' : 'Hidden'}`);
-      });
-
-      // Filter out invisible layers before generating layout
+      // Filter visible layers and generate layout
       const visibleLayers = processedLayers.filter(layer => layer.visible);
-      console.log('\nLayers being used in layout:', visibleLayers.map(l => l.name).join(', '));
+      console.log('Visible layers:', visibleLayers.map(l => l.name));
 
-      // Generate the layout with visible layers only
       const layout = generateLayout(visibleLayers, selectedOption, {
         safezone: safezoneWidth,
         margin: margin
       });
-      
+
       if (!layout) {
         toast.error('Failed to generate layout');
         setIsGenerating(false);
         return;
       }
-      
-      console.log('Generated layout:', layout.name, 'with elements:', layout.elements.length);
-      console.log('Elements in layout:', layout.elements.map(e => e.name).join(', '));
-      
-      // Set the generated layout
+
       setGeneratedLayout(layout);
       
-      // Wait a short time before finishing
       setTimeout(() => {
         setIsGenerating(false);
       }, 1000);
-      
+
     } catch (error) {
       console.error('Error generating layout:', error);
       toast.error('Error generating layout');
@@ -1061,7 +1308,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       
       {/* Selection controls */}
       <div className="space-y-4">
-        {/* Dropdowns and button in a row */}
+        {/* Dropdowns and buttons in a row */}
         <div className="flex flex-wrap items-end gap-4">
           {/* Channel selection */}
           <div>
@@ -1204,19 +1451,37 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           </Select>
           </div>
 
-          {/* Generate button */}
+          {/* Generate buttons */}
           {selectedChannelId && selectedAspectRatio && selectedOption && selectedSegmentationType && selectedSegmentationValue && (
-            <Button 
-              onClick={handleGenerateLayout} 
-              disabled={!selectedOption || isGenerating}
-              size="lg"
-              className="w-[200px]"
-            >
-              {isGenerating ? 'Generating...' : 'Generate Layout'}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleGenerateLayout} 
+                disabled={!selectedOption || isGenerating}
+                size="lg"
+              >
+                {isGenerating ? 'Generating...' : 'Generate Layout'}
+              </Button>
+              
+              <Button 
+                onClick={handleGenerateAllSyncLayouts}
+                disabled={!selectedOption || isGenerating}
+                size="lg"
+                variant="secondary"
+              >
+                {isGenerating ? 'Generating...' : 'Generate All Sync Layouts'}
+              </Button>
+            </div>
           )}
         </div>
       </div>
+      
+      {/* Add generation description */}
+      {generationDescription && (
+        <div className="text-sm text-muted-foreground whitespace-pre-wrap p-4 bg-slate-50 rounded-lg">
+          <h4 className="font-medium mb-2">Generation Details:</h4>
+          {generationDescription}
+        </div>
+      )}
       
       {/* Layout info and export */}
       {generatedLayout && (
@@ -1240,6 +1505,31 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             <Download className="h-4 w-4" />
             {downloading ? 'Exporting...' : 'Export PNG'}
           </Button>
+        </div>
+      )}
+      
+      {/* Layout navigation controls */}
+      {multipleLayouts.length > 1 && (
+        <div className="flex items-center gap-4 justify-end">
+          <span className="text-sm text-muted-foreground">
+            Layout {currentLayoutIndex + 1} of {multipleLayouts.length}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              onClick={showPreviousLayout}
+              size="sm"
+              variant="outline"
+            >
+              Previous
+            </Button>
+            <Button
+              onClick={showNextLayout}
+              size="sm"
+              variant="outline"
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
       

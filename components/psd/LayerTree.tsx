@@ -13,6 +13,10 @@ import {
   Tag,
   Check,
   Users,
+  CheckSquare,
+  Square as SquareIcon,
+  Link,
+  Link2Off,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { 
@@ -63,6 +67,14 @@ const LABEL_OPTIONS = [
   { id: "cta", name: "CTA", color: "bg-orange-100 text-orange-700" },
   { id: "disclaimer", name: "Disclaimer", color: "bg-amber-100 text-amber-700" },
 ];
+
+// Add new interfaces for layer links
+interface LayerLink {
+  sourceId: string;
+  targetId: string;
+  type: 'sync-visibility' | 'sync-position' | 'custom';
+  description?: string;
+}
 
 interface LayerTreeProps {
   layers?: PsdLayerMetadata[];
@@ -874,6 +886,405 @@ export function LayerTree({
     );
   };
 
+  // Add new state for multi-select
+  const [selectedLayers, setSelectedLayers] = useState<Set<string>>(new Set());
+  const [bulkLabelModalOpen, setBulkLabelModalOpen] = useState(false);
+  const [bulkPersonalizationModalOpen, setBulkPersonalizationModalOpen] = useState(false);
+
+  // Handle layer selection
+  const handleLayerSelect = (e: React.MouseEvent, layerId: string) => {
+    e.stopPropagation();
+    
+    setSelectedLayers(prev => {
+      const newSelection = new Set(prev);
+      if (e.shiftKey && prev.size > 0) {
+        // Get all layers in between last selected and current
+        const allLayers = flattenLayers(Array.isArray(layerData) ? layerData : []);
+        const lastSelected = Array.from(prev)[prev.size - 1];
+        const lastIndex = allLayers.findIndex(l => l.id === lastSelected);
+        const currentIndex = allLayers.findIndex(l => l.id === layerId);
+        const [start, end] = [Math.min(lastIndex, currentIndex), Math.max(lastIndex, currentIndex)];
+        
+        for (let i = start; i <= end; i++) {
+          newSelection.add(allLayers[i].id);
+        }
+      } else if (e.ctrlKey || e.metaKey) {
+        // Toggle selection
+        if (newSelection.has(layerId)) {
+          newSelection.delete(layerId);
+        } else {
+          newSelection.add(layerId);
+        }
+      } else {
+        // Single select/deselect
+        if (newSelection.size === 1 && newSelection.has(layerId)) {
+          // If only this layer is selected, deselect it
+          newSelection.clear();
+        } else {
+          // Otherwise, select only this layer
+          newSelection.clear();
+          newSelection.add(layerId);
+        }
+      }
+      return newSelection;
+    });
+  };
+
+  // Bulk label application
+  const applyBulkLabel = (labelId: string | null) => {
+    setLabelState(prev => {
+      const newState = {...prev};
+      selectedLayers.forEach(layerId => {
+        if (labelId === null) {
+          delete newState[layerId];
+        } else {
+          newState[layerId] = labelId;
+        }
+      });
+      return newState;
+    });
+    setBulkLabelModalOpen(false);
+  };
+
+  // Bulk personalization application
+  const applyBulkPersonalization = (isPersonalized: boolean, rules: PersonalizationRule[]) => {
+    setPersonalizationRules(prev => {
+      const newState = {...prev};
+      selectedLayers.forEach(layerId => {
+        newState[layerId] = {
+          isPersonalized,
+          rules: [...rules]
+        };
+      });
+      return newState;
+    });
+    setBulkPersonalizationModalOpen(false);
+  };
+
+  // Render bulk label modal
+  const renderBulkLabelModal = () => (
+    <Dialog open={bulkLabelModalOpen} onOpenChange={setBulkLabelModalOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Bulk Label Layers</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <div className="text-sm text-gray-500 mb-4">
+            Selected layers: {selectedLayers.size}
+          </div>
+          <div className="space-y-2">
+            {LABEL_OPTIONS.map(option => (
+              <Button
+                key={option.id}
+                variant="ghost"
+                className="w-full justify-start text-sm py-1.5 px-2 h-auto"
+                onClick={() => applyBulkLabel(option.id)}
+              >
+                <div className="flex items-center w-full">
+                  <div className={cn("w-2 h-2 rounded-full mr-2", option.color.split(' ')[0])} />
+                  <span>{option.name}</span>
+                </div>
+              </Button>
+            ))}
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm py-1.5 px-2 h-auto text-red-500 hover:text-red-600"
+              onClick={() => applyBulkLabel(null)}
+            >
+              Remove Labels
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Render bulk personalization modal
+  const renderBulkPersonalizationModal = () => (
+    <Dialog open={bulkPersonalizationModalOpen} onOpenChange={setBulkPersonalizationModalOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Bulk Personalize Layers</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="text-sm text-gray-500">
+            Selected layers: {selectedLayers.size}
+          </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Type</label>
+                <Select
+                  value={selectedSegmentationType}
+                  onValueChange={setSelectedSegmentationType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSegmentationTypes().map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Value</label>
+                <Select
+                  value={selectedSegmentationValue}
+                  onValueChange={setSelectedSegmentationValue}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select value" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getValuesForType(selectedSegmentationType).map((value) => (
+                      <SelectItem key={value.id} value={value.id}>
+                        {value.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (!selectedSegmentationType || !selectedSegmentationValue) return;
+                  
+                  const rules = [{
+                    type: selectedSegmentationType,
+                    value: selectedSegmentationValue
+                  }];
+                  
+                  applyBulkPersonalization(true, rules);
+                }}
+              >
+                Apply to All Selected
+              </Button>
+
+              <Button
+                variant="destructive"
+                onClick={() => applyBulkPersonalization(false, [])}
+              >
+                Clear All Rules
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Add new state for layer links
+  const [layerLinks, setLayerLinks] = useState<LayerLink[]>([]);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkSourceLayer, setLinkSourceLayer] = useState<string | null>(null);
+  const [linkTargetLayer, setLinkTargetLayer] = useState<string | null>(null);
+  const [linkType, setLinkType] = useState<LayerLink['type']>('sync-visibility');
+  const [linkDescription, setLinkDescription] = useState('');
+
+  // Load layer links from storage
+  useEffect(() => {
+    const storedLinks = localStorage.getItem('psd_layer_links');
+    if (storedLinks) {
+      try {
+        setLayerLinks(JSON.parse(storedLinks));
+      } catch (error) {
+        console.error('Error parsing layer links:', error);
+      }
+    }
+  }, []);
+
+  // Save layer links to storage when they change
+  useEffect(() => {
+    if (layerLinks.length > 0) {
+      localStorage.setItem('psd_layer_links', JSON.stringify(layerLinks));
+    } else {
+      localStorage.removeItem('psd_layer_links');
+    }
+
+    // Dispatch event for other components
+    window.dispatchEvent(new CustomEvent('psd_layer_links_change', {
+      detail: { links: layerLinks }
+    }));
+  }, [layerLinks]);
+
+  // Handle creating a new link
+  const handleCreateLink = () => {
+    if (!linkSourceLayer || !linkTargetLayer) return;
+
+    const newLink: LayerLink = {
+      sourceId: linkSourceLayer,
+      targetId: linkTargetLayer,
+      type: linkType,
+      description: linkDescription || undefined
+    };
+
+    setLayerLinks(prev => [...prev, newLink]);
+    setLinkModalOpen(false);
+    resetLinkForm();
+  };
+
+  // Handle removing a link
+  const handleRemoveLink = (sourceId: string, targetId: string) => {
+    setLayerLinks(prev => 
+      prev.filter(link => 
+        !(link.sourceId === sourceId && link.targetId === targetId) &&
+        !(link.sourceId === targetId && link.targetId === sourceId)
+      )
+    );
+  };
+
+  // Reset link form
+  const resetLinkForm = () => {
+    setLinkSourceLayer(null);
+    setLinkTargetLayer(null);
+    setLinkType('sync-visibility');
+    setLinkDescription('');
+  };
+
+  // Get links for a layer
+  const getLayerLinks = (layerId: string) => {
+    return layerLinks.filter(link => 
+      link.sourceId === layerId || link.targetId === layerId
+    );
+  };
+
+  // Render link modal
+  const renderLinkModal = () => (
+    <Dialog open={linkModalOpen} onOpenChange={(open) => {
+      if (!open) resetLinkForm();
+      setLinkModalOpen(open);
+    }}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Link Layers</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Source Layer</label>
+              <Select
+                value={linkSourceLayer || ''}
+                onValueChange={setLinkSourceLayer}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select layer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {layersState && flattenLayers(layersState).map(layer => (
+                    <SelectItem key={layer.id} value={layer.id}>
+                      {layer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Target Layer</label>
+              <Select
+                value={linkTargetLayer || ''}
+                onValueChange={setLinkTargetLayer}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select layer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {layersState && flattenLayers(layersState)
+                    .filter(layer => layer.id !== linkSourceLayer)
+                    .map(layer => (
+                      <SelectItem key={layer.id} value={layer.id}>
+                        {layer.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Link Type</label>
+            <Select
+              value={linkType}
+              onValueChange={(value) => setLinkType(value as LayerLink['type'])}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sync-visibility">Sync Visibility</SelectItem>
+                <SelectItem value="sync-position">Sync Position</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Description (Optional)</label>
+            <input
+              type="text"
+              value={linkDescription}
+              onChange={(e) => setLinkDescription(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              placeholder="Enter link description"
+            />
+          </div>
+
+          <Button
+            onClick={handleCreateLink}
+            disabled={!linkSourceLayer || !linkTargetLayer}
+          >
+            Create Link
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Update layer node rendering to show links
+  const renderLayerLinks = (layerId: string) => {
+    const links = getLayerLinks(layerId);
+    if (links.length === 0) return null;
+
+    return (
+      <div className="ml-8 mt-1 space-y-1">
+        {links.map((link, index) => {
+          const otherLayerId = link.sourceId === layerId ? link.targetId : link.sourceId;
+          const otherLayer = layersState && flattenLayers(layersState).find(l => l.id === otherLayerId);
+          
+          return (
+            <div key={index} className="flex items-center text-xs text-gray-500">
+              <Link className="h-3 w-3 mr-1" />
+              <span>Linked to {otherLayer?.name}</span>
+              <span className="mx-1">•</span>
+              <span>{link.type}</span>
+              {link.description && (
+                <>
+                  <span className="mx-1">•</span>
+                  <span>{link.description}</span>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 ml-1 p-0"
+                onClick={() => handleRemoveLink(link.sourceId, link.targetId)}
+              >
+                <Link2Off className="h-3 w-3" />
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Render layer tree nodes recursively
   const renderLayerNodes = (
     layers: PsdLayerMetadata[] | null,
@@ -897,6 +1308,7 @@ export function LayerTree({
         : layer.visible;
       const layerLabel = labelState[layer.id] || "";
       const hasChildren = isGroup && layer.children && layer.children.length > 0;
+      const isSelected = selectedLayers.has(layer.id);
       
       // Find the label option if there's a label set
       const labelOption = LABEL_OPTIONS.find(option => option.id === layerLabel);
@@ -911,9 +1323,15 @@ export function LayerTree({
               "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
               highlightedLayer === layer.id && "bg-blue-50",
               draggedLayer === layer.id && "opacity-50",
+              isSelected && "bg-blue-100",
             )}
             style={{ paddingLeft: `${level * 12 + 8}px` }}
-            onClick={() => toggleExpanded(layer.id)}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                handleLayerSelect(e, layer.id);
+                toggleExpanded(layer.id);
+              }
+            }}
             onMouseEnter={() => handleLayerHover(layer.id)}
             onMouseLeave={() => handleLayerHover(null)}
             draggable={true}
@@ -922,6 +1340,17 @@ export function LayerTree({
             onDragOver={(e) => handleDragOver(e, layer.id, Boolean(isGroup))}
             onDrop={handleDrop}
           >
+            <div 
+              className="flex-shrink-0 mr-1 p-1 cursor-pointer"
+              onClick={(e) => handleLayerSelect(e, layer.id)}
+            >
+              {isSelected ? (
+                <CheckSquare className="h-4 w-4 text-blue-500" />
+              ) : (
+                <SquareIcon className="h-4 w-4 text-gray-400" />
+              )}
+            </div>
+
             <div 
               className="flex-shrink-0 mr-1 p-1 cursor-grab hover:bg-gray-200 rounded-sm"
               onMouseDown={(e) => e.stopPropagation()}
@@ -1036,7 +1465,23 @@ export function LayerTree({
                   : "text-gray-400"
               )} />
             </div>
+
+            <div 
+              className="flex-shrink-0 ml-2 p-1 hover:bg-gray-200 rounded-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLinkSourceLayer(layer.id);
+                setLinkModalOpen(true);
+              }}
+            >
+              <Link className={cn(
+                "h-4 w-4",
+                getLayerLinks(layer.id).length > 0 ? "text-blue-500" : "text-gray-400"
+              )} />
+            </div>
           </div>
+
+          {renderLayerLinks(layer.id)}
 
           {isGroup && isExpanded && layer.children && (
             <div className="layer-children">
@@ -1059,7 +1504,29 @@ export function LayerTree({
   return (
     <div className="layer-tree border rounded-md overflow-hidden flex flex-col h-full">
       <div className="p-2 border-b bg-gray-50">
-        <h3 className="font-medium text-sm">Layers</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium text-sm">Layers</h3>
+          {selectedLayers.size > 0 && (
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setBulkLabelModalOpen(true)}
+              >
+                <Tag className="h-4 w-4 mr-1" />
+                Label ({selectedLayers.size})
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setBulkPersonalizationModalOpen(true)}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Personalize ({selectedLayers.size})
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <style jsx global>{`
@@ -1079,7 +1546,10 @@ export function LayerTree({
         {layersState && renderLayerNodes(layersState)}
       </div>
 
+      {renderBulkLabelModal()}
+      {renderBulkPersonalizationModal()}
       {renderPersonalizationModal()}
+      {renderLinkModal()}
     </div>
   );
 } 
