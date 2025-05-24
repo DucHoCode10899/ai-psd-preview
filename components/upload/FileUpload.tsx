@@ -114,52 +114,52 @@ export function FileUpload({ onFileUpload, onPsdParsed }: FileUploadProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div
-        {...getRootProps()}
-        className={`p-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
-          isDragActive
-            ? 'border-primary bg-primary/5'
-            : parsing 
-              ? 'border-amber-400 bg-amber-50' 
-              : parseError 
-                ? 'border-red-400 bg-red-50'
-                : 'border-gray-300 hover:border-primary/50'
-        }`}
-      >
-        <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center space-y-2 text-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
+      {!file ? (
+        <div
+          {...getRootProps()}
+          className={`p-6 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+            isDragActive
+              ? 'border-primary bg-primary/5'
+              : parsing 
+                ? 'border-amber-400 bg-amber-50' 
+                : parseError 
+                  ? 'border-red-400 bg-red-50'
+                  : 'border-gray-300 hover:border-primary/50'
+          }`}
+        >
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center justify-center space-y-2 text-center">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium">Drag & drop Master PSD file here</h3>
+            <p className="text-sm text-gray-500">or click to browse files</p>
+            
+            {parsing && (
+              <p className="text-sm text-amber-600 mt-2">Parsing PSD file, please wait...</p>
+            )}
+            
+            {parseError && (
+              <p className="text-sm text-red-600 mt-2">Error: {parseError}</p>
+            )}
           </div>
-          <h3 className="text-lg font-medium">Drag & drop Master PSD file here</h3>
-          <p className="text-sm text-gray-500">or click to browse files</p>
-          
-          {parsing && (
-            <p className="text-sm text-amber-600 mt-2">Parsing PSD file, please wait...</p>
-          )}
-          
-          {parseError && (
-            <p className="text-sm text-red-600 mt-2">Error: {parseError}</p>
-          )}
         </div>
-      </div>
-
-      {file && (
-        <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+      ) : (
+        <div className="p-4 border rounded-lg bg-gray-50">
           <h4 className="text-sm font-medium">Uploaded File</h4>
           <div className="flex items-center justify-between mt-2">
             <span className="text-sm truncate max-w-[calc(100%-4rem)]">{file.name}</span>

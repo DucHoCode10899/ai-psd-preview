@@ -1603,14 +1603,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         </div>
       </div>
       
-      {/* Add generation description */}
-      {generationDescription && (
-        <div className="text-sm text-muted-foreground whitespace-pre-wrap p-4 bg-slate-50 rounded-lg">
-          <h4 className="font-medium mb-2">Generation Details:</h4>
-          {generationDescription}
-        </div>
-      )}
-      
       {/* Layout info and export */}
       {generatedLayout && (
         <div className="flex items-center justify-end text-sm text-muted-foreground gap-2">          
@@ -1667,6 +1659,14 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           <canvas ref={canvasRef} className="w-full h-full"  />
         </div>
       </div>
+
+      {/* Add generation description */}
+      {generationDescription && (
+        <div className="text-sm text-muted-foreground whitespace-pre-wrap p-4 bg-slate-50 rounded-lg">
+          <h4 className="font-medium mb-2">Generation Details:</h4>
+          {generationDescription}
+        </div>
+      )}
     
     </div>
   );
