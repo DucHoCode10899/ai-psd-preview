@@ -107,6 +107,36 @@ interface SyncLayerSet {
 }
 
 export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayoutGeneratorProps) {
+  // Function to check for personalized layers
+  const hasPersonalizedLayers = () => {
+    const storedRules = localStorage.getItem('psd_personalization_rules');
+    if (!storedRules) return false;
+    
+    try {
+      const rules = JSON.parse(storedRules) as Record<string, LayerPersonalization>;
+      return Object.values(rules).some((layer) => 
+        layer.isPersonalized && layer.rules.length > 0
+      );
+    } catch (error) {
+      console.error('Error parsing personalization rules:', error);
+      return false;
+    }
+  };
+
+  // Add function to check for sync links
+  const hasSyncLinks = () => {
+    const storedLinks = localStorage.getItem('psd_layer_links');
+    if (!storedLinks) return false;
+    
+    try {
+      const links = JSON.parse(storedLinks) as LayerLink[];
+      return links.length > 0;
+    } catch (error) {
+      console.error('Error parsing layer links:', error);
+      return false;
+    }
+  };
+
   const [availableChannels, setAvailableChannels] = useState<Channel[]>([]);
   const [availableLayouts, setAvailableLayouts] = useState<LayoutRatio[]>([]);
   const [availableOptions, setAvailableOptions] = useState<LayoutOption[]>([]);
@@ -129,6 +159,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     angle?: number;
   }>>>({});
   const [animateElements] = useState(true);
+  const [hasPersonalization, setHasPersonalization] = useState(false);
   
   // New personalization states
   const [selectedSegmentationType, setSelectedSegmentationType] = useState<string>('gender');
@@ -149,27 +180,75 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   // Add new state for multiple layouts
   const [multipleLayouts, setMultipleLayouts] = useState<GeneratedLayout[]>([]);
 
+  // Add new state for sync links
+  const [hasSync, setHasSync] = useState(false);
+  
+  // Add useEffect to check for personalized layers
+  useEffect(() => {
+    setHasPersonalization(hasPersonalizedLayers());
+
+    // Listen for changes in personalization rules
+    const handlePersonalizationChange = () => {
+      setHasPersonalization(hasPersonalizedLayers());
+    };
+
+    window.addEventListener('psd_personalization_change', handlePersonalizationChange);
+    return () => {
+      window.removeEventListener('psd_personalization_change', handlePersonalizationChange);
+    };
+  }, []);
+
+  // Add useEffect to check for sync links
+  useEffect(() => {
+    setHasSync(hasSyncLinks());
+
+    // Listen for changes in layer links
+    const handleLinksChange = () => {
+      setHasSync(hasSyncLinks());
+    };
+
+    window.addEventListener('psd_layer_links_change', handleLinksChange);
+    return () => {
+      window.removeEventListener('psd_layer_links_change', handleLinksChange);
+    };
+  }, []);
+
   // Add new function to generate all sync layouts
   const handleGenerateAllSyncLayouts = async () => {
-    if (!psdLayers || !selectedAspectRatio || !selectedOption || !selectedSegmentationType || !selectedSegmentationValue) {
-      toast.error('Please select all options including segmentation');
+    if (!psdLayers || !selectedAspectRatio || !selectedOption) {
+      toast.error('Please select all required options');
+      return;
+    }
+
+    // Only check segmentation if there are personalized layers
+    if (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue)) {
+      toast.error('Please select segmentation options');
       return;
     }
 
     // Load necessary data from storage
     const layerLabels = sessionStorage.getItem('psd_layer_labels');
     const storedLinks = localStorage.getItem('psd_layer_links');
-    const storedRules = localStorage.getItem('psd_personalization_rules');
-
-    if (!layerLabels || !storedLinks || !storedRules) {
-      toast.error('Missing required layer data');
+    
+    if (!layerLabels || !storedLinks) {
+      toast.error('Missing layer data or sync links');
       return;
     }
 
     try {
       const labels = JSON.parse(layerLabels);
       const links = JSON.parse(storedLinks) as LayerLink[];
-      const personalizationRules = JSON.parse(storedRules);
+      let personalizationRules = {};
+
+      // Only load personalization rules if we have personalized layers
+      if (hasPersonalization) {
+        const storedRules = localStorage.getItem('psd_personalization_rules');
+        if (!storedRules) {
+          toast.error('Missing personalization rules');
+          return;
+        }
+        personalizationRules = JSON.parse(storedRules);
+      }
 
       setIsGenerating(true);
       const description = [];
@@ -208,12 +287,18 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       // Get all valid sets for each label
       const validSetsByLabel = new Map<string, typeof sets>();
       setsByLabel.forEach((labelSets, labelKey) => {
-        const validSets = labelSets.filter(set =>
-          doesLayerMatchRules(set.mainLayer, personalizationRules) &&
-          set.syncedLayers.flat().every(id => doesLayerMatchRules(id, personalizationRules))
-        );
-        if (validSets.length > 0) {
-          validSetsByLabel.set(labelKey, validSets);
+        // Only apply personalization rules if we have personalized layers
+        if (hasPersonalization) {
+          const validSets = labelSets.filter(set =>
+            doesLayerMatchRules(set.mainLayer, personalizationRules) &&
+            set.syncedLayers.flat().every(id => doesLayerMatchRules(id, personalizationRules))
+          );
+          if (validSets.length > 0) {
+            validSetsByLabel.set(labelKey, validSets);
+          }
+        } else {
+          // If no personalization, all sets are valid
+          validSetsByLabel.set(labelKey, labelSets);
         }
       });
 
@@ -1047,23 +1132,37 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
   // Modify handleGenerateLayout to use the shared doesLayerMatchRules function
   const handleGenerateLayout = async () => {
-    if (!psdLayers || !selectedAspectRatio || !selectedOption || !selectedSegmentationType || !selectedSegmentationValue) {
-      toast.error('Please select all options including segmentation');
+    if (!psdLayers || !selectedAspectRatio || !selectedOption) {
+      toast.error('Please select all required options');
+      return;
+    }
+
+    // Only check segmentation if there are personalized layers
+    if (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue)) {
+      toast.error('Please select segmentation options');
       return;
     }
 
     // Load necessary data from storage
     const layerLabels = sessionStorage.getItem('psd_layer_labels');
-    const storedRules = localStorage.getItem('psd_personalization_rules');
-
-    if (!layerLabels || !storedRules) {
-      toast.error('Missing required layer data');
+    if (!layerLabels) {
+      toast.error('Missing layer labels data');
       return;
     }
 
     try {
       const labels = JSON.parse(layerLabels);
-      const personalizationRules = JSON.parse(storedRules);
+      let personalizationRules = {};
+
+      // Only load personalization rules if we have personalized layers
+      if (hasPersonalization) {
+        const storedRules = localStorage.getItem('psd_personalization_rules');
+        if (!storedRules) {
+          toast.error('Missing personalization rules');
+          return;
+        }
+        personalizationRules = JSON.parse(storedRules);
+      }
 
       setIsGenerating(true);
 
@@ -1083,17 +1182,27 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
       // Process each label group independently
       const processedLayers = Array.from(layersByLabel.entries()).flatMap(([, layers]) => {
-        const matchingLayers = layers.filter(layer => doesLayerMatchRules(layer.id, personalizationRules));
-        
-        if (matchingLayers.length === 0) {
-          return layers.map(layer => ({ ...layer, visible: false }));
-        }
+        // Only apply personalization rules if we have personalized layers
+        if (hasPersonalization) {
+          const matchingLayers = layers.filter(layer => doesLayerMatchRules(layer.id, personalizationRules));
+          
+          if (matchingLayers.length === 0) {
+            return layers.map(layer => ({ ...layer, visible: false }));
+          }
 
-        const selectedLayer = matchingLayers[Math.floor(Math.random() * matchingLayers.length)];
-        return layers.map(layer => ({
-          ...layer,
-          visible: layer.id === selectedLayer.id
-        }));
+          const selectedLayer = matchingLayers[Math.floor(Math.random() * matchingLayers.length)];
+          return layers.map(layer => ({
+            ...layer,
+            visible: layer.id === selectedLayer.id
+          }));
+        } else {
+          // If no personalization, just use the first layer in each group
+          const selectedLayer = layers[0];
+          return layers.map(layer => ({
+            ...layer,
+            visible: layer.id === selectedLayer.id
+          }));
+        }
       });
 
       // Filter visible layers and generate layout
@@ -1385,50 +1494,55 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             </Select>
           </div>
 
-          {/* New segmentation type selection */}
-          <div>
-            <Label className="text-sm font-medium mb-2">Segmentation Type</Label>
-            <Select 
-              value={selectedSegmentationType} 
-              onValueChange={(value: string) => {
-                setSelectedSegmentationType(value);
-                setSelectedSegmentationValue(''); // Reset value when type changes
-              }}
-              disabled={!selectedOption}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select segmentation type" />
-              </SelectTrigger>
-              <SelectContent>
-                {getSegmentationTypes().map((type) => (
-                  <SelectItem key={type.id} value={type.id}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Segmentation controls - only show if there are personalized layers */}
+          {hasPersonalization && (
+            <>
+              {/* New segmentation type selection */}
+              <div>
+                <Label className="text-sm font-medium mb-2">Segmentation Type</Label>
+                <Select 
+                  value={selectedSegmentationType} 
+                  onValueChange={(value: string) => {
+                    setSelectedSegmentationType(value);
+                    setSelectedSegmentationValue(''); // Reset value when type changes
+                  }}
+                  disabled={!selectedOption}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select segmentation type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSegmentationTypes().map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* New segmentation value selection */}
-          <div>
-            <Label className="text-sm font-medium mb-2">Segmentation Value</Label>
-            <Select 
-              value={selectedSegmentationValue} 
-              onValueChange={setSelectedSegmentationValue}
-              disabled={!selectedOption || !selectedSegmentationType}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select value" />
-              </SelectTrigger>
-              <SelectContent>
-                {getValuesForType(selectedSegmentationType).map((value) => (
-                  <SelectItem key={value.id} value={value.id}>
-                    {value.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              {/* New segmentation value selection */}
+              <div>
+                <Label className="text-sm font-medium mb-2">Segmentation Value</Label>
+                <Select 
+                  value={selectedSegmentationValue} 
+                  onValueChange={setSelectedSegmentationValue}
+                  disabled={!selectedOption || !selectedSegmentationType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select value" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getValuesForType(selectedSegmentationType).map((value) => (
+                      <SelectItem key={value.id} value={value.id}>
+                        {value.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
 
           <div>
           <Label htmlFor="safezone-width" className="text-sm font-medium mb-2">
@@ -1452,24 +1566,26 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           </div>
 
           {/* Generate buttons */}
-          {selectedChannelId && selectedAspectRatio && selectedOption && selectedSegmentationType && selectedSegmentationValue && (
+          {selectedChannelId && selectedAspectRatio && selectedOption && (
             <div className="flex gap-2">
               <Button 
                 onClick={handleGenerateLayout} 
-                disabled={!selectedOption || isGenerating}
+                disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
                 size="lg"
               >
                 {isGenerating ? 'Generating...' : 'Generate Layout'}
               </Button>
               
-              <Button 
-                onClick={handleGenerateAllSyncLayouts}
-                disabled={!selectedOption || isGenerating}
-                size="lg"
-                variant="secondary"
-              >
-                {isGenerating ? 'Generating...' : 'Generate All Sync Layouts'}
-              </Button>
+              {hasSync && (
+                <Button 
+                  onClick={handleGenerateAllSyncLayouts}
+                  disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
+                  size="lg"
+                  variant="secondary"
+                >
+                  {isGenerating ? 'Generating...' : 'Generate All Sync Layouts'}
+                </Button>
+              )}
             </div>
           )}
         </div>

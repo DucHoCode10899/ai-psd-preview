@@ -1787,8 +1787,11 @@ export function LayerTree({
     
     allLayers.forEach(layer => {
       const prediction = predictLabel(layer.name);
-      if (prediction) {
-        newPredictions[layer.id] = prediction;
+      if (prediction && prediction.label) {
+        newPredictions[layer.id] = {
+          label: prediction.label,
+          confidence: prediction.confidence
+        };
       }
     });
     
@@ -1801,7 +1804,7 @@ export function LayerTree({
 
     // Process layers with AI
     const results = processLayers(layersState, {
-      labelConfidenceThreshold: 0.7
+      labelConfidenceThreshold: 0.6
     });
 
     // Apply labels
@@ -1846,7 +1849,7 @@ export function LayerTree({
 
         // Save the new training example
         // Calculate confidence based on user interaction
-        const confidence = 0.8;
+        const confidence = 0.6;
         
         fetch('/api/ai-training/save', {
           method: 'POST',

@@ -42,6 +42,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "compromise": "^14.14.4",
     "embla-carousel-react": "^8.6.0",
     "fabric": "^6.6.5",
     "framer-motion": "^12.12.1",
@@ -57,6 +58,7 @@
     "recharts": "^2.15.3",
     "shadcn-ui": "^0.9.5",
     "sonner": "^2.0.3",
+    "string-similarity": "^4.0.4",
     "tailwind-merge": "^3.3.0",
     "vaul": "^1.1.2",
     "zod": "^3.24.4"
@@ -67,6 +69,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/string-similarity": "^4.0.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",

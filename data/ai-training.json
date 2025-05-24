@@ -5,26 +5,51 @@
     "patterns": [
       {
         "pattern": "background",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:10.036Z",
+    "lastUpdated": "2025-05-24T04:27:58.759Z",
     "history": [
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:19:12.851Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:05.187Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:22:50.982Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:07.956Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:27:10.036Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:25.737Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:11:23.409Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:12:16.253Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:12:43.817Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:48.574Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:27:58.759Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -34,26 +59,66 @@
     "patterns": [
       {
         "pattern": "samsung.com",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 11
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:02.418Z",
+    "lastUpdated": "2025-05-24T04:28:01.319Z",
     "history": [
       {
         "label": "domain",
-        "timestamp": "2025-05-24T03:19:22.990Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:07.841Z",
+        "confidence": 0.6
       },
       {
         "label": "domain",
-        "timestamp": "2025-05-24T03:22:43.370Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:02.058Z",
+        "confidence": 0.6
       },
       {
         "label": "domain",
-        "timestamp": "2025-05-24T03:27:02.418Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:34.690Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:11:16.556Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:12:10.880Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:12:48.894Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:20:43.370Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:22:13.251Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:22:20.528Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:22:26.626Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:28:01.319Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -63,46 +128,71 @@
     "patterns": [
       {
         "pattern": "product kv - green",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "green",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product kv",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "kv green",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:03.907Z",
+    "lastUpdated": "2025-05-24T04:27:50.559Z",
     "history": [
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:19:36.820Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:10.359Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:22:43.789Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:03.112Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:27:03.907Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:22.328Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:19.251Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:12.325Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:40.479Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:45.019Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:50.559Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -112,46 +202,71 @@
     "patterns": [
       {
         "pattern": "product kv - grey",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "grey",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product kv",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "kv grey",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:04.353Z",
+    "lastUpdated": "2025-05-24T04:27:51.105Z",
     "history": [
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:19:38.451Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:11.753Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:22:44.305Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:03.558Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:27:04.353Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:22.768Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:19.829Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:12.722Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:40.947Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:45.562Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:51.105Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -161,46 +276,71 @@
     "patterns": [
       {
         "pattern": "product kv - red",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "red",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product kv",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "kv red",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:04.935Z",
+    "lastUpdated": "2025-05-24T04:27:51.472Z",
     "history": [
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:19:39.064Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:12.280Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:22:44.717Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:04.023Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:27:04.935Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:23.290Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:20.346Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:13.362Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:41.303Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:45.991Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:51.472Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -210,46 +350,71 @@
     "patterns": [
       {
         "pattern": "product kv - yellow",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "yellow",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "product kv",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "kv yellow",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:06.034Z",
+    "lastUpdated": "2025-05-24T04:27:51.976Z",
     "history": [
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:19:40.157Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:12.923Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:22:45.236Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:04.722Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:27:06.034Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:23.728Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:21.077Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:13.831Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:41.879Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:46.414Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:51.976Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -259,71 +424,96 @@
     "patterns": [
       {
         "pattern": "galaxy tab s10 fe & fe+",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "galaxy",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "tab",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "s10",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "fe+",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "galaxy tab",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "tab s10",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "s10 fe",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "fe &",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "& fe+",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:06.883Z",
+    "lastUpdated": "2025-05-24T04:27:55.566Z",
     "history": [
       {
         "label": "product-name",
-        "timestamp": "2025-05-24T03:19:42.875Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:27.528Z",
+        "confidence": 0.6
       },
       {
         "label": "product-name",
-        "timestamp": "2025-05-24T03:22:46.535Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:05.884Z",
+        "confidence": 0.6
       },
       {
         "label": "product-name",
-        "timestamp": "2025-05-24T03:27:06.883Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:24.380Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:11:21.917Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:12:14.562Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:12:45.973Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:20:46.914Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:27:55.566Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -333,365 +523,91 @@
     "patterns": [
       {
         "pattern": "circle to search with google",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "circle",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "search",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "with",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "google",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "circle to",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "to search",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "search with",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       },
       {
         "pattern": "with google",
-        "confidence": 0.8,
-        "matches": 3
+        "confidence": 0.6,
+        "matches": 8
       }
     ],
-    "lastUpdated": "2025-05-24T03:27:08.507Z",
+    "lastUpdated": "2025-05-24T04:27:57.893Z",
     "history": [
       {
         "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:19:45.980Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:07:36.651Z",
+        "confidence": 0.6
       },
       {
         "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:22:49.975Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:07.382Z",
+        "confidence": 0.6
       },
       {
         "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:27:08.507Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "VOUCHER - yellow",
-    "correctLabel": "main-subject",
-    "patterns": [
-      {
-        "pattern": "voucher - yellow",
-        "confidence": 0.8,
-        "matches": 4
+        "timestamp": "2025-05-24T04:09:24.980Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "voucher",
-        "confidence": 0.8,
-        "matches": 4
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:11:22.648Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "yellow",
-        "confidence": 0.8,
-        "matches": 4
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:12:15.495Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "voucher yellow",
-        "confidence": 0.8,
-        "matches": 4
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:26:47.872Z",
-    "history": [
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:21:13.554Z",
-        "confidence": 0.8
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:12:44.885Z",
+        "confidence": 0.6
       },
       {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:34.813Z",
-        "confidence": 0.8
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:20:47.864Z",
+        "confidence": 0.6
       },
       {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:56.010Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:26:47.872Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "VOUCHER - red",
-    "correctLabel": "main-subject",
-    "patterns": [
-      {
-        "pattern": "voucher - red",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "voucher",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "red",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "voucher red",
-        "confidence": 0.8,
-        "matches": 4
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:26:48.602Z",
-    "history": [
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:21:14.054Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:35.354Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:56.538Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:26:48.602Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "VOUCHER - blue",
-    "correctLabel": "main-subject",
-    "patterns": [
-      {
-        "pattern": "voucher - blue",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "voucher",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "blue",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "voucher blue",
-        "confidence": 0.8,
-        "matches": 4
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:26:49.230Z",
-    "history": [
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:21:14.947Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:36.062Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:57.307Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:26:49.230Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "VOUCHER - bronze",
-    "correctLabel": "main-subject",
-    "patterns": [
-      {
-        "pattern": "voucher - bronze",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "voucher",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "bronze",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "voucher bronze",
-        "confidence": 0.8,
-        "matches": 4
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:26:47.167Z",
-    "history": [
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:21:15.850Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:34.298Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:54.734Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "main-subject",
-        "timestamp": "2025-05-24T03:26:47.167Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "Main Content",
-    "correctLabel": "product-name",
-    "patterns": [
-      {
-        "pattern": "main content",
-        "confidence": 0.8,
-        "matches": 7
-      },
-      {
-        "pattern": "main",
-        "confidence": 0.8,
-        "matches": 7
-      },
-      {
-        "pattern": "content",
-        "confidence": 0.8,
-        "matches": 7
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:26:45.734Z",
-    "history": [
-      {
-        "label": "product-name",
-        "timestamp": "2025-05-24T03:21:19.008Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "product-name",
-        "timestamp": "2025-05-24T03:23:02.536Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "product-name",
-        "timestamp": "2025-05-24T03:25:12.553Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "product-name",
-        "timestamp": "2025-05-24T03:25:40.057Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "product-name",
-        "timestamp": "2025-05-24T03:26:04.431Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "product-name",
-        "timestamp": "2025-05-24T03:26:14.532Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "product-name",
-        "timestamp": "2025-05-24T03:26:45.734Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "Disclaimer",
-    "correctLabel": "disclaimer",
-    "patterns": [
-      {
-        "pattern": "disclaimer",
-        "confidence": 0.8,
-        "matches": 6
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:26:49.939Z",
-    "history": [
-      {
-        "label": "disclaimer",
-        "timestamp": "2025-05-24T03:21:21.214Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "disclaimer",
-        "timestamp": "2025-05-24T03:23:00.270Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "disclaimer",
-        "timestamp": "2025-05-24T03:25:10.004Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "disclaimer",
-        "timestamp": "2025-05-24T03:25:41.593Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "disclaimer",
-        "timestamp": "2025-05-24T03:26:05.220Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "disclaimer",
-        "timestamp": "2025-05-24T03:26:49.939Z",
-        "confidence": 0.8
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:27:57.893Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -701,95 +617,81 @@
     "patterns": [
       {
         "pattern": "background - bronze",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 11
       },
       {
         "pattern": "background",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 11
       },
       {
         "pattern": "bronze",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 11
       },
       {
         "pattern": "background bronze",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 11
       }
     ],
-    "lastUpdated": "2025-05-24T03:26:50.891Z",
+    "lastUpdated": "2025-05-24T04:59:03.645Z",
     "history": [
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:21:21.775Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:40.851Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:25:42.276Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:10:25.305Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:05.928Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:11:59.169Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:50.891Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "Background - yellow",
-    "correctLabel": "background",
-    "patterns": [
-      {
-        "pattern": "background - yellow",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "background",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "yellow",
-        "confidence": 0.8,
-        "matches": 4
-      },
-      {
-        "pattern": "background yellow",
-        "confidence": 0.8,
-        "matches": 4
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:26:51.271Z",
-    "history": [
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:21:22.289Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:13:00.434Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:25:42.731Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:20:34.929Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:06.441Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:27:32.325Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:51.271Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:28:26.449Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:42:49.674Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:47:00.653Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:58:50.430Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:59:03.645Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -799,46 +701,71 @@
     "patterns": [
       {
         "pattern": "background - red",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       },
       {
         "pattern": "background",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       },
       {
         "pattern": "red",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       },
       {
         "pattern": "background red",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       }
     ],
-    "lastUpdated": "2025-05-24T03:26:51.662Z",
+    "lastUpdated": "2025-05-24T04:47:01.654Z",
     "history": [
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:21:23.054Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:42.538Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:25:43.358Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:10:26.217Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:07.053Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:12:00.164Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:51.662Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:13:01.704Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:36.219Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:27:33.141Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:28:27.734Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:42:51.432Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:47:01.654Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -848,265 +775,574 @@
     "patterns": [
       {
         "pattern": "background - blue",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       },
       {
         "pattern": "background",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       },
       {
         "pattern": "blue",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       },
       {
         "pattern": "background blue",
-        "confidence": 0.8,
-        "matches": 4
+        "confidence": 0.6,
+        "matches": 9
       }
     ],
-    "lastUpdated": "2025-05-24T03:26:52.104Z",
+    "lastUpdated": "2025-05-24T04:47:02.154Z",
     "history": [
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:21:23.601Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:43.283Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:25:43.849Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:10:26.881Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:07.490Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:12:00.779Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:26:52.104Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:13:02.168Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:36.931Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:27:33.777Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:28:28.450Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:42:52.188Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:47:02.154Z",
+        "confidence": 0.6
       }
     ]
   },
   {
-    "layerName": "VOUCHER",
+    "layerName": "VOUCHER - blue",
     "correctLabel": "main-subject",
     "patterns": [
       {
+        "pattern": "voucher - blue",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
         "pattern": "voucher",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "blue",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "voucher blue",
+        "confidence": 0.6,
+        "matches": 9
       }
     ],
-    "lastUpdated": "2025-05-24T03:25:09.188Z",
+    "lastUpdated": "2025-05-24T04:46:58.801Z",
     "history": [
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:22:59.252Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:46.526Z",
+        "confidence": 0.6
       },
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:09.188Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:10:19.988Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:56.792Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:58.076Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:33.002Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:30.734Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:28:24.197Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:42:46.516Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:46:58.801Z",
+        "confidence": 0.6
       }
     ]
   },
   {
-    "layerName": "Background",
+    "layerName": "VOUCHER - red",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher - red",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "voucher",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "red",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "voucher red",
+        "confidence": 0.6,
+        "matches": 9
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:46:58.333Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:08:48.049Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:10:20.650Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:56.382Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:57.536Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:32.606Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:30.268Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:28:23.795Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:42:45.642Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:46:58.333Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "VOUCHER - yellow",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher - yellow",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "voucher",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "yellow",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "voucher yellow",
+        "confidence": 0.6,
+        "matches": 9
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:46:58.033Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:08:48.635Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:10:21.212Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:55.926Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:57.178Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:32.157Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:29.802Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:28:23.306Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:42:44.404Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:46:58.033Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "VOUCHER - bronze",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher - bronze",
+        "confidence": 0.6,
+        "matches": 10
+      },
+      {
+        "pattern": "voucher",
+        "confidence": 0.6,
+        "matches": 10
+      },
+      {
+        "pattern": "bronze",
+        "confidence": 0.6,
+        "matches": 10
+      },
+      {
+        "pattern": "voucher bronze",
+        "confidence": 0.6,
+        "matches": 10
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:58:59.113Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:08:49.306Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:10:23.593Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:11:55.318Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:12:56.553Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:20:31.714Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:27:29.358Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:28:22.934Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:42:43.471Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:46:57.515Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:58:59.113Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Disclaimer",
+    "correctLabel": "disclaimer",
+    "patterns": [
+      {
+        "pattern": "disclaimer",
+        "confidence": 0.6,
+        "matches": 9
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:47:00.039Z",
+    "history": [
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:08:50.960Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:10:18.850Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:11:58.161Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:12:59.783Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:20:34.387Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:27:31.852Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:28:25.660Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:42:48.926Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T04:47:00.039Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Main Content",
+    "correctLabel": "product-name",
+    "patterns": [
+      {
+        "pattern": "main content",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "main",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "content",
+        "confidence": 0.6,
+        "matches": 9
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:46:59.141Z",
+    "history": [
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:08:57.020Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:10:19.539Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:11:57.391Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:12:58.904Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:20:33.778Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:27:31.384Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:28:24.929Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:42:47.770Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:46:59.141Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Background - yellow",
     "correctLabel": "background",
     "patterns": [
       {
+        "pattern": "background - yellow",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
         "pattern": "background",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "yellow",
+        "confidence": 0.6,
+        "matches": 9
+      },
+      {
+        "pattern": "background yellow",
+        "confidence": 0.6,
+        "matches": 9
       }
     ],
-    "lastUpdated": "2025-05-24T03:25:13.243Z",
+    "lastUpdated": "2025-05-24T04:47:01.078Z",
     "history": [
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:23:03.220Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:08:59.755Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:25:13.243Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "Sub Content - Battery",
-    "correctLabel": "sub-content-1",
-    "patterns": [
-      {
-        "pattern": "sub content - battery",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "timestamp": "2025-05-24T04:10:25.726Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "sub",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "label": "background",
+        "timestamp": "2025-05-24T04:11:59.567Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "content",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "label": "background",
+        "timestamp": "2025-05-24T04:13:00.891Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "battery",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:35.502Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "sub content",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "label": "background",
+        "timestamp": "2025-05-24T04:27:32.685Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "content battery",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:33.921Z",
-    "history": [
-      {
-        "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:23:34.088Z",
-        "confidence": 0.8
+        "label": "background",
+        "timestamp": "2025-05-24T04:28:27.038Z",
+        "confidence": 0.6
       },
       {
-        "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:24:33.921Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "Sub Content - Processor",
-    "correctLabel": "sub-content-1",
-    "patterns": [
-      {
-        "pattern": "sub content - processor",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "label": "background",
+        "timestamp": "2025-05-24T04:42:50.623Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "sub",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "content",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "processor",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "sub content",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "content processor",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:32.134Z",
-    "history": [
-      {
-        "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:23:35.699Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:24:32.134Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "Sub Content - Design",
-    "correctLabel": "sub-content-1",
-    "patterns": [
-      {
-        "pattern": "sub content - design",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "sub",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "content",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "design",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "sub content",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "content design",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:30.173Z",
-    "history": [
-      {
-        "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:23:37.885Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "sub-content-1",
-        "timestamp": "2025-05-24T03:24:30.173Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "Domain",
-    "correctLabel": "domain",
-    "patterns": [
-      {
-        "pattern": "domain",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:25.233Z",
-    "history": [
-      {
-        "label": "domain",
-        "timestamp": "2025-05-24T03:23:40.804Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "domain",
-        "timestamp": "2025-05-24T03:24:25.233Z",
-        "confidence": 0.8
+        "label": "background",
+        "timestamp": "2025-05-24T04:47:01.078Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1116,21 +1352,26 @@
     "patterns": [
       {
         "pattern": "logo",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       }
     ],
-    "lastUpdated": "2025-05-24T03:24:43.321Z",
+    "lastUpdated": "2025-05-24T04:20:10.781Z",
     "history": [
       {
         "label": "logo",
-        "timestamp": "2025-05-24T03:23:43.096Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:46.590Z",
+        "confidence": 0.6
       },
       {
         "label": "logo",
-        "timestamp": "2025-05-24T03:24:43.321Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:11:34.538Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "logo",
+        "timestamp": "2025-05-24T04:20:10.781Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1140,143 +1381,36 @@
     "patterns": [
       {
         "pattern": "product name",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       },
       {
         "pattern": "product",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       },
       {
         "pattern": "name",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       }
     ],
-    "lastUpdated": "2025-05-24T03:24:37.903Z",
+    "lastUpdated": "2025-05-24T04:20:11.872Z",
     "history": [
       {
         "label": "product-name",
-        "timestamp": "2025-05-24T03:23:45.823Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:49.702Z",
+        "confidence": 0.6
       },
       {
         "label": "product-name",
-        "timestamp": "2025-05-24T03:24:37.903Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "bg - lavender",
-    "correctLabel": "background",
-    "patterns": [
-      {
-        "pattern": "bg - lavender",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "timestamp": "2025-05-24T04:11:35.293Z",
+        "confidence": 0.6
       },
       {
-        "pattern": "lavender",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "bg lavender",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:16.413Z",
-    "history": [
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:23:48.539Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:24:16.413Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "bg - pastel pink",
-    "correctLabel": "background",
-    "patterns": [
-      {
-        "pattern": "bg - pastel pink",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "pastel",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "pink",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "bg pastel",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "pastel pink",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:15.884Z",
-    "history": [
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:23:49.408Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:24:15.884Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "bg - gold",
-    "correctLabel": "background",
-    "patterns": [
-      {
-        "pattern": "bg - gold",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "gold",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      },
-      {
-        "pattern": "bg gold",
-        "confidence": 0.8000000000000002,
-        "matches": 2
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:15.296Z",
-    "history": [
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:23:50.410Z",
-        "confidence": 0.8
-      },
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:24:15.296Z",
-        "confidence": 0.8
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:20:11.872Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1286,31 +1420,163 @@
     "patterns": [
       {
         "pattern": "bg - green",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       },
       {
         "pattern": "green",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       },
       {
         "pattern": "bg green",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       }
     ],
-    "lastUpdated": "2025-05-24T03:24:11.836Z",
+    "lastUpdated": "2025-05-24T04:20:17.876Z",
     "history": [
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:23:54.950Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:09:53.522Z",
+        "confidence": 0.6
       },
       {
         "label": "background",
-        "timestamp": "2025-05-24T03:24:11.836Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:11:31.915Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:17.876Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "bg - lavender",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - lavender",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "lavender",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "bg lavender",
+        "confidence": 0.6,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:20:15.239Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:09:54.950Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:11:29.978Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:15.239Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "bg - pastel pink",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - pastel pink",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "pastel",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "pink",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "bg pastel",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "pastel pink",
+        "confidence": 0.6,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:20:16.098Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:09:55.510Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:11:30.425Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:16.098Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "bg - gold",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - gold",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "gold",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "bg gold",
+        "confidence": 0.6,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:20:17.252Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:09:56.290Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:11:31.418Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:17.252Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1320,98 +1586,312 @@
     "patterns": [
       {
         "pattern": "bg - blue",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       },
       {
         "pattern": "blue",
-        "confidence": 0.8000000000000002,
-        "matches": 2
+        "confidence": 0.6,
+        "matches": 3
       },
       {
         "pattern": "bg blue",
-        "confidence": 0.8000000000000002,
+        "confidence": 0.6,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:20:18.315Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:09:58.199Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:11:32.398Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:20:18.315Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Domain",
+    "correctLabel": "domain",
+    "patterns": [
+      {
+        "pattern": "domain",
+        "confidence": 0.6,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:20:14.287Z",
+    "history": [
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:10:01.711Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:11:33.717Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T04:20:14.287Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Sub Content - Battery",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "sub content - battery",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "sub",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "content",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "battery",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "sub content",
+        "confidence": 0.6,
+        "matches": 3
+      },
+      {
+        "pattern": "content battery",
+        "confidence": 0.6,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:20:12.372Z",
+    "history": [
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T04:11:36.351Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:11:41.305Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:20:12.372Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Sub Content - Processor",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "sub content - processor",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "sub",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "content",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "processor",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "sub content",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "content processor",
+        "confidence": 0.6,
         "matches": 2
       }
     ],
-    "lastUpdated": "2025-05-24T03:24:13.990Z",
+    "lastUpdated": "2025-05-24T04:20:12.849Z",
     "history": [
       {
-        "label": "background",
-        "timestamp": "2025-05-24T03:23:57.032Z",
-        "confidence": 0.8
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:11:44.313Z",
+        "confidence": 0.6
       },
       {
-        "label": "background",
-        "timestamp": "2025-05-24T03:24:13.990Z",
-        "confidence": 0.8
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:20:12.849Z",
+        "confidence": 0.6
       }
     ]
   },
   {
-    "layerName": "logo-ss",
-    "correctLabel": "logo",
+    "layerName": "Sub Content - Design",
+    "correctLabel": "sub-content-1",
     "patterns": [
       {
-        "pattern": "logo-ss",
-        "confidence": 0.8,
-        "matches": 1
+        "pattern": "sub content - design",
+        "confidence": 0.6,
+        "matches": 2
       },
       {
-        "pattern": "logo",
-        "confidence": 0.8,
-        "matches": 1
+        "pattern": "sub",
+        "confidence": 0.6,
+        "matches": 2
       },
       {
-        "pattern": "logo ss",
-        "confidence": 0.8,
-        "matches": 1
+        "pattern": "content",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "design",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "sub content",
+        "confidence": 0.6,
+        "matches": 2
+      },
+      {
+        "pattern": "content design",
+        "confidence": 0.6,
+        "matches": 2
       }
     ],
-    "lastUpdated": "2025-05-24T03:24:53.163Z",
+    "lastUpdated": "2025-05-24T04:20:13.314Z",
     "history": [
       {
-        "label": "logo",
-        "timestamp": "2025-05-24T03:24:53.163Z",
-        "confidence": 0.8
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:11:46.009Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T04:20:13.314Z",
+        "confidence": 0.6
       }
     ]
   },
   {
-    "layerName": "bg",
-    "correctLabel": "background",
-    "patterns": [
-      {
-        "pattern": "bg",
-        "confidence": 0.8,
-        "matches": 1
-      }
-    ],
-    "lastUpdated": "2025-05-24T03:24:54.333Z",
-    "history": [
-      {
-        "label": "background",
-        "timestamp": "2025-05-24T03:24:54.333Z",
-        "confidence": 0.8
-      }
-    ]
-  },
-  {
-    "layerName": "phone",
+    "layerName": "Body",
     "correctLabel": "main-subject",
     "patterns": [
       {
-        "pattern": "phone",
-        "confidence": 0.8,
+        "pattern": "body",
+        "confidence": 0.6,
         "matches": 1
       }
     ],
-    "lastUpdated": "2025-05-24T03:25:01.295Z",
+    "lastUpdated": "2025-05-24T04:26:33.281Z",
     "history": [
       {
         "label": "main-subject",
-        "timestamp": "2025-05-24T03:25:01.295Z",
-        "confidence": 0.8
+        "timestamp": "2025-05-24T04:26:33.281Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "White",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "white",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:26:35.514Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:26:35.514Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Teal",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "teal",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:26:40.149Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:26:40.149Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Black",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "black",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:26:45.992Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T04:26:45.992Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Background",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-24T04:26:47.653Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T04:26:47.653Z",
+        "confidence": 0.6
       }
     ]
   }
