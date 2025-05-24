@@ -1,0 +1,1418 @@
+[
+  {
+    "layerName": "background",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:10.036Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:19:12.851Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:22:50.982Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:27:10.036Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "samsung.com",
+    "correctLabel": "domain",
+    "patterns": [
+      {
+        "pattern": "samsung.com",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:02.418Z",
+    "history": [
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T03:19:22.990Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T03:22:43.370Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T03:27:02.418Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Product KV - green",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "product kv - green",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "green",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product kv",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "kv green",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:03.907Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:19:36.820Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:22:43.789Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:27:03.907Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Product KV - grey",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "product kv - grey",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "grey",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product kv",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "kv grey",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:04.353Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:19:38.451Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:22:44.305Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:27:04.353Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Product KV - red",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "product kv - red",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "red",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product kv",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "kv red",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:04.935Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:19:39.064Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:22:44.717Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:27:04.935Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Product KV - yellow",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "product kv - yellow",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "yellow",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "product kv",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "kv yellow",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:06.034Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:19:40.157Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:22:45.236Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:27:06.034Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Galaxy Tab S10 FE & FE+",
+    "correctLabel": "product-name",
+    "patterns": [
+      {
+        "pattern": "galaxy tab s10 fe & fe+",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "galaxy",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "tab",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "s10",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "fe+",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "galaxy tab",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "tab s10",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "s10 fe",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "fe &",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "& fe+",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:06.883Z",
+    "history": [
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:19:42.875Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:22:46.535Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:27:06.883Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Circle to Search with Google",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "circle to search with google",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "circle",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "search",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "with",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "google",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "circle to",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "to search",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "search with",
+        "confidence": 0.8,
+        "matches": 3
+      },
+      {
+        "pattern": "with google",
+        "confidence": 0.8,
+        "matches": 3
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:27:08.507Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:19:45.980Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:22:49.975Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:27:08.507Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "VOUCHER - yellow",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher - yellow",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "yellow",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher yellow",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:47.872Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:21:13.554Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:34.813Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:56.010Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:26:47.872Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "VOUCHER - red",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher - red",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "red",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher red",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:48.602Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:21:14.054Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:35.354Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:56.538Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:26:48.602Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "VOUCHER - blue",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher - blue",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "blue",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher blue",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:49.230Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:21:14.947Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:36.062Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:57.307Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:26:49.230Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "VOUCHER - bronze",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher - bronze",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "bronze",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "voucher bronze",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:47.167Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:21:15.850Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:34.298Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:54.734Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:26:47.167Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Main Content",
+    "correctLabel": "product-name",
+    "patterns": [
+      {
+        "pattern": "main content",
+        "confidence": 0.8,
+        "matches": 7
+      },
+      {
+        "pattern": "main",
+        "confidence": 0.8,
+        "matches": 7
+      },
+      {
+        "pattern": "content",
+        "confidence": 0.8,
+        "matches": 7
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:45.734Z",
+    "history": [
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:21:19.008Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:23:02.536Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:25:12.553Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:25:40.057Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:26:04.431Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:26:14.532Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:26:45.734Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Disclaimer",
+    "correctLabel": "disclaimer",
+    "patterns": [
+      {
+        "pattern": "disclaimer",
+        "confidence": 0.8,
+        "matches": 6
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:49.939Z",
+    "history": [
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T03:21:21.214Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T03:23:00.270Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T03:25:10.004Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T03:25:41.593Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T03:26:05.220Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-24T03:26:49.939Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Background - bronze",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background - bronze",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "bronze",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background bronze",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:50.891Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:21:21.775Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:25:42.276Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:05.928Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:50.891Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Background - yellow",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background - yellow",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "yellow",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background yellow",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:51.271Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:21:22.289Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:25:42.731Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:06.441Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:51.271Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Background - red",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background - red",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "red",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background red",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:51.662Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:21:23.054Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:25:43.358Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:07.053Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:51.662Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Background - blue",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background - blue",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "blue",
+        "confidence": 0.8,
+        "matches": 4
+      },
+      {
+        "pattern": "background blue",
+        "confidence": 0.8,
+        "matches": 4
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:26:52.104Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:21:23.601Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:25:43.849Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:07.490Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:26:52.104Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "VOUCHER",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "voucher",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:25:09.188Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:22:59.252Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:09.188Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Background",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:25:13.243Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:23:03.220Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:25:13.243Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Sub Content - Battery",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "sub content - battery",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "sub",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "content",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "battery",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "sub content",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "content battery",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:33.921Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:23:34.088Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:24:33.921Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Sub Content - Processor",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "sub content - processor",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "sub",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "content",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "processor",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "sub content",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "content processor",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:32.134Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:23:35.699Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:24:32.134Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Sub Content - Design",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "sub content - design",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "sub",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "content",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "design",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "sub content",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "content design",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:30.173Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:23:37.885Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-24T03:24:30.173Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Domain",
+    "correctLabel": "domain",
+    "patterns": [
+      {
+        "pattern": "domain",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:25.233Z",
+    "history": [
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T03:23:40.804Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "domain",
+        "timestamp": "2025-05-24T03:24:25.233Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Logo",
+    "correctLabel": "logo",
+    "patterns": [
+      {
+        "pattern": "logo",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:43.321Z",
+    "history": [
+      {
+        "label": "logo",
+        "timestamp": "2025-05-24T03:23:43.096Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "logo",
+        "timestamp": "2025-05-24T03:24:43.321Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "Product Name",
+    "correctLabel": "product-name",
+    "patterns": [
+      {
+        "pattern": "product name",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "product",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "name",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:37.903Z",
+    "history": [
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:23:45.823Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-24T03:24:37.903Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "bg - lavender",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - lavender",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "lavender",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "bg lavender",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:16.413Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:23:48.539Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:24:16.413Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "bg - pastel pink",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - pastel pink",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "pastel",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "pink",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "bg pastel",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "pastel pink",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:15.884Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:23:49.408Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:24:15.884Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "bg - gold",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - gold",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "gold",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "bg gold",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:15.296Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:23:50.410Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:24:15.296Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "bg - green",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - green",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "green",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "bg green",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:11.836Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:23:54.950Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:24:11.836Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "bg - blue",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg - blue",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "blue",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      },
+      {
+        "pattern": "bg blue",
+        "confidence": 0.8000000000000002,
+        "matches": 2
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:13.990Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:23:57.032Z",
+        "confidence": 0.8
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:24:13.990Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "logo-ss",
+    "correctLabel": "logo",
+    "patterns": [
+      {
+        "pattern": "logo-ss",
+        "confidence": 0.8,
+        "matches": 1
+      },
+      {
+        "pattern": "logo",
+        "confidence": 0.8,
+        "matches": 1
+      },
+      {
+        "pattern": "logo ss",
+        "confidence": 0.8,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:53.163Z",
+    "history": [
+      {
+        "label": "logo",
+        "timestamp": "2025-05-24T03:24:53.163Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "bg",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg",
+        "confidence": 0.8,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:24:54.333Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-24T03:24:54.333Z",
+        "confidence": 0.8
+      }
+    ]
+  },
+  {
+    "layerName": "phone",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "phone",
+        "confidence": 0.8,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-24T03:25:01.295Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T03:25:01.295Z",
+        "confidence": 0.8
+      }
+    ]
+  }
+]

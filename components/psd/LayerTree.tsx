@@ -21,7 +21,9 @@ import {
   Trash2,
   Move,
   Settings2,
-  Info
+  Info,
+  Wand2,
+  X
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { 
@@ -44,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSegmentationRules } from '@/hooks/useSegmentationRules';
+import { useAutoAI } from '@/hooks/useAutoAI';
 
 // Update type to use string instead of union
 type SegmentationType = string;
@@ -719,23 +722,44 @@ export function LayerTree({
     }
   };
 
-  // Create a memoized set layer label function to prevent re-renders
-  const setLayerLabelMemo = useCallback((layerId: string, labelId: string | null) => {
-    // Update label state
-    setLabelState(prev => {
-      const newState = {...prev};
-      if (labelId === null) {
-        // Remove label
-        delete newState[layerId];
+  // Handle layer selection
+  const handleLayerSelect = (e: React.MouseEvent, layerId: string) => {
+    e.stopPropagation();
+    
+    setSelectedLayers(prev => {
+      const newSelection = new Set(prev);
+      if (e.shiftKey && prev.size > 0) {
+        // Get all layers in between last selected and current
+        const allLayers = flattenLayers(Array.isArray(layerData) ? layerData : []);
+        const lastSelected = Array.from(prev)[prev.size - 1];
+        const lastIndex = allLayers.findIndex(l => l.id === lastSelected);
+        const currentIndex = allLayers.findIndex(l => l.id === layerId);
+        const [start, end] = [Math.min(lastIndex, currentIndex), Math.max(lastIndex, currentIndex)];
+        
+        for (let i = start; i <= end; i++) {
+          newSelection.add(allLayers[i].id);
+        }
+      } else if (e.ctrlKey || e.metaKey) {
+        // Toggle selection
+        if (newSelection.has(layerId)) {
+          newSelection.delete(layerId);
+        } else {
+          newSelection.add(layerId);
+        }
       } else {
-        // Set label
-        newState[layerId] = labelId;
+        // Single select/deselect
+        if (newSelection.size === 1 && newSelection.has(layerId)) {
+          // If only this layer is selected, deselect it
+          newSelection.clear();
+        } else {
+          // Otherwise, select only this layer
+          newSelection.clear();
+          newSelection.add(layerId);
+        }
       }
-      return newState;
+      return newSelection;
     });
-    // Close the popover after selection
-    setLabelPopoverOpen(null);
-  }, []);
+  };
 
   // Get segmentation rules from the hook
   const {
@@ -1018,45 +1042,6 @@ export function LayerTree({
   const [selectedLayers, setSelectedLayers] = useState<Set<string>>(new Set());
   const [bulkLabelModalOpen, setBulkLabelModalOpen] = useState(false);
   const [bulkPersonalizationModalOpen, setBulkPersonalizationModalOpen] = useState(false);
-
-  // Handle layer selection
-  const handleLayerSelect = (e: React.MouseEvent, layerId: string) => {
-    e.stopPropagation();
-    
-    setSelectedLayers(prev => {
-      const newSelection = new Set(prev);
-      if (e.shiftKey && prev.size > 0) {
-        // Get all layers in between last selected and current
-        const allLayers = flattenLayers(Array.isArray(layerData) ? layerData : []);
-        const lastSelected = Array.from(prev)[prev.size - 1];
-        const lastIndex = allLayers.findIndex(l => l.id === lastSelected);
-        const currentIndex = allLayers.findIndex(l => l.id === layerId);
-        const [start, end] = [Math.min(lastIndex, currentIndex), Math.max(lastIndex, currentIndex)];
-        
-        for (let i = start; i <= end; i++) {
-          newSelection.add(allLayers[i].id);
-        }
-      } else if (e.ctrlKey || e.metaKey) {
-        // Toggle selection
-        if (newSelection.has(layerId)) {
-          newSelection.delete(layerId);
-        } else {
-          newSelection.add(layerId);
-        }
-      } else {
-        // Single select/deselect
-        if (newSelection.size === 1 && newSelection.has(layerId)) {
-          // If only this layer is selected, deselect it
-          newSelection.clear();
-        } else {
-          // Otherwise, select only this layer
-          newSelection.clear();
-          newSelection.add(layerId);
-        }
-      }
-      return newSelection;
-    });
-  };
 
   // Bulk label application
   const applyBulkLabel = (labelId: string | null) => {
@@ -1636,10 +1621,42 @@ export function LayerTree({
 
             <div className="flex-grow truncate">
               <span className="font-medium text-xs">{layer.name}</span>
-              {labelOption && (
+              {labelOption ? (
                 <span className={cn("ml-2 text-xs font-semibold px-1.5 py-0.5 rounded", labelOption.color)}>
                   {labelOption.name}
                 </span>
+              ) : predictions[layer.id] && (
+                <div className="inline-flex items-center ml-2 gap-1">
+                  <span className={cn(
+                    "text-xs font-semibold px-1.5 py-0.5 rounded opacity-70",
+                    LABEL_OPTIONS.find(opt => opt.id === predictions[layer.id].label)?.color
+                  )}>
+                    {LABEL_OPTIONS.find(opt => opt.id === predictions[layer.id].label)?.name}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Accept prediction
+                      handleLabelChange(layer.id, predictions[layer.id].label);
+                    }}
+                  >
+                    <Check className="h-3 w-3 text-green-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLabelPopoverOpen(layer.id);
+                    }}
+                  >
+                    <X className="h-3 w-3 text-red-500" />
+                  </Button>
+                </div>
               )}
               {personalizationRules[layer.id]?.rules.length > 0 && (
                 <div className="mt-1 text-xs text-gray-500">
@@ -1677,7 +1694,7 @@ export function LayerTree({
                     className="w-full justify-start text-sm py-1.5 px-2 h-auto"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setLayerLabelMemo(layer.id, layerLabel === option.id ? null : option.id);
+                      handleLabelChange(layer.id, layerLabel === option.id ? null : option.id);
                     }}
                   >
                     <div className="flex items-center w-full">
@@ -1695,7 +1712,7 @@ export function LayerTree({
                     className="w-full justify-start text-sm py-1.5 px-2 h-auto text-red-500 hover:text-red-600"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setLayerLabelMemo(layer.id, null);
+                      handleLabelChange(layer.id, null);
                     }}
                   >
                     Remove Label
@@ -1745,6 +1762,147 @@ export function LayerTree({
     });
   };
 
+  // Add useAutoAI hook with feedback
+  const { 
+    processLayers, 
+    processing: aiProcessing, 
+    error: aiError,
+    loadTrainingData,
+    predictLabel,
+  } = useAutoAI();
+
+  // State for AI predictions
+  const [predictions, setPredictions] = useState<Record<string, { label: string; confidence: number }>>({});
+
+  useEffect(() => {
+    loadTrainingData();
+  }, [loadTrainingData]);
+
+  // Generate predictions when layers change
+  useEffect(() => {
+    if (!layersState) return;
+    
+    const allLayers = flattenLayers(Array.isArray(layersState) ? layersState : []);
+    const newPredictions: Record<string, { label: string; confidence: number }> = {};
+    
+    allLayers.forEach(layer => {
+      const prediction = predictLabel(layer.name);
+      if (prediction) {
+        newPredictions[layer.id] = prediction;
+      }
+    });
+    
+    setPredictions(newPredictions);
+  }, [layersState, predictLabel]);
+
+  // Add auto process function with feedback tracking
+  const handleAutoProcess = useCallback(() => {
+    if (!layersState) return;
+
+    // Process layers with AI
+    const results = processLayers(layersState, {
+      labelConfidenceThreshold: 0.7
+    });
+
+    // Apply labels
+    const newLabelState = { ...labelState };
+    Object.entries(results).forEach(([layerId, result]) => {
+      if (result.label) {
+        newLabelState[layerId] = result.label;
+      }
+    });
+    setLabelState(newLabelState);
+
+    // Show success message
+    window.dispatchEvent(new CustomEvent('psd_auto_process_complete', {
+      detail: {
+        labels: Object.keys(newLabelState).length
+      }
+    }));
+  }, [layersState, processLayers, labelState]);
+
+  // Handle manual label change
+  const handleLabelChange = useCallback((layerId: string, newLabel: string | null) => {
+    // First update the UI state
+    setLabelState(prev => {
+      const newState = {...prev};
+      if (newLabel === null) {
+        delete newState[layerId];
+      } else {
+        newState[layerId] = newLabel;
+      }
+      return newState;
+    });
+    setLabelPopoverOpen(null);
+
+    // If there's a new label, save it as a training example
+    if (newLabel && layersState) {
+      const layer = flattenLayers(Array.isArray(layersState) ? layersState : []).find(l => l.id === layerId);
+      if (layer) {
+        // Show saving indicator
+        window.dispatchEvent(new CustomEvent('psd_training_update', {
+          detail: { status: 'saving' }
+        }));
+
+        // Save the new training example
+        // Calculate confidence based on user interaction
+        const confidence = 0.8;
+        
+        fetch('/api/ai-training/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([{
+            layerName: layer.name,
+            correctLabel: newLabel,
+            confidence
+          }])
+        }).then(() => {
+          // Reload training data to include the new example
+          loadTrainingData();
+          
+          // Show success message
+          window.dispatchEvent(new CustomEvent('psd_training_update', {
+            detail: { 
+              status: 'success',
+              message: `Added "${layer.name}" as training example for "${newLabel}"`
+            }
+          }));
+        }).catch(error => {
+          console.error('Error saving training data:', error);
+          
+          // Show error message
+          window.dispatchEvent(new CustomEvent('psd_training_update', {
+            detail: { 
+              status: 'error',
+              message: 'Failed to save training data'
+            }
+          }));
+        });
+      }
+    } else if (newLabel === null && layersState) {
+      // When a label is removed, remove it from training data
+      const layer = flattenLayers(Array.isArray(layersState) ? layersState : []).find(l => l.id === layerId);
+      if (layer) {
+        fetch('/api/ai-training/remove', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            layerName: layer.name,
+            shouldRemove: false // Don't remove, just update history
+          })
+        }).then(() => {
+          loadTrainingData();
+        }).catch(error => {
+          console.error('Error removing training data:', error);
+        });
+      }
+    }
+  }, [layersState, loadTrainingData]);
+
   if (!layerData) {
     return (
       <div className="p-4 border rounded-md bg-gray-50 text-center">
@@ -1759,27 +1917,51 @@ export function LayerTree({
       <div className="p-2 border-b bg-gray-50">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm">Layers</h3>
-          {selectedLayers.size > 0 && (
-            <div className="flex gap-2">
+          <div className="flex gap-2">
+            {selectedLayers.size > 0 ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBulkLabelModalOpen(true)}
+                >
+                  <Tag className="h-4 w-4 mr-1" />
+                  Label ({selectedLayers.size})
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBulkPersonalizationModalOpen(true)}
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  Personalize ({selectedLayers.size})
+                </Button>
+              </>
+            ) : (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => setBulkLabelModalOpen(true)}
+                onClick={handleAutoProcess}
+                disabled={aiProcessing || !layersState}
+                className={cn(
+                  "transition-all",
+                  aiProcessing && "opacity-50 cursor-not-allowed"
+                )}
               >
-                <Tag className="h-4 w-4 mr-1" />
-                Label ({selectedLayers.size})
+                <Wand2 className={cn(
+                  "h-4 w-4 mr-1",
+                  aiProcessing && "animate-spin"
+                )} />
+                {aiProcessing ? "Processing..." : "Auto Label"}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setBulkPersonalizationModalOpen(true)}
-              >
-                <Users className="h-4 w-4 mr-1" />
-                Personalize ({selectedLayers.size})
-              </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+        {aiError && (
+          <div className="mt-2 text-xs text-red-500">
+            Error: {aiError}
+          </div>
+        )}
       </div>
 
       <style jsx global>{`
