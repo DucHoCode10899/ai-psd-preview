@@ -618,25 +618,25 @@
       {
         "pattern": "background - bronze",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       },
       {
         "pattern": "bronze",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       },
       {
         "pattern": "background bronze",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       }
     ],
-    "lastUpdated": "2025-05-24T06:46:36.197Z",
+    "lastUpdated": "2025-05-26T05:53:07.904Z",
     "history": [
       {
         "label": "background",
@@ -696,6 +696,11 @@
       {
         "label": "background",
         "timestamp": "2025-05-24T06:46:36.197Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-26T05:53:07.904Z",
         "confidence": 0.6
       }
     ]
@@ -1082,25 +1087,25 @@
       {
         "pattern": "voucher - bronze",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "bronze",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "voucher bronze",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       }
     ],
-    "lastUpdated": "2025-05-24T07:56:04.988Z",
+    "lastUpdated": "2025-05-26T05:53:03.844Z",
     "history": [
       {
         "label": "background",
@@ -1155,6 +1160,11 @@
       {
         "label": "main-subject",
         "timestamp": "2025-05-24T07:56:04.988Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-26T05:53:03.844Z",
         "confidence": 0.6
       }
     ]
@@ -1294,25 +1304,25 @@
       {
         "pattern": "background - yellow",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "yellow",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "background yellow",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       }
     ],
-    "lastUpdated": "2025-05-24T04:47:01.078Z",
+    "lastUpdated": "2025-05-26T05:53:55.668Z",
     "history": [
       {
         "label": "background",
@@ -1357,6 +1367,11 @@
       {
         "label": "background",
         "timestamp": "2025-05-24T04:47:01.078Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-26T05:53:55.668Z",
         "confidence": 0.6
       }
     ]
