@@ -29,8 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        {/* <PasswordProtection>{children}</PasswordProtection> */}
-        {children}
+        <PasswordProtection>{children}</PasswordProtection>
       </body>
     </html>
   );
