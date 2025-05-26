@@ -11,40 +11,24 @@
         {
           "id": "female",
           "label": "Female"
-        },
-        {
-          "id": "other",
-          "label": "Other"
         }
       ]
     },
     {
       "id": "age",
-      "label": "Age",
+      "label": "Age Group",
       "values": [
         {
-          "id": "0-17",
-          "label": "Under 18"
-        },
-        {
           "id": "18-24",
-          "label": "18-24"
+          "label": "18-24 years"
         },
         {
           "id": "25-34",
-          "label": "25-34"
+          "label": "25-34 years"
         },
         {
           "id": "35-44",
-          "label": "35-44"
-        },
-        {
-          "id": "45-54",
-          "label": "45-54"
-        },
-        {
-          "id": "55+",
-          "label": "55+"
+          "label": "35-44 years"
         }
       ]
     },
@@ -65,6 +49,28 @@
           "label": "Rural"
         }
       ]
+    },
+    {
+      "id": "interest",
+      "label": "Interest",
+      "values": [
+        {
+          "id": "sports",
+          "label": "Sports"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        },
+        {
+          "id": "fashion",
+          "label": "Fashion"
+        },
+        {
+          "id": "food",
+          "label": "Food & Dining"
+        }
+      ]
     }
   ]
-} 
+}

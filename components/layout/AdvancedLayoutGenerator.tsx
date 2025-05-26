@@ -178,7 +178,8 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   // Add the segmentation rules hook with only used functions
   const { 
     getValuesForType,
-    getSegmentationTypes
+    getSegmentationTypes,
+    rules: segmentationRules
   } = useSegmentationRules();
 
   const [generationDescription, setGenerationDescription] = useState<string>('');
@@ -1145,18 +1146,22 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
   // Move doesLayerMatchRules outside of handleGenerateSyncLayout
   const doesLayerMatchRules = (layerId: string, personalizationRules: Record<string, LayerPersonalization>) => {
-    const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
-    const layerRules = personalizationRules[normalizedId] || personalizationRules[layerId];
+    const layerRules = personalizationRules[layerId];
+    if (!layerRules || !layerRules.isPersonalized || !layerRules.rules.length) {
+      return true; // Layer is not personalized, so it matches by default
+    }
 
-    if (!layerRules?.isPersonalized) return true;
+    // Check if all rules match the current context
+    return layerRules.rules.every(rule => {
+      const segmentationType = segmentationRules?.segmentationTypes.find(t => t.id === rule.type);
+      if (!segmentationType) return false;
 
-    const relevantRules = layerRules.rules.filter((rule: PersonalizationRule) => 
-      rule.type === selectedSegmentationType
-    );
+      const value = segmentationType.values.find(v => v.id === rule.value);
+      if (!value) return false;
 
-    if (relevantRules.length === 0) return false;
-
-    return relevantRules.some((rule: PersonalizationRule) => rule.value === selectedSegmentationValue);
+      // Use the selected segmentation values instead of hardcoded ones
+      return rule.type === selectedSegmentationType && rule.value === selectedSegmentationValue;
+    });
   };
 
   // Modify handleGenerateLayout to use the shared doesLayerMatchRules function
@@ -1795,6 +1800,60 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
+  // Add new function to get available segmentation types from personalization rules
+  const getAvailableSegmentationTypes = () => {
+    try {
+      const storedRules = localStorage.getItem('psd_personalization_rules');
+      if (!storedRules) return [];
+      
+      const rules = JSON.parse(storedRules) as Record<string, LayerPersonalization>;
+      const segmentationTypes = new Set<string>();
+      
+      // Collect all unique segmentation types from rules
+      Object.values(rules).forEach(layer => {
+        if (layer.isPersonalized && layer.rules.length > 0) {
+          layer.rules.forEach(rule => {
+            segmentationTypes.add(rule.type);
+          });
+        }
+      });
+      
+      // Filter segmentation types to only include those that exist in the rules
+      return getSegmentationTypes().filter(type => segmentationTypes.has(type.id));
+    } catch (error) {
+      console.error('Error getting available segmentation types:', error);
+      return [];
+    }
+  };
+
+  // Add function to get available values for a segmentation type
+  const getAvailableSegmentationValues = (typeId: string) => {
+    try {
+      const storedRules = localStorage.getItem('psd_personalization_rules');
+      if (!storedRules) return [];
+      
+      const rules = JSON.parse(storedRules) as Record<string, LayerPersonalization>;
+      const segmentationValues = new Set<string>();
+      
+      // Collect all unique values for this type from rules
+      Object.values(rules).forEach(layer => {
+        if (layer.isPersonalized && layer.rules.length > 0) {
+          layer.rules.forEach(rule => {
+            if (rule.type === typeId) {
+              segmentationValues.add(rule.value);
+            }
+          });
+        }
+      });
+      
+      // Filter values to only include those that exist in the rules
+      return getValuesForType(typeId).filter(value => segmentationValues.has(value.id));
+    } catch (error) {
+      console.error('Error getting available segmentation values:', error);
+      return [];
+    }
+  };
+
   // If no layers, show upload message
   if (!psdLayers) {
     return (
@@ -1901,7 +1960,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               {/* Segmentation controls - only show if there are personalized layers */}
               {hasPersonalization && (
                 <>
-                  {/* New segmentation type selection */}
+                  {/* Segmentation type selection */}
                   <div>
                     <Label className="text-sm font-medium mb-2">Segmentation Type</Label>
                     <Select 
@@ -1916,7 +1975,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         <SelectValue placeholder="Select segmentation type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {getSegmentationTypes().map((type) => (
+                        {getAvailableSegmentationTypes().map((type) => (
                           <SelectItem key={type.id} value={type.id}>
                             {type.label}
                           </SelectItem>
@@ -1925,7 +1984,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                     </Select>
                   </div>
 
-                  {/* New segmentation value selection */}
+                  {/* Segmentation value selection */}
                   <div>
                     <Label className="text-sm font-medium mb-2">Segmentation Value</Label>
                     <Select 
@@ -1937,11 +1996,13 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         <SelectValue placeholder="Select value" />
                       </SelectTrigger>
                       <SelectContent>
-                        {getValuesForType(selectedSegmentationType).map((value) => (
-                          <SelectItem key={value.id} value={value.id}>
-                            {value.label}
-                          </SelectItem>
-                        ))}
+                        {selectedSegmentationType && 
+                          getAvailableSegmentationValues(selectedSegmentationType).map((value) => (
+                            <SelectItem key={value.id} value={value.id}>
+                              {value.label}
+                            </SelectItem>
+                          ))
+                        }
                       </SelectContent>
                     </Select>
                   </div>

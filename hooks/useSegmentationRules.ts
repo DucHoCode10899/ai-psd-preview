@@ -1,58 +1,94 @@
-import { useState, useEffect } from 'react';
-import type { SegmentationRules, SegmentationType, SegmentationValue } from '@/types/segmentation';
+import { useState, useEffect, useCallback } from 'react';
+
+interface SegmentationType {
+  id: string;
+  label: string;
+  values: Array<{
+    id: string;
+    label: string;
+  }>;
+}
+
+interface SegmentationRules {
+  segmentationTypes: SegmentationType[];
+}
 
 export function useSegmentationRules() {
   const [rules, setRules] = useState<SegmentationRules | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchRules = async () => {
-      try {
-        const response = await fetch('/api/segmentation-rules');
-        const data = await response.json();
-        
-        if (data.success) {
-          setRules(data.data);
-          setError(null);
-        } else {
-          setError(data.error || 'Failed to fetch segmentation rules');
-          setRules(null);
-        }
-      } catch {
-        setError('Failed to fetch segmentation rules');
-        setRules(null);
-      } finally {
-        setLoading(false);
+  // Fetch segmentation rules from the API
+  const fetchRules = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/segmentation-rules');
+      if (!response.ok) {
+        throw new Error('Failed to fetch segmentation rules');
       }
-    };
-
-    fetchRules();
+      const data = await response.json();
+      setRules(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching segmentation rules:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Helper function to get values for a specific segmentation type
-  const getValuesForType = (typeId: string): SegmentationValue[] => {
+  // Fetch rules on mount
+  useEffect(() => {
+    fetchRules();
+  }, [fetchRules]);
+
+  // Get all segmentation types
+  const getSegmentationTypes = useCallback(() => {
     if (!rules) return [];
-    const segmentationType = rules.segmentationTypes.find(type => type.id === typeId);
-    return segmentationType?.values || [];
-  };
+    return rules.segmentationTypes.map(type => ({
+      id: type.id,
+      label: type.label
+    }));
+  }, [rules]);
 
-  // Helper function to get all segmentation types
-  const getSegmentationTypes = (): SegmentationType[] => {
-    return rules?.segmentationTypes || [];
-  };
+  // Get values for a specific segmentation type
+  const getValuesForType = useCallback((typeId: string) => {
+    if (!rules) return [];
+    const type = rules.segmentationTypes.find(t => t.id === typeId);
+    return type?.values || [];
+  }, [rules]);
 
-  // Helper function to get a specific segmentation type
-  const getSegmentationType = (typeId: string): SegmentationType | undefined => {
-    return rules?.segmentationTypes.find(type => type.id === typeId);
-  };
+  // Update segmentation rules
+  const updateRules = useCallback(async (newRules: SegmentationRules) => {
+    try {
+      const response = await fetch('/api/segmentation-rules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newRules),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update segmentation rules');
+      }
+      
+      await fetchRules(); // Refresh rules after update
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error updating segmentation rules:', err);
+      return false;
+    }
+  }, [fetchRules]);
 
   return {
     rules,
     loading,
     error,
-    getValuesForType,
     getSegmentationTypes,
-    getSegmentationType
+    getValuesForType,
+    updateRules,
+    refreshRules: fetchRules
   };
 } 

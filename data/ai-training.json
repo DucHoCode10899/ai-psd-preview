@@ -534,50 +534,50 @@
       {
         "pattern": "circle to search with google",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "circle",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "search",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "with",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "google",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "circle to",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "to search",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "search with",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       },
       {
         "pattern": "with google",
         "confidence": 0.6,
-        "matches": 8
+        "matches": 9
       }
     ],
-    "lastUpdated": "2025-05-24T04:27:57.893Z",
+    "lastUpdated": "2025-05-26T15:41:09.529Z",
     "history": [
       {
         "label": "sub-content-1",
@@ -617,6 +617,11 @@
       {
         "label": "sub-content-1",
         "timestamp": "2025-05-24T04:27:57.893Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-26T15:41:09.529Z",
         "confidence": 0.6
       }
     ]
@@ -870,25 +875,25 @@
       {
         "pattern": "voucher - blue",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "blue",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "voucher blue",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       }
     ],
-    "lastUpdated": "2025-05-24T04:46:58.801Z",
+    "lastUpdated": "2025-05-26T15:11:48.676Z",
     "history": [
       {
         "label": "main-subject",
@@ -934,6 +939,11 @@
         "label": "main-subject",
         "timestamp": "2025-05-24T04:46:58.801Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-26T15:11:48.676Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -944,25 +954,25 @@
       {
         "pattern": "voucher - red",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "red",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "voucher red",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       }
     ],
-    "lastUpdated": "2025-05-24T04:46:58.333Z",
+    "lastUpdated": "2025-05-26T15:11:47.934Z",
     "history": [
       {
         "label": "main-subject",
@@ -1008,6 +1018,11 @@
         "label": "main-subject",
         "timestamp": "2025-05-24T04:46:58.333Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-26T15:11:47.934Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1018,25 +1033,25 @@
       {
         "pattern": "voucher - yellow",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "yellow",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "voucher yellow",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       }
     ],
-    "lastUpdated": "2025-05-26T06:56:31.198Z",
+    "lastUpdated": "2025-05-26T14:27:40.910Z",
     "history": [
       {
         "label": "main-subject",
@@ -1091,6 +1106,11 @@
       {
         "label": "main-subject",
         "timestamp": "2025-05-26T06:56:31.198Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-26T14:27:40.910Z",
         "confidence": 0.6
       }
     ]
@@ -1319,25 +1339,25 @@
       {
         "pattern": "background - yellow",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 14
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 14
       },
       {
         "pattern": "yellow",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 14
       },
       {
         "pattern": "background yellow",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 14
       }
     ],
-    "lastUpdated": "2025-05-26T07:50:59.339Z",
+    "lastUpdated": "2025-05-26T14:27:41.707Z",
     "history": [
       {
         "label": "background",
@@ -1402,6 +1422,11 @@
       {
         "label": "background",
         "timestamp": "2025-05-26T07:50:59.339Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-26T14:27:41.707Z",
         "confidence": 0.6
       }
     ]
@@ -1948,14 +1973,19 @@
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 2
       }
     ],
-    "lastUpdated": "2025-05-24T04:26:47.653Z",
+    "lastUpdated": "2025-05-26T15:41:54.023Z",
     "history": [
       {
         "label": "background",
         "timestamp": "2025-05-24T04:26:47.653Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-26T15:41:54.023Z",
         "confidence": 0.6
       }
     ]
@@ -2140,14 +2170,19 @@
       {
         "pattern": "product",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 2
       }
     ],
-    "lastUpdated": "2025-05-26T07:59:04.033Z",
+    "lastUpdated": "2025-05-26T15:51:24.554Z",
     "history": [
       {
         "label": "main-subject",
         "timestamp": "2025-05-26T07:59:04.033Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-26T15:51:24.554Z",
         "confidence": 0.6
       }
     ]
