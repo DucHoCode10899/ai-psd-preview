@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas as FabricCanvas, Image as FabricImage, Point } from "fabric";
+import { Canvas as FabricCanvas, Image as FabricImage } from "fabric";
 import { toast } from "sonner";
 import type { Layer as PsdLayer, Node } from "@webtoon/psd";
 import Psd from "@webtoon/psd";
@@ -181,9 +181,15 @@ export function SynchronizedPsdPreview({
                 const fabricImage = new FabricImage(tempCanvas, {
                   left: layer.left,
                   top: layer.top,
-                  selectable: true,
+                  selectable: false,
                   name: layer.name,
-                  visible: layer.visible
+                  visible: layer.visible,
+                  evented: false,
+                  lockMovementX: true,
+                  lockMovementY: true,
+                  lockRotation: true,
+                  lockScalingX: true,
+                  lockScalingY: true,
                 });
                 
                 layer.fabricObject = fabricImage;
@@ -192,6 +198,10 @@ export function SynchronizedPsdPreview({
               }
             }
           }
+          
+          // Disable all canvas interactions
+          canvas.selection = false;
+          canvas.skipTargetFind = true;
           
           setupPanAndZoom(canvas);
           resizeCanvasToContainer();
@@ -212,51 +222,9 @@ export function SynchronizedPsdPreview({
   }, [layers, psdFile, resizeCanvasToContainer]);
 
   const setupPanAndZoom = (canvas: FabricCanvas) => {
-    let isPanning = false;
-    let lastPosX = 0;
-    let lastPosY = 0;
-    
-    canvas.on('mouse:down', (opt) => {
-      const evt = opt.e as MouseEvent;
-      if (evt.altKey === true) {
-        isPanning = true;
-        lastPosX = evt.clientX;
-        lastPosY = evt.clientY;
-        canvas.selection = false;
-      }
-    });
-    
-    canvas.on('mouse:move', (opt) => {
-      if (isPanning && opt.e) {
-        const e = opt.e as MouseEvent;
-        const vpt = canvas.viewportTransform!;
-        vpt[4] += e.clientX - lastPosX;
-        vpt[5] += e.clientY - lastPosY;
-        canvas.requestRenderAll();
-        lastPosX = e.clientX;
-        lastPosY = e.clientY;
-      }
-    });
-    
-    canvas.on('mouse:up', () => {
-      isPanning = false;
-    });
-    
-    canvasRef.current?.addEventListener('wheel', (e) => {
-      if (!e.ctrlKey) return;
-      e.preventDefault();
-      const delta = e.deltaY;
-      let zoom = canvas.getZoom();
-      zoom = delta > 0 ? zoom * 0.9 : zoom * 1.1;
-      
-      if (zoom > 20) zoom = 20;
-      if (zoom < 0.1) zoom = 0.1;
-      
-      canvas.zoomToPoint(
-        new Point(e.offsetX, e.offsetY),
-        zoom
-      );
-    });
+    // Disable all interactions
+    canvas.allowTouchScrolling = true;
+    canvas.off(); // Remove all event listeners
   };
 
   // Handle window resize

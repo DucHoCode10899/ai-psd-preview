@@ -28,7 +28,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PasswordProtection>{children}</PasswordProtection>
+        {/* <PasswordProtection>{children}</PasswordProtection> */}
+        {children}
       </body>
     </html>
   );

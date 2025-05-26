@@ -30,6 +30,17 @@ import { PositionKeyword } from '@/utils/position-calculator';
 import { toast, Toaster } from 'sonner';
 import type { Node, Layer as PsdLayer } from "@webtoon/psd";
 import { useSegmentationRules } from '@/hooks/useSegmentationRules';
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Grid2X2Icon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Personalization types
 type SegmentationType = string;
@@ -107,6 +118,8 @@ interface SyncLayerSet {
 }
 
 export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayoutGeneratorProps) {
+  const [isOpen, setIsOpen] = useState(true);
+
   // Function to check for personalized layers
   const hasPersonalizedLayers = () => {
     const storedRules = localStorage.getItem('psd_personalization_rules');
@@ -182,6 +195,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
   // Add new state for sync links
   const [hasSync, setHasSync] = useState(false);
+  
+  // Add new state for gallery modal
+  const [showGallery, setShowGallery] = useState(false);
   
   // Add useEffect to check for personalized layers
   useEffect(() => {
@@ -1408,6 +1424,183 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
+  // Update renderLayoutPreview function to use larger size
+  const renderLayoutPreview = (canvas: HTMLCanvasElement, layout: GeneratedLayout) => {
+    const fabricCanvas = new Canvas(canvas);
+    
+    // Calculate dimensions to maintain aspect ratio
+    const containerWidth = 500; // Much larger preview size
+    const layoutAspectRatio = layout.width / layout.height;
+    const canvasWidth = containerWidth;
+    const canvasHeight = containerWidth / layoutAspectRatio;
+    
+    // Update canvas dimensions
+    fabricCanvas.setDimensions({
+      width: canvasWidth,
+      height: canvasHeight,
+    });
+    
+    // Calculate scale
+    const scaleX = canvasWidth / layout.width;
+    const scaleY = canvasHeight / layout.height;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Add background
+    const background = new Rect({
+      left: 0,
+      top: 0,
+      width: canvasWidth,
+      height: canvasHeight,
+      fill: 'white',
+      stroke: '#cccccc',
+      strokeWidth: 1,
+      selectable: false,
+      evented: false,
+      excludeFromExport: true
+    });
+    fabricCanvas.add(background);
+    
+    // Add safezone outline
+    if (safezoneWidth > 0) {
+      const safezone = new Rect({
+        left: safezoneWidth * scale,
+        top: safezoneWidth * scale,
+        width: canvasWidth - (safezoneWidth * scale * 2),
+        height: canvasHeight - (safezoneWidth * scale * 2),
+        fill: 'transparent',
+        stroke: '#0ea5e9',
+        strokeWidth: 1,
+        strokeDashArray: [5, 5],
+        selectable: false,
+        evented: false,
+        excludeFromExport: true
+      });
+      fabricCanvas.add(safezone);
+    }
+    
+    // Add elements in reverse order (bottom to top)
+    const elementsToRender = [...layout.elements].reverse();
+    
+    // Draw background elements first
+    for (const element of elementsToRender.filter(el => el.label === 'background')) {
+      if (!element.visible) continue;
+      
+      try {
+        // Create temporary canvas for the layer
+        const tempCanvas = document.createElement('canvas');
+        const elementWidth = element.width;
+        const elementHeight = element.height;
+        
+        tempCanvas.width = Math.max(1, elementWidth);
+        tempCanvas.height = Math.max(1, elementHeight);
+        const ctx = tempCanvas.getContext('2d');
+        
+        if (ctx) {
+          const imageData = layerImages.get(element.name);
+          
+          if (imageData && imageData.width > 0 && imageData.height > 0) {
+            const originalCanvas = document.createElement('canvas');
+            originalCanvas.width = Math.max(1, imageData.width);
+            originalCanvas.height = Math.max(1, imageData.height);
+            const originalCtx = originalCanvas.getContext('2d');
+            
+            if (originalCtx) {
+              originalCtx.putImageData(imageData, 0, 0);
+              ctx.drawImage(
+                originalCanvas,
+                0, 0, imageData.width, imageData.height,
+                0, 0, elementWidth, elementHeight
+              );
+            }
+          } else {
+            ctx.fillStyle = getLabelColor(element.label);
+            ctx.fillRect(0, 0, elementWidth, elementHeight);
+          }
+        }
+        
+        // Create fabric image
+        const fabricImage = new FabricImage(tempCanvas, {
+          left: element.x * scale,
+          top: element.y * scale,
+          width: elementWidth,
+          height: elementHeight,
+          scaleX: scale,
+          scaleY: scale,
+          selectable: false,
+          hasControls: false,
+          hasBorders: false,
+          opacity: 1
+        });
+        
+        fabricCanvas.add(fabricImage);
+        
+      } catch (error) {
+        console.error(`Error rendering preview element ${element.name}:`, error);
+      }
+    }
+    
+    // Draw non-background elements
+    for (const element of elementsToRender.filter(el => el.label !== 'background')) {
+      if (!element.visible) continue;
+      
+      try {
+        // Create temporary canvas for the layer
+        const tempCanvas = document.createElement('canvas');
+        const elementWidth = element.width;
+        const elementHeight = element.height;
+        
+        tempCanvas.width = Math.max(1, elementWidth);
+        tempCanvas.height = Math.max(1, elementHeight);
+        const ctx = tempCanvas.getContext('2d');
+        
+        if (ctx) {
+          const imageData = layerImages.get(element.name);
+          
+          if (imageData && imageData.width > 0 && imageData.height > 0) {
+            const originalCanvas = document.createElement('canvas');
+            originalCanvas.width = Math.max(1, imageData.width);
+            originalCanvas.height = Math.max(1, imageData.height);
+            const originalCtx = originalCanvas.getContext('2d');
+            
+            if (originalCtx) {
+              originalCtx.putImageData(imageData, 0, 0);
+              ctx.drawImage(
+                originalCanvas,
+                0, 0, imageData.width, imageData.height,
+                0, 0, elementWidth, elementHeight
+              );
+            }
+          } else {
+            ctx.fillStyle = getLabelColor(element.label);
+            ctx.fillRect(0, 0, elementWidth, elementHeight);
+          }
+        }
+        
+        // Create fabric image
+        const fabricImage = new FabricImage(tempCanvas, {
+          left: element.x * scale,
+          top: element.y * scale,
+          width: elementWidth,
+          height: elementHeight,
+          scaleX: scale,
+          scaleY: scale,
+          selectable: false,
+          hasControls: false,
+          hasBorders: false,
+          opacity: 1
+        });
+        
+        fabricCanvas.add(fabricImage);
+        
+      } catch (error) {
+        console.error(`Error rendering preview element ${element.name}:`, error);
+      }
+    }
+    
+    fabricCanvas.renderAll();
+    return fabricCanvas;
+  };
+
   // If no layers, show upload message
   if (!psdLayers) {
     return (
@@ -1418,241 +1611,319 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   }
   
   return (
-    <div className="space-y-4">
+    <div>
       <Toaster />
-      {/* Channel and layout selection */}
-      <div className="flex flex-wrap items-center gap-4 justify-between">
-        <div className="flex items-center gap-2">
-          {/* Empty div - removed Reset Current Position button from here */}
+      <Collapsible defaultOpen className="mb-4" open={isOpen} onOpenChange={setIsOpen}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold mb-4">Layout Generator</h3>
+          <CollapsibleTrigger className="hover:bg-accent hover:text-accent-foreground rounded-md p-2 transition-colors">
+            {isOpen ? (
+              <ChevronUpIcon className="h-4 w-4" />
+            ) : (
+              <ChevronDownIcon className="h-4 w-4" />
+            )}
+          </CollapsibleTrigger>
         </div>
-      </div>
-      
-      {/* Selection controls */}
-      <div className="space-y-4">
-        {/* Dropdowns and buttons in a row */}
-        <div className="flex flex-wrap items-end gap-4">
-          {/* Channel selection */}
-          <div>
-            <Label className="text-sm font-medium mb-2">Channel</Label>
-            <Select value={selectedChannelId || ''} onValueChange={handleChannelSelect}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select channel" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableChannels.length === 0 ? (
-                  <SelectItem value="none" disabled>No channels available</SelectItem>
-                ) : (
-                  availableChannels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
-                      {channel.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Aspect Ratio selection */}
-          <div>
-            <Label className="text-sm font-medium mb-2">Aspect Ratio</Label>
-            <Select 
-              value={selectedAspectRatio || ''} 
-              onValueChange={handleAspectRatioSelect}
-              disabled={!selectedChannelId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select aspect ratio" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredAspectRatios.length === 0 ? (
-                  <SelectItem value="none" disabled>
-                    {sourceRatio ? `No ratios available (Source: ${sourceRatio})` : 'No ratios available'}
-                  </SelectItem>
-                ) : (
-                  filteredAspectRatios.map((layout) => (
-                    <SelectItem key={layout.aspectRatio} value={layout.aspectRatio}>
-                      <div className="flex items-center gap-2">
-                        {layout.aspectRatio}
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Option selection */}
-          <div>
-            <Label className="text-sm font-medium mb-2">Layout Option</Label>
-            <Select 
-              value={selectedOption || ''} 
-              onValueChange={handleOptionSelect}
-              disabled={!selectedChannelId || !selectedAspectRatio}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select layout option" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredOptions.length === 0 ? (
-                  <SelectItem value="none" disabled>No options available</SelectItem>
-                ) : (
-                  filteredOptions.map((option) => (
-                    <SelectItem key={option.name} value={option.name}>
-                      {option.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Segmentation controls - only show if there are personalized layers */}
-          {hasPersonalization && (
-            <>
-              {/* New segmentation type selection */}
+        <CollapsibleContent className="space-y-4">
+          {/* Selection controls */}
+          <div className="space-y-4">
+            {/* Dropdowns and buttons in a row */}
+            <div className="flex flex-wrap items-end gap-4">
+              {/* Channel selection */}
               <div>
-                <Label className="text-sm font-medium mb-2">Segmentation Type</Label>
-                <Select 
-                  value={selectedSegmentationType} 
-                  onValueChange={(value: string) => {
-                    setSelectedSegmentationType(value);
-                    setSelectedSegmentationValue(''); // Reset value when type changes
-                  }}
-                  disabled={!selectedOption}
-                >
+                <Label className="text-sm font-medium mb-2">Channel</Label>
+                <Select value={selectedChannelId || ''} onValueChange={handleChannelSelect}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select segmentation type" />
+                    <SelectValue placeholder="Select channel" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getSegmentationTypes().map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
+                    {availableChannels.length === 0 ? (
+                      <SelectItem value="none" disabled>No channels available</SelectItem>
+                    ) : (
+                      availableChannels.map((channel) => (
+                        <SelectItem key={channel.id} value={channel.id}>
+                          {channel.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* New segmentation value selection */}
+              {/* Aspect Ratio selection */}
               <div>
-                <Label className="text-sm font-medium mb-2">Segmentation Value</Label>
+                <Label className="text-sm font-medium mb-2">Aspect Ratio</Label>
                 <Select 
-                  value={selectedSegmentationValue} 
-                  onValueChange={setSelectedSegmentationValue}
-                  disabled={!selectedOption || !selectedSegmentationType}
+                  value={selectedAspectRatio || ''} 
+                  onValueChange={handleAspectRatioSelect}
+                  disabled={!selectedChannelId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select value" />
+                    <SelectValue placeholder="Select aspect ratio" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getValuesForType(selectedSegmentationType).map((value) => (
-                      <SelectItem key={value.id} value={value.id}>
-                        {value.label}
+                    {filteredAspectRatios.length === 0 ? (
+                      <SelectItem value="none" disabled>
+                        {sourceRatio ? `No ratios available (Source: ${sourceRatio})` : 'No ratios available'}
                       </SelectItem>
-                    ))}
+                    ) : (
+                      filteredAspectRatios.map((layout) => (
+                        <SelectItem key={layout.aspectRatio} value={layout.aspectRatio}>
+                          <div className="flex items-center gap-2">
+                            {layout.aspectRatio}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-            </>
-          )}
 
-          <div>
-          <Label htmlFor="safezone-width" className="text-sm font-medium mb-2">
-            Safezone
-          </Label>
-          <Select 
-            value={safezoneWidth.toString()} 
-            onValueChange={(value) => setSafezoneWidth(parseInt(value))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select safezone width" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({length: 11}, (_, i) => i * 5).map((value) => (
-                <SelectItem key={value} value={value.toString()}>
-                  {value}px
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          </div>
+              {/* Option selection */}
+              <div>
+                <Label className="text-sm font-medium mb-2">Layout Option</Label>
+                <Select 
+                  value={selectedOption || ''} 
+                  onValueChange={handleOptionSelect}
+                  disabled={!selectedChannelId || !selectedAspectRatio}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select layout option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredOptions.length === 0 ? (
+                      <SelectItem value="none" disabled>No options available</SelectItem>
+                    ) : (
+                      filteredOptions.map((option) => (
+                        <SelectItem key={option.name} value={option.name}>
+                          {option.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Generate buttons */}
-          {selectedChannelId && selectedAspectRatio && selectedOption && (
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleGenerateLayout} 
-                disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
-                size="lg"
+              {/* Segmentation controls - only show if there are personalized layers */}
+              {hasPersonalization && (
+                <>
+                  {/* New segmentation type selection */}
+                  <div>
+                    <Label className="text-sm font-medium mb-2">Segmentation Type</Label>
+                    <Select 
+                      value={selectedSegmentationType} 
+                      onValueChange={(value: string) => {
+                        setSelectedSegmentationType(value);
+                        setSelectedSegmentationValue(''); // Reset value when type changes
+                      }}
+                      disabled={!selectedOption}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select segmentation type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getSegmentationTypes().map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* New segmentation value selection */}
+                  <div>
+                    <Label className="text-sm font-medium mb-2">Segmentation Value</Label>
+                    <Select 
+                      value={selectedSegmentationValue} 
+                      onValueChange={setSelectedSegmentationValue}
+                      disabled={!selectedOption || !selectedSegmentationType}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select value" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getValuesForType(selectedSegmentationType).map((value) => (
+                          <SelectItem key={value.id} value={value.id}>
+                            {value.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              <div>
+              <Label htmlFor="safezone-width" className="text-sm font-medium mb-2">
+                Safezone
+              </Label>
+              <Select 
+                value={safezoneWidth.toString()} 
+                onValueChange={(value) => setSafezoneWidth(parseInt(value))}
               >
-                {isGenerating ? 'Generating...' : 'Generate Layout'}
-              </Button>
-              
-              {hasSync && (
-                <Button 
-                  onClick={handleGenerateAllSyncLayouts}
-                  disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
-                  size="lg"
-                  variant="secondary"
-                >
-                  {isGenerating ? 'Generating...' : 'Generate All Sync Layouts'}
-                </Button>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select safezone width" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({length: 11}, (_, i) => i * 5).map((value) => (
+                    <SelectItem key={value} value={value.toString()}>
+                      {value}px
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              </div>
+
+              {/* Generate buttons */}
+              {selectedChannelId && selectedAspectRatio && selectedOption && (
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleGenerateLayout} 
+                    disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
+                    size="lg"
+                  >
+                    {isGenerating ? 'Generating...' : 'Generate Layout'}
+                  </Button>
+                  
+                  {hasSync && (
+                    <Button 
+                      onClick={handleGenerateAllSyncLayouts}
+                      disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
+                      size="lg"
+                      variant="secondary"
+                    >
+                      {isGenerating ? 'Generating...' : 'Generate All Sync Layouts'}
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-      </div>
-      
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
       {/* Layout info and export */}
-      {generatedLayout && (
-        <div className="flex items-center justify-end text-sm text-muted-foreground gap-2">          
-          <Button 
-            variant="destructive" 
-            onClick={handleResetCurrentLayout}
-            size="sm"
-            className="flex items-center gap-1"
-          >
-            Reset Current Position
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportImage}
-            disabled={downloading}
-            className="flex items-center gap-1"
-          >
-            <Download className="h-4 w-4" />
-            {downloading ? 'Exporting...' : 'Export PNG'}
-          </Button>
-        </div>
-      )}
-      
-      {/* Layout navigation controls */}
-      {multipleLayouts.length > 1 && (
-        <div className="flex items-center gap-4 justify-end">
-          <span className="text-sm text-muted-foreground">
-            Layout {currentLayoutIndex + 1} of {multipleLayouts.length}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              onClick={showPreviousLayout}
+      <div className="mb-4">
+        {generatedLayout && (
+          <div className="flex items-center justify-end text-sm text-muted-foreground gap-2 mb-4">          
+            <Button 
+              variant="destructive" 
+              onClick={handleResetCurrentLayout}
               size="sm"
-              variant="outline"
+              className="flex items-center gap-1"
             >
-              Previous
+              Reset Current Position
             </Button>
-            <Button
-              onClick={showNextLayout}
-              size="sm"
-              variant="outline"
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportImage}
+              disabled={downloading}
+              className="flex items-center gap-1"
             >
-              Next
+              <Download className="h-4 w-4" />
+              {downloading ? 'Exporting...' : 'Export PNG'}
             </Button>
           </div>
-        </div>
-      )}
-      
+        )}
+        
+        {/* Layout navigation controls */}
+        {multipleLayouts.length > 1 && (
+          <div className="flex items-center gap-4 justify-end">
+            <span className="text-sm text-muted-foreground">
+              Layout {currentLayoutIndex + 1} of {multipleLayouts.length}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                onClick={showPreviousLayout}
+                size="sm"
+                variant="outline"
+              >
+                Previous
+              </Button>
+              <Button
+                onClick={showNextLayout}
+                size="sm"
+                variant="outline"
+              >
+                Next
+              </Button>
+              <Dialog open={showGallery} onOpenChange={setShowGallery}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-1"
+                  >
+                    <Grid2X2Icon className="h-4 w-4" />
+                    Gallery
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="w-screen h-screen m-0 p-8 bg-gray-100/95 backdrop-blur-sm">
+                  <DialogHeader className="mb-8">
+                    <div className="flex items-center justify-between">
+                      <DialogTitle className="text-2xl font-bold">Layout Gallery</DialogTitle>
+                      {/* <DialogClose className="w-8 h-8 rounded-full hover:bg-gray-200 flex items-center justify-center">
+                        <XIcon className="w-5 h-5" />
+                      </DialogClose> */}
+                    </div>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 gap-8 p-4 overflow-y-auto max-h-[calc(100vh-120px)]">
+                    {multipleLayouts.map((layout, index) => (
+                      <div 
+                        key={index}
+                        className={cn(
+                          "relative border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 bg-white",
+                          currentLayoutIndex === index 
+                            ? "border-primary ring-2 ring-primary/20 shadow-xl" 
+                            : "border-border hover:border-primary/50 hover:shadow-lg"
+                        )}
+                        onClick={() => {
+                          setCurrentLayoutIndex(index);
+                          setGeneratedLayout(layout);
+                          setShowGallery(false);
+                        }}
+                      >
+                        <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center">
+                          <canvas
+                            ref={(canvas) => {
+                              if (canvas) {
+                                try {
+                                  const fabricCanvas = renderLayoutPreview(canvas, layout);
+                                  return () => {
+                                    fabricCanvas.dispose();
+                                  };
+                                } catch (error) {
+                                  console.error('Error rendering layout preview:', error);
+                                }
+                              }
+                            }}
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </div>
+                        <div className="mt-4 flex items-center justify-between">
+                          <span className="text-lg font-medium">
+                            Layout {index + 1}
+                          </span>
+                          {currentLayoutIndex === index && (
+                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        )}
+
+      </div>
+
       {/* Canvas container */}
       <div className="border rounded-lg overflow-hidden w-full bg-white shadow-sm" style={{ minHeight: '200px' }}>
         <div className="w-full h-full flex items-center justify-center">
@@ -1662,12 +1933,58 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
       {/* Add generation description */}
       {generationDescription && (
-        <div className="text-sm text-muted-foreground whitespace-pre-wrap p-4 bg-slate-50 rounded-lg">
+        <div className="text-sm text-muted-foreground whitespace-pre-wrap p-4 bg-slate-50 rounded-lg mt-4">
           <h4 className="font-medium mb-2">Generation Details:</h4>
           {generationDescription}
         </div>
       )}
-    
+
+      <div className="grid grid-cols-2 gap-3 overflow-y-auto mt-4">
+        {multipleLayouts.map((layout, index) => (
+          <div 
+            key={index}
+            className={cn(
+              "relative border-2 rounded-xl p-3 cursor-pointer transition-all duration-200 bg-white",
+              currentLayoutIndex === index 
+                ? "border-primary ring-1 ring-primary/20 shadow-xl" 
+                : "border-border hover:border-primary/50 hover:shadow-lg"
+            )}
+            onClick={() => {
+              setCurrentLayoutIndex(index);
+              setGeneratedLayout(layout);
+              setShowGallery(false);
+            }}
+          >
+            <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center">
+              <canvas
+                ref={(canvas) => {
+                  if (canvas) {
+                    try {
+                      const fabricCanvas = renderLayoutPreview(canvas, layout);
+                      return () => {
+                        fabricCanvas.dispose();
+                      };
+                    } catch (error) {
+                      console.error('Error rendering layout preview:', error);
+                    }
+                  }
+                }}
+                className="object-contain max-w-full max-h-full"
+              />
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-sm font-medium">
+                Layout {index + 1}
+              </span>
+              {currentLayoutIndex === index && (
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                  Current
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 } 

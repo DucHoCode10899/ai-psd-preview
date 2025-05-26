@@ -1003,25 +1003,25 @@
       {
         "pattern": "voucher - yellow",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "yellow",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "voucher yellow",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       }
     ],
-    "lastUpdated": "2025-05-24T04:46:58.033Z",
+    "lastUpdated": "2025-05-24T07:56:04.984Z",
     "history": [
       {
         "label": "main-subject",
@@ -1067,6 +1067,11 @@
         "label": "main-subject",
         "timestamp": "2025-05-24T04:46:58.033Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T07:56:04.984Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1077,25 +1082,25 @@
       {
         "pattern": "voucher - bronze",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       },
       {
         "pattern": "bronze",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       },
       {
         "pattern": "voucher bronze",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       }
     ],
-    "lastUpdated": "2025-05-24T04:58:59.113Z",
+    "lastUpdated": "2025-05-24T07:56:04.988Z",
     "history": [
       {
         "label": "background",
@@ -1145,6 +1150,11 @@
       {
         "label": "main-subject",
         "timestamp": "2025-05-24T04:58:59.113Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-24T07:56:04.988Z",
         "confidence": 0.6
       }
     ]
@@ -1465,20 +1475,20 @@
       {
         "pattern": "bg - lavender",
         "confidence": 0.6,
-        "matches": 3
+        "matches": 4
       },
       {
         "pattern": "lavender",
         "confidence": 0.6,
-        "matches": 3
+        "matches": 4
       },
       {
         "pattern": "bg lavender",
         "confidence": 0.6,
-        "matches": 3
+        "matches": 4
       }
     ],
-    "lastUpdated": "2025-05-24T04:20:15.239Z",
+    "lastUpdated": "2025-05-26T02:40:38.097Z",
     "history": [
       {
         "label": "background",
@@ -1493,6 +1503,11 @@
       {
         "label": "background",
         "timestamp": "2025-05-24T04:20:15.239Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-26T02:40:38.097Z",
         "confidence": 0.6
       }
     ]
