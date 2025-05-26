@@ -50,10 +50,10 @@ export default function Home() {
         const parsedStructure = JSON.parse(storedStructure);
         setPsdStructure(parsedStructure);
 
-        // Initialize layer visibility
+        // Initialize layer visibility based on stored structure
         const initialVisibility: Record<string, boolean> = {};
         parsedStructure.forEach((layer: PsdLayerMetadata) => {
-          initialVisibility[layer.id] = true;
+          initialVisibility[layer.id] = layer.visible;
         });
         setLayerVisibility(initialVisibility);
 
@@ -98,10 +98,10 @@ export default function Home() {
 
   const handlePsdParsed = (layers: PsdLayerMetadata[]) => {
     setPsdStructure(layers);
-    // Initialize all layers as visible
+    // Initialize layer visibility based on the PSD file's visibility state
     const initialVisibility: Record<string, boolean> = {};
     layers.forEach((layer) => {
-      initialVisibility[layer.id] = true;
+      initialVisibility[layer.id] = layer.visible;
     });
     setLayerVisibility(initialVisibility);
   };
