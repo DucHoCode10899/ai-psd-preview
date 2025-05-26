@@ -32,14 +32,6 @@ import type { Node, Layer as PsdLayer } from "@webtoon/psd";
 import { useSegmentationRules } from '@/hooks/useSegmentationRules';
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Grid2X2Icon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Personalization types
@@ -1447,7 +1439,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     
     // Add background
     const background = new Rect({
-      left: 0,
+      right: 0,
       top: 0,
       width: canvasWidth,
       height: canvasHeight,
@@ -1599,6 +1591,135 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     
     fabricCanvas.renderAll();
     return fabricCanvas;
+  };
+
+  // Add new function to generate all combinations
+  const handleGenerateAllCombinations = async () => {
+    if (!psdLayers || !selectedAspectRatio || !selectedOption) {
+      toast.error('Please select all required options');
+      return;
+    }
+
+    // Only check segmentation if there are personalized layers
+    if (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue)) {
+      toast.error('Please select segmentation options');
+      return;
+    }
+
+    // Load necessary data from storage
+    const layerLabels = sessionStorage.getItem('psd_layer_labels');
+    if (!layerLabels) {
+      toast.error('Missing layer labels data');
+      return;
+    }
+
+    try {
+      const labels = JSON.parse(layerLabels);
+      let personalizationRules = {};
+
+      // Only load personalization rules if we have personalized layers
+      if (hasPersonalization) {
+        const storedRules = localStorage.getItem('psd_personalization_rules');
+        if (!storedRules) {
+          toast.error('Missing personalization rules');
+          return;
+        }
+        personalizationRules = JSON.parse(storedRules);
+      }
+
+      setIsGenerating(true);
+      const description = [];
+
+      // Group layers by label
+      const layersByLabel = new Map<string, PsdLayerMetadata[]>();
+      psdLayers.forEach(layer => {
+        const layerId = layer.id;
+        const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
+        const label = labels[normalizedId] || labels[layerId];
+        if (label) {
+          if (!layersByLabel.has(label)) {
+            layersByLabel.set(label, []);
+          }
+          layersByLabel.get(label)?.push(layer);
+        }
+      });
+
+      // Generate all possible combinations
+      const layouts: GeneratedLayout[] = [];
+      const generateCombinations = (
+        currentLabel: string | undefined,
+        selectedLayers: Map<string, string>,
+        remainingLabels: string[]
+      ) => {
+        if (!currentLabel) {
+          // Base case: generate layout from current combination
+          const visibleLayerIds = new Set<string>();
+          
+          // Add selected layers to visible set
+          selectedLayers.forEach((layerId) => {
+            visibleLayerIds.add(layerId);
+            visibleLayerIds.add(layerId.replace('layer_', ''));
+          });
+
+          // Generate layout with current visible layers
+          const visibleLayers = psdLayers.filter(layer =>
+            visibleLayerIds.has(layer.id) || visibleLayerIds.has(`layer_${layer.id}`)
+          ).map(layer => ({
+            ...layer,
+            visible: true
+          }));
+
+          const layout = generateLayout(visibleLayers, selectedOption, {
+            safezone: safezoneWidth,
+            margin: margin
+          });
+
+          if (layout) {
+            layouts.push(layout);
+          }
+          return;
+        }
+
+        // Get layers for current label
+        const currentLayers = layersByLabel.get(currentLabel) || [];
+        const nextLabel = remainingLabels[0];
+        const nextRemainingLabels = remainingLabels.slice(1);
+
+        // Try each layer in the current label group
+        currentLayers.forEach(layer => {
+          // Check if layer matches personalization rules
+          if (hasPersonalization) {
+            if (!doesLayerMatchRules(layer.id, personalizationRules)) {
+              return; // Skip this layer if it doesn't match rules
+            }
+          }
+
+          // Create new combination with this layer
+          const newSelectedLayers = new Map(selectedLayers);
+          newSelectedLayers.set(currentLabel, layer.id);
+          generateCombinations(nextLabel, newSelectedLayers, nextRemainingLabels);
+        });
+      };
+
+      // Start generating combinations
+      const labelKeys = Array.from(layersByLabel.keys());
+      generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
+
+      description.push(`Generated ${layouts.length} layout combinations`);
+      setGenerationDescription(description.join('\n'));
+      setMultipleLayouts(layouts);
+      setGeneratedLayout(layouts[0]); // Show first layout initially
+      setShowGallery(true); // Open the gallery modal automatically
+
+      setTimeout(() => {
+        setIsGenerating(false);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error generating layout combinations:', error);
+      toast.error('Error generating layouts');
+      setIsGenerating(false);
+    }
   };
 
   // If no layers, show upload message
@@ -1796,6 +1917,15 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                       {isGenerating ? 'Generating...' : 'Generate All Sync Layouts'}
                     </Button>
                   )}
+
+                  <Button 
+                    onClick={handleGenerateAllCombinations}
+                    disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
+                    size="lg"
+                    variant="outline"
+                  >
+                    {isGenerating ? 'Generating...' : 'Generate All Combinations'}
+                  </Button>
                 </div>
               )}
             </div>
@@ -1850,74 +1980,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               >
                 Next
               </Button>
-              <Dialog open={showGallery} onOpenChange={setShowGallery}>
-                <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex items-center gap-1"
-                  >
-                    <Grid2X2Icon className="h-4 w-4" />
-                    Gallery
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-screen h-screen m-0 p-8 bg-gray-100/95 backdrop-blur-sm">
-                  <DialogHeader className="mb-8">
-                    <div className="flex items-center justify-between">
-                      <DialogTitle className="text-2xl font-bold">Layout Gallery</DialogTitle>
-                      {/* <DialogClose className="w-8 h-8 rounded-full hover:bg-gray-200 flex items-center justify-center">
-                        <XIcon className="w-5 h-5" />
-                      </DialogClose> */}
-                    </div>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 gap-8 p-4 overflow-y-auto max-h-[calc(100vh-120px)]">
-                    {multipleLayouts.map((layout, index) => (
-                      <div 
-                        key={index}
-                        className={cn(
-                          "relative border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 bg-white",
-                          currentLayoutIndex === index 
-                            ? "border-primary ring-2 ring-primary/20 shadow-xl" 
-                            : "border-border hover:border-primary/50 hover:shadow-lg"
-                        )}
-                        onClick={() => {
-                          setCurrentLayoutIndex(index);
-                          setGeneratedLayout(layout);
-                          setShowGallery(false);
-                        }}
-                      >
-                        <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center">
-                          <canvas
-                            ref={(canvas) => {
-                              if (canvas) {
-                                try {
-                                  const fabricCanvas = renderLayoutPreview(canvas, layout);
-                                  return () => {
-                                    fabricCanvas.dispose();
-                                  };
-                                } catch (error) {
-                                  console.error('Error rendering layout preview:', error);
-                                }
-                              }
-                            }}
-                            className="max-w-full max-h-full object-contain"
-                          />
-                        </div>
-                        <div className="mt-4 flex items-center justify-between">
-                          <span className="text-lg font-medium">
-                            Layout {index + 1}
-                          </span>
-                          {currentLayoutIndex === index && (
-                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                              Current
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
         )}
@@ -1939,52 +2001,116 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 overflow-y-auto mt-4">
-        {multipleLayouts.map((layout, index) => (
+      {/* Replace Dialog with custom full-screen modal */}
+      {showGallery && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
           <div 
-            key={index}
-            className={cn(
-              "relative border-2 rounded-xl p-3 cursor-pointer transition-all duration-200 bg-white",
-              currentLayoutIndex === index 
-                ? "border-primary ring-1 ring-primary/20 shadow-xl" 
-                : "border-border hover:border-primary/50 hover:shadow-lg"
-            )}
-            onClick={() => {
-              setCurrentLayoutIndex(index);
-              setGeneratedLayout(layout);
-              setShowGallery(false);
-            }}
-          >
-            <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center">
-              <canvas
-                ref={(canvas) => {
-                  if (canvas) {
-                    try {
-                      const fabricCanvas = renderLayoutPreview(canvas, layout);
-                      return () => {
-                        fabricCanvas.dispose();
-                      };
-                    } catch (error) {
-                      console.error('Error rendering layout preview:', error);
-                    }
-                  }
-                }}
-                className="object-contain max-w-full max-h-full"
-              />
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowGallery(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="absolute inset-0 bg-gray-100/95">
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-white border-b">
+              <div className="max-w-[2000px] mx-auto px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold">Layout Gallery</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {multipleLayouts.length} layouts generated • Click on a layout to select it
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border">
+                      <span className="text-sm font-medium">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
+                      <div className="flex gap-1">
+                        <Button
+                          onClick={showPreviousLayout}
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronUpIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          onClick={showNextLayout}
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronDownIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => setShowGallery(false)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Close Gallery
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-sm font-medium">
-                Layout {index + 1}
-              </span>
-              {currentLayoutIndex === index && (
-                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                  Current
-                </span>
-              )}
+
+            {/* Grid Layout */}
+            <div className="max-w-[2000px] mx-auto p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 overflow-y-auto">
+                {multipleLayouts.map((layout, index) => (
+                  <div 
+                    key={index}
+                    className={cn(
+                      "relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 bg-gray-100 hover:shadow-lg",
+                      currentLayoutIndex === index 
+                        ? "border-primary ring-2 ring-primary/20 shadow-xl" 
+                        : "border-border hover:border-primary/50"
+                    )}
+                    onClick={() => {
+                      setCurrentLayoutIndex(index);
+                      setGeneratedLayout(layout);
+                      setShowGallery(false);
+                    }}
+                  >
+                    <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center">
+                      <canvas
+                        ref={(canvas) => {
+                          if (canvas) {
+                            try {
+                              const fabricCanvas = renderLayoutPreview(canvas, layout);
+                              return () => {
+                                fabricCanvas.dispose();
+                              };
+                            } catch (error) {
+                              console.error('Error rendering layout preview:', error);
+                            }
+                          }
+                        }}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        Layout {index + 1}
+                      </span>
+                      {currentLayoutIndex === index && (
+                        <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {layout.width}×{layout.height} • {layout.aspectRatio}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 } 
