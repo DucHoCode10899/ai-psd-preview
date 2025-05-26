@@ -33,6 +33,7 @@ import { useSegmentationRules } from '@/hooks/useSegmentationRules';
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { Rnd } from 'react-rnd';
 
 // Personalization types
 type SegmentationType = string;
@@ -1416,15 +1417,27 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
-  // Update renderLayoutPreview function to use larger size
+  // Update renderLayoutPreview function to maintain aspect ratio
   const renderLayoutPreview = (canvas: HTMLCanvasElement, layout: GeneratedLayout) => {
     const fabricCanvas = new Canvas(canvas);
     
-    // Calculate dimensions to maintain aspect ratio
-    const containerWidth = 500; // Much larger preview size
-    const layoutAspectRatio = layout.width / layout.height;
-    const canvasWidth = containerWidth;
-    const canvasHeight = containerWidth / layoutAspectRatio;
+    // Set a fixed container width for consistency
+    const containerWidth = 400; // Base width for the preview
+    const containerHeight = 300; // Base height for the preview
+    
+    // Calculate dimensions to maintain layout's aspect ratio
+    const layoutRatio = layout.width / layout.height;
+    let canvasWidth, canvasHeight;
+    
+    if (layoutRatio > 1) {
+      // Landscape orientation
+      canvasWidth = containerWidth;
+      canvasHeight = containerWidth / layoutRatio;
+    } else {
+      // Portrait or square orientation
+      canvasHeight = containerHeight;
+      canvasWidth = containerHeight * layoutRatio;
+    }
     
     // Update canvas dimensions
     fabricCanvas.setDimensions({
@@ -1432,14 +1445,14 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       height: canvasHeight,
     });
     
-    // Calculate scale
+    // Calculate scale to fit elements
     const scaleX = canvasWidth / layout.width;
     const scaleY = canvasHeight / layout.height;
     const scale = Math.min(scaleX, scaleY);
     
     // Add background
     const background = new Rect({
-      right: 0,
+      left: 0,
       top: 0,
       width: canvasWidth,
       height: canvasHeight,
@@ -1452,7 +1465,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     });
     fabricCanvas.add(background);
     
-    // Add safezone outline
+    // Add safezone outline if needed
     if (safezoneWidth > 0) {
       const safezone = new Rect({
         left: safezoneWidth * scale,
@@ -1510,7 +1523,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           }
         }
         
-        // Create fabric image
+        // Create fabric image with proper scaling
         const fabricImage = new FabricImage(tempCanvas, {
           left: element.x * scale,
           top: element.y * scale,
@@ -1568,7 +1581,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           }
         }
         
-        // Create fabric image
+        // Create fabric image with proper scaling
         const fabricImage = new FabricImage(tempCanvas, {
           left: element.x * scale,
           top: element.y * scale,
@@ -2001,115 +2014,118 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         </div>
       )}
 
-      {/* Replace Dialog with custom full-screen modal */}
+      {/* Replace Dialog with custom floating modal */}
       {showGallery && (
-        <div className="fixed inset-0 z-50">
+        <>
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setShowGallery(false)}
+            className="fixed inset-0 z-40 pointer-events-none"
           />
           
-          {/* Modal Content */}
-          <div className="absolute inset-0 bg-gray-100/95">
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-white border-b">
-              <div className="max-w-[2000px] mx-auto px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold">Layout Gallery</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {multipleLayouts.length} layouts generated • Click on a layout to select it
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border">
-                      <span className="text-sm font-medium">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
-                      <div className="flex gap-1">
-                        <Button
-                          onClick={showPreviousLayout}
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronUpIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={showNextLayout}
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronDownIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
+          {/* Floating Modal */}
+          <Rnd
+            default={{
+              x: window.innerWidth / 2 - 2150,
+              y: window.innerHeight / 2 - 520,
+              width: 1000,
+              height: 950
+            }}
+            minWidth={200}
+            minHeight={200}
+            bounds="window"
+            className="z-50"
+          >
+            <div className="w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden">
+              {/* Header */}
+              <div className="sticky top-0 z-10 bg-white border-b cursor-move handle">
+                <div className="px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">Layout Gallery</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {multipleLayouts.length} layouts generated • Click on a layout to select it
+                      </p>
                     </div>
-                    <Button
-                      onClick={() => setShowGallery(false)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Close Gallery
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border">
+                        <span className="text-sm font-medium">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={showPreviousLayout}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronUpIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={showNextLayout}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronDownIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => setShowGallery(false)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Close Gallery
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Grid Layout */}
-            <div className="max-w-[2000px] mx-auto p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 overflow-y-auto">
-                {multipleLayouts.map((layout, index) => (
-                  <div 
-                    key={index}
-                    className={cn(
-                      "relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 bg-gray-100 hover:shadow-lg",
-                      currentLayoutIndex === index 
-                        ? "border-primary ring-2 ring-primary/20 shadow-xl" 
-                        : "border-border hover:border-primary/50"
-                    )}
-                    onClick={() => {
-                      setCurrentLayoutIndex(index);
-                      setGeneratedLayout(layout);
-                      setShowGallery(false);
-                    }}
-                  >
-                    <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center">
-                      <canvas
-                        ref={(canvas) => {
-                          if (canvas) {
-                            try {
-                              const fabricCanvas = renderLayoutPreview(canvas, layout);
-                              return () => {
-                                fabricCanvas.dispose();
-                              };
-                            } catch (error) {
-                              console.error('Error rendering layout preview:', error);
-                            }
-                          }
-                        }}
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        Layout {index + 1}
-                      </span>
-                      {currentLayoutIndex === index && (
-                        <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                          Current
-                        </span>
+              {/* Grid Layout - Scrollable Content */}
+              <div className="flex-1 overflow-auto p-6">
+                {/* Calculate grid column based on the ratio and size of each layout */}
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+                  {multipleLayouts.map((layout, index) => (
+                    <div 
+                      key={index}
+                      className={cn(
+                        "relative border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg",
+                        currentLayoutIndex === index 
+                          ? "border-primary ring-2 ring-primary/20 shadow-xl" 
+                          : "border-border hover:border-primary/50"
                       )}
+                      onClick={() => {
+                        setCurrentLayoutIndex(index);
+                        setGeneratedLayout(layout);
+                        // setShowGallery(false);
+                      }}
+                    >
+                      <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center" style={{
+                        aspectRatio: `${layout.width} / ${layout.height}`,
+                        width: '100%'
+                      }}>
+                        <canvas
+                          ref={(canvas) => {
+                            if (canvas) {
+                              try {
+                                const fabricCanvas = renderLayoutPreview(canvas, layout);
+                                return () => {
+                                  fabricCanvas.dispose();
+                                };
+                              } catch (error) {
+                                console.error('Error rendering layout preview:', error);
+                              }
+                            }
+                          }}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
                     </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {layout.width}×{layout.height} • {layout.aspectRatio}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </Rnd>
+        </>
       )}
     </div>
   );

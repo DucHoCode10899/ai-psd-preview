@@ -1959,5 +1959,384 @@
         "confidence": 0.6
       }
     ]
+  },
+  {
+    "layerName": "LOGO ABBOTT",
+    "correctLabel": "logo",
+    "patterns": [
+      {
+        "pattern": "logo abbott",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "logo",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "abbott",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:57:23.725Z",
+    "history": [
+      {
+        "label": "logo",
+        "timestamp": "2025-05-26T07:57:23.725Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Woman 1",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "woman 1",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "woman",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:58:34.196Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-26T07:58:34.196Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Woman 2",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "woman 2",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "woman",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:58:52.983Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-26T07:58:52.983Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Woman 3",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "woman 3",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "woman",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:58:54.034Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-26T07:58:54.034Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Man 1",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "man 1",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "man",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:58:58.330Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-26T07:58:58.330Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Man 2",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "man 2",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "man",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:58:59.243Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-26T07:58:59.243Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Man 3",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "man 3",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "man",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:59:00.111Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-26T07:59:00.111Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Product",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "product",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:59:04.033Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-26T07:59:04.033Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "BG",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "bg",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:59:20.074Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-26T07:59:20.074Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "PED-C-564-24-01",
+    "correctLabel": "disclaimer",
+    "patterns": [
+      {
+        "pattern": "ped-c-564-24-01",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "ped",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "564",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "ped c",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "c 564",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "564 24",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "24 01",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T07:59:39.628Z",
+    "history": [
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-26T07:59:39.628Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "MẸ ĐĂNG KÝ LIỀN TAY, RINh NGAY NHIỀU QUÀ XINH CHO BÉ",
+    "correctLabel": "product-name",
+    "patterns": [
+      {
+        "pattern": "mẹ đăng ký liền tay, rinh ngay nhiều quà xinh cho bé",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "đăng",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "liền",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "tay,",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "rinh",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "ngay",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "nhiều",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "quà",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "xinh",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "cho",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "mẹ đăng",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "đăng ký",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "ký liền",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "liền tay,",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "tay, rinh",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "rinh ngay",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "ngay nhiều",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "nhiều quà",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "quà xinh",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "xinh cho",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "cho bé",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-26T08:02:35.060Z",
+    "history": [
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-26T08:02:35.060Z",
+        "confidence": 0.6
+      }
+    ]
   }
 ]
