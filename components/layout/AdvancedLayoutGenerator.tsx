@@ -192,6 +192,26 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   // Add new state for gallery modal
   const [showGallery, setShowGallery] = useState(false);
   
+  // Add format selection state
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpeg'>('png');
+
+  // Add state for grid columns
+  const [gridColumns, setGridColumns] = useState(3);
+
+  // Add state for modal dimensions
+  const [modalDimensions, setModalDimensions] = useState({
+    width: window.innerWidth - 400,
+    height: window.innerHeight - 100
+  });
+
+  // Add function to calculate grid columns based on width
+  const calculateGridColumns = (width: number) => {
+    if (width < 768) return 1;
+    if (width < 1200) return 2;
+    if (width < 1600) return 3;
+    return 4;
+  };
+
   // Add useEffect to check for personalized layers
   useEffect(() => {
     setHasPersonalization(hasPersonalizedLayers());
@@ -1312,6 +1332,46 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
+  // Generate filename based on layout and segmentation info
+  const generateExportFilename = () => {
+    if (!generatedLayout || !selectedChannelId) return '';
+    
+    const channel = availableChannels.find(c => c.id === selectedChannelId);
+    const parts = [
+      channel?.name || 'Unknown', // Platform
+      generatedLayout.aspectRatio.replace(':', '-'), // Ratio
+      generatedLayout.name, // Layout option
+    ];
+    
+    // Add segmentation info if available
+    if (selectedSegmentationType && selectedSegmentationValue) {
+      const segmentType = getSegmentationTypes().find(t => t.id === selectedSegmentationType);
+      const segmentValue = getValuesForType(selectedSegmentationType).find(v => v.id === selectedSegmentationValue);
+      
+      if (segmentType && segmentValue) {
+        parts.push(segmentType.label);
+        parts.push(segmentValue.label);
+      }
+    }
+    
+    // Add timestamp in YYYY-MM-DD-HH-MM-SS format
+    const now = new Date();
+    const timestamp = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+      String(now.getHours()).padStart(2, '0'),
+      String(now.getMinutes()).padStart(2, '0'),
+      String(now.getSeconds()).padStart(2, '0')
+    ].join('-');
+    
+    parts.push(timestamp);
+    
+    // Convert jpeg to jpg for the file extension
+    const extension = exportFormat === 'jpeg' ? 'jpg' : exportFormat;
+    return parts.join('_').replace(/\s+/g, '-') + '.' + extension;
+  };
+
   // Export the layout as an image
   const handleExportImage = () => {
     if (!fabricCanvasRef.current || !generatedLayout) return;
@@ -1365,14 +1425,14 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       
       // Export at exact dimensions
       const dataURL = canvas.toDataURL({
-        format: 'png',
+        format: exportFormat,
         quality: 1,
         multiplier: 1
       });
       
       // Create download link
       const link = document.createElement('a');
-      link.download = `${generatedLayout.name.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.download = generateExportFilename();
       link.href = dataURL;
       document.body.appendChild(link);
       link.click();
@@ -1959,16 +2019,32 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               Reset Current Position
             </Button>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleExportImage}
-              disabled={downloading}
-              className="flex items-center gap-1"
-            >
-              <Download className="h-4 w-4" />
-              {downloading ? 'Exporting...' : 'Export PNG'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Label>Export Format</Label>
+              <Select value={exportFormat} onValueChange={(value: 'png' | 'jpeg') => setExportFormat(value)}>
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="png">PNG</SelectItem>
+                  <SelectItem value="jpeg">JPG</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={handleExportImage}
+                disabled={!generatedLayout || downloading}
+                className="ml-2"
+              >
+                {downloading ? (
+                  <span>Exporting...</span>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
         
@@ -2025,15 +2101,32 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           {/* Floating Modal */}
           <Rnd
             default={{
-              x: window.innerWidth / 2 - 2150,
-              y: window.innerHeight / 2 - 520,
-              width: 1000,
-              height: 950
+              x: -1080,
+              y: 0,
+              width: modalDimensions.width,
+              height: modalDimensions.height
             }}
-            minWidth={200}
-            minHeight={200}
+            minWidth={400}
+            minHeight={300}
             bounds="window"
             className="z-50"
+            onResize={(e, direction, ref) => {
+              setGridColumns(calculateGridColumns(ref.offsetWidth));
+              setModalDimensions({
+                width: ref.offsetWidth,
+                height: ref.offsetHeight
+              });
+            }}
+            size={{
+              width: modalDimensions.width,
+              height: modalDimensions.height
+            }}
+            onResizeStop={(e, direction, ref) => {
+              setModalDimensions({
+                width: ref.offsetWidth,
+                height: ref.offsetHeight
+              });
+            }}
           >
             <div className="w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden">
               {/* Header */}
@@ -2082,13 +2175,15 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
               {/* Grid Layout - Scrollable Content */}
               <div className="flex-1 overflow-auto p-6">
-                {/* Calculate grid column based on the ratio and size of each layout */}
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+                {/* Calculate grid column based on the modal width */}
+                <div className="grid gap-6" style={{
+                  gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`
+                }}>
                   {multipleLayouts.map((layout, index) => (
                     <div 
                       key={index}
                       className={cn(
-                        "relative border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg",
+                        "relative overflow-hidden rounded-md transition-all duration-200 hover:shadow-lg",
                         currentLayoutIndex === index 
                           ? "border-primary ring-2 ring-primary/20 shadow-xl" 
                           : "border-border hover:border-primary/50"
@@ -2096,10 +2191,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                       onClick={() => {
                         setCurrentLayoutIndex(index);
                         setGeneratedLayout(layout);
-                        // setShowGallery(false);
                       }}
                     >
-                      <div className="relative bg-white rounded-lg overflow-hidden flex items-center justify-center" style={{
+                      <div className="relative overflow-hidden cursor-pointer flex items-center justify-center" style={{
                         aspectRatio: `${layout.width} / ${layout.height}`,
                         width: '100%'
                       }}>

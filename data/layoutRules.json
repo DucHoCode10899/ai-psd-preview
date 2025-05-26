@@ -209,6 +209,73 @@
                   }
                 }
               }
+            },
+            {
+              "name": "Default Template 1:1 (PediaSure)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": true
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.07
+                  },
+                  "main-subject": {
+                    "position": "left-center-40",
+                    "maxWidthPercent": 0.75,
+                    "maxHeightPercent": 0.75
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.8,
+                    "maxHeightPercent": 0.26,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "right-center-20",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.65
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.6
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
             }
           ]
         },
@@ -339,6 +406,73 @@
                     "position": "center",
                     "maxWidthPercent": 0.5,
                     "maxHeightPercent": 0.5
+                  }
+                }
+              }
+            },
+            {
+              "name": "Default Template 16:9 (PediaSure)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": true
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "bottom-center-40",
+                    "maxWidthPercent": 0.71,
+                    "maxHeightPercent": 1
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.15,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "right-center-20",
+                    "maxWidthPercent": 0.47,
+                    "maxHeightPercent": 0.65
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.6
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
                   }
                 }
               }
@@ -537,6 +671,73 @@
                   },
                   "disclaimer": {
                     "position": "bottom-center",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            },
+            {
+              "name": "Default Template 4:5 (PediaSure)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": true
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.06
+                  },
+                  "main-subject": {
+                    "position": "left-center-40",
+                    "maxWidthPercent": 0.75,
+                    "maxHeightPercent": 0.75
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.8,
+                    "maxHeightPercent": 0.15,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "right-center-20",
+                    "maxWidthPercent": 0.38,
+                    "maxHeightPercent": 0.65
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.6
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-left",
                     "maxWidthPercent": 0.5,
                     "maxHeightPercent": 0.1
                   }
