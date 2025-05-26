@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { TrainingExample, AutoAIResult, Pattern, DefaultPattern, PredictionResult } from '../types/ai';
+import { TrainingExample, AutoAIResult, Pattern, DefaultPattern } from '../types/ai';
 import { predictLabelWithContext } from '../utils/nlp';
 
 // Default patterns for initial AI behavior
@@ -39,17 +39,23 @@ export function useAutoAI() {
   // Pattern-based analysis
   const analyzeWithPatterns = useCallback((layerName: string): AutoAIResult => {
     const name = layerName.toLowerCase();
-    let bestMatch: { label: string; confidence: number } | null = null;
+    type BestMatch = {
+      label: string;
+      confidence: number;
+    };
+    
+    let bestMatch = null as BestMatch | null;
 
     // First check training data patterns
     trainingData.forEach(example => {
       example.patterns.forEach((pattern: Pattern) => {
         if (name.includes(pattern.pattern)) {
-          if (!bestMatch || pattern.confidence > bestMatch.confidence) {
-            bestMatch = {
-              label: example.correctLabel,
-              confidence: 0.6
-            };
+          const currentMatch: BestMatch = {
+            label: example.correctLabel,
+            confidence: pattern.confidence
+          };
+          if (!bestMatch || currentMatch.confidence > bestMatch.confidence) {
+            bestMatch = currentMatch;
           }
         }
       });
@@ -61,20 +67,25 @@ export function useAutoAI() {
         try {
           const pattern = new RegExp(info.pattern, 'i');
           if (pattern.test(name)) {
-            if (!bestMatch || info.confidence > bestMatch.confidence) {
-              bestMatch = {
-                label,
-                confidence: 0.6
-              };
+            const currentMatch: BestMatch = {
+              label,
+              confidence: info.confidence
+            };
+            if (!bestMatch || currentMatch.confidence > bestMatch.confidence) {
+              bestMatch = currentMatch;
             }
           }
-        } catch (error) {
+        } catch {
           console.warn('Invalid pattern:', info.pattern);
         }
       });
     }
 
-    return bestMatch ? { label: bestMatch.label, confidence: bestMatch.confidence } : { label: null, confidence: 0 };
+    const result: AutoAIResult = bestMatch 
+      ? { label: bestMatch.label, confidence: bestMatch.confidence }
+      : { label: null, confidence: 0 };
+    
+    return result;
   }, [trainingData]);
 
   // Combined analysis using both pattern matching and NLP
