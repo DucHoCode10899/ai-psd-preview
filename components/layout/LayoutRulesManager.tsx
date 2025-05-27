@@ -35,6 +35,7 @@ interface LayoutOption {
         bottom?: number;
         left?: number;
       };
+      applySafezone?: boolean;
     }>;
     renderOrder?: string[]; // Add renderOrder to store label order
   };
@@ -257,7 +258,8 @@ export function LayoutRulesManager() {
     visible: currentOption.rules.visibility[selectedLabel],
     position: currentOption.rules.positioning[selectedLabel]?.position,
     maxWidthPercent: currentOption.rules.positioning[selectedLabel]?.maxWidthPercent * 100,
-    maxHeightPercent: currentOption.rules.positioning[selectedLabel]?.maxHeightPercent * 100
+    maxHeightPercent: currentOption.rules.positioning[selectedLabel]?.maxHeightPercent * 100,
+    applySafezone: currentOption.rules.positioning[selectedLabel]?.applySafezone ?? true
   } : null;
 
   // Handle channel selection
@@ -447,6 +449,7 @@ export function LayoutRulesManager() {
       position: string;
       maxWidthPercent: number;
       maxHeightPercent: number;
+      applySafezone: boolean;
     }> = {};
     
     LABEL_TYPES.forEach(label => {
@@ -454,7 +457,8 @@ export function LayoutRulesManager() {
       defaultPositioning[label] = {
         position: "center",
         maxWidthPercent: 0.5,
-        maxHeightPercent: 0.5
+        maxHeightPercent: 0.5,
+        applySafezone: true
       };
     });
     
@@ -1037,6 +1041,222 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
     setIsCloneOptionDialogOpen(true);
   };
 
+  // Handle safezone toggle
+  const handleSafezoneToggle = (checked: boolean) => {
+    if (!currentChannel || !currentLayout || !currentOption || !selectedLabel) return;
+    
+    const updatedChannels = channels.map(channel => {
+      if (channel.id === selectedChannelId) {
+        return {
+          ...channel,
+          layouts: channel.layouts.map(layout => {
+            if (layout.aspectRatio === selectedAspectRatio) {
+              return {
+                ...layout,
+                options: layout.options.map(option => {
+                  if (option.name === selectedOption) {
+                    return {
+                      ...option,
+                      rules: {
+                        ...option.rules,
+                        positioning: {
+                          ...option.rules.positioning,
+                          [selectedLabel]: {
+                            ...option.rules.positioning[selectedLabel],
+                            applySafezone: checked
+                          }
+                        }
+                      }
+                    };
+                  }
+                  return option;
+                })
+              };
+            }
+            return layout;
+          })
+        };
+      }
+      return channel;
+    });
+    
+    setChannels(updatedChannels);
+    addToHistory(updatedChannels);
+    setIsDirty(true);
+  };
+
+  // Update canvas useEffect to show safezone
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !currentLayout || !currentOption) return;
+
+    const canvas = fabricCanvasRef.current;
+    canvas.clear();
+
+    // Calculate scale to fit canvas
+    const scale = Math.min(
+      canvas.width! / currentLayout.width,
+      canvas.height! / currentLayout.height
+    );
+
+    // Add layout background
+    const background = new Rect({
+      left: 0,
+      top: 0,
+      width: currentLayout.width * scale,
+      height: currentLayout.height * scale,
+      fill: 'white',
+      stroke: '#cccccc',
+      strokeWidth: 1,
+      selectable: false
+    });
+    canvas.add(background);
+
+    // Add safezone boundaries (5% margin)
+    const safezoneMargin = 0; // 5% margin
+    const safezone = new Rect({
+      left: currentLayout.width * safezoneMargin * scale,
+      top: currentLayout.height * safezoneMargin * scale,
+      width: currentLayout.width * (1 - 2 * safezoneMargin) * scale,
+      height: currentLayout.height * (1 - 2 * safezoneMargin) * scale,
+      fill: 'transparent',
+      stroke: '#2563eb',
+      strokeWidth: 1,
+      strokeDashArray: [5, 5],
+      selectable: false
+    });
+    canvas.add(safezone);
+
+    // Get render order and add labels in that order
+    const renderOrder = getCurrentRenderOrder();
+    renderOrder.forEach(label => {
+      const settings = currentOption.rules.positioning[label];
+      if (!settings || !currentOption.rules.visibility[label]) return;
+
+      const maxWidth = settings.maxWidthPercent * currentLayout.width;
+      const maxHeight = settings.maxHeightPercent * currentLayout.height;
+      const applySafezone = settings.applySafezone ?? true;
+
+      // Calculate position based on settings.position
+      let left = 0;
+      let top = 0;
+      
+      // Apply safezone margin if enabled
+      const margin = applySafezone ? safezoneMargin : 0;
+      const safeWidth = currentLayout.width * (1 - 2 * margin);
+      const safeHeight = currentLayout.height * (1 - 2 * margin);
+      const safeLeft = currentLayout.width * margin;
+      const safeTop = currentLayout.height * margin;
+
+      switch (settings.position) {
+        case 'center':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + (safeHeight - maxHeight) / 2;
+          break;
+          
+        // Top positions
+        case 'top-left':
+          left = safeLeft;
+          top = safeTop;
+          break;
+        case 'top-center':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop;
+          break;
+        case 'top-right':
+          left = safeLeft + safeWidth - maxWidth;
+          top = safeTop;
+          break;
+          
+        // Middle positions
+        case 'middle-top-center':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + safeHeight * 0.25 - maxHeight / 2;
+          break;
+        case 'middle-bottom-center':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + safeHeight * 0.75 - maxHeight / 2;
+          break;
+          
+        // Bottom positions
+        case 'bottom-left':
+          left = safeLeft;
+          top = safeTop + safeHeight - maxHeight;
+          break;
+        case 'bottom-center':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + safeHeight - maxHeight;
+          break;
+        case 'bottom-right':
+          left = safeLeft + safeWidth - maxWidth;
+          top = safeTop + safeHeight - maxHeight;
+          break;
+          
+        // Side positions
+        case 'left-center':
+          left = safeLeft;
+          top = safeTop + (safeHeight - maxHeight) / 2;
+          break;
+        case 'right-center':
+          left = safeLeft + safeWidth - maxWidth;
+          top = safeTop + (safeHeight - maxHeight) / 2;
+          break;
+          
+        // Percentage-based positions
+        case 'top-center-10':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + safeHeight * 0.1 - maxHeight / 2;
+          break;
+        case 'top-center-20':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + safeHeight * 0.2 - maxHeight / 2;
+          break;
+        case 'top-center-30':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + safeHeight * 0.3 - maxHeight / 2;
+          break;
+        case 'top-center-40':
+          left = safeLeft + (safeWidth - maxWidth) / 2;
+          top = safeTop + safeHeight * 0.4 - maxHeight / 2;
+          break;
+      }
+      
+      // Create rectangle for label
+      const rect = new Rect({
+        left: left * scale,
+        top: top * scale,
+        width: maxWidth * scale,
+        height: maxHeight * scale,
+        fill: getLabelColor(label),
+        stroke: selectedLabel === label ? '#3b82f6' : 'transparent',
+        strokeWidth: 2,
+        selectable: false,
+        hoverCursor: 'pointer'
+      });
+      
+      // Add label text
+      const text = new Text(label, {
+        left: (left + maxWidth/2) * scale,
+        top: (top + maxHeight/2) * scale,
+        fontSize: 12 * scale,
+        fill: 'white',
+        fontFamily: 'sans-serif',
+        originX: 'center',
+        originY: 'center',
+        selectable: false
+      });
+      
+      // Add click handler
+      rect.on('mousedown', () => {
+        handleLabelSelect(label);
+      });
+      
+      canvas.add(rect);
+      canvas.add(text);
+    });
+    
+    canvas.renderAll();
+  }, [currentLayout, currentOption, selectedLabel]);
+
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
@@ -1401,6 +1621,16 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
                     onCheckedChange={handleVisibilityToggle}
                   />
                   <Label htmlFor="visibility">Visible in layout</Label>
+                </div>
+
+                {/* Safezone */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="safezone"
+                    checked={currentLabelSettings.applySafezone}
+                    onCheckedChange={handleSafezoneToggle}
+                  />
+                  <Label htmlFor="safezone">Apply safezone</Label>
                 </div>
 
                 {/* Position */}

@@ -69,6 +69,7 @@ interface LayoutOption {
         bottom?: number;
         left?: number;
       };
+      applySafezone?: boolean;
     }>;
     renderOrder?: string[];
   };
@@ -173,7 +174,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   const [generatedLayout, setGeneratedLayout] = useState<GeneratedLayout | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [safezoneWidth, setSafezoneWidth] = useState(10);
   const [margin] = useState(5);
   const [sourceRatio, setSourceRatio] = useState<string | null>(null);
   const [layerImages, setLayerImages] = useState<Map<string, ImageData>>(new Map());
@@ -425,7 +425,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           );
 
           const layout = generateLayout(visibleLayers, selectedOption, {
-            safezone: safezoneWidth,
+            safezone: margin,
             margin: margin
           });
 
@@ -729,24 +729,23 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       excludeFromExport: true
     });
     canvas.add(background);
-    
-    // Add safezone outline
-    if (safezoneWidth > 0) {
-      const safezone = new Rect({
-        left: safezoneWidth * scale,
-        top: safezoneWidth * scale,
-        width: canvasWidth - (safezoneWidth * scale * 2),
-        height: canvasHeight - (safezoneWidth * scale * 2),
-        fill: 'transparent',
-        stroke: '#0ea5e9',
-        strokeWidth: 1,
-        strokeDashArray: [5, 5],
-        selectable: false,
-        evented: false,
-        excludeFromExport: true
-      });
-      canvas.add(safezone);
-    }
+
+    // Add safezone boundaries (5% margin)
+    const safezoneMargin = margin / 100; // Convert margin to decimal
+    const safezone = new Rect({
+      left: canvasWidth * safezoneMargin,
+      top: canvasHeight * safezoneMargin,
+      width: canvasWidth * (1 - 2 * safezoneMargin),
+      height: canvasHeight * (1 - 2 * safezoneMargin),
+      fill: 'transparent',
+      stroke: '#2563eb',
+      strokeWidth: 1,
+      strokeDashArray: [5, 5],
+      selectable: false,
+      evented: false,
+      excludeFromExport: true
+    });
+    canvas.add(safezone);
     
     // Track elements added for logging
     let elementsAdded = 0;
@@ -786,6 +785,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         return 0;
       });
     }
+
+    // Get current layout option to check for safezone settings
+    const currentOption = availableOptions.find(opt => opt.name === generatedLayout.name);
 
     // Render elements in order
     for (const element of elementsToRender) {
@@ -841,10 +843,22 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           }
         }
         
-        // Calculate final position with scale
+        // Calculate final position with scale and safezone
         const customPosition = layoutCustomPositions[element.id];
-        const left = (customPosition ? customPosition.x : element.x) * scale;
-        const top = (customPosition ? customPosition.y : element.y) * scale;
+        let left = (customPosition ? customPosition.x : element.x) * scale;
+        let top = (customPosition ? customPosition.y : element.y) * scale;
+
+        // Apply safezone if enabled for this element
+        if (currentOption?.rules.positioning[element.label]?.applySafezone !== false) {
+          const safeLeft = canvasWidth * safezoneMargin;
+          const safeTop = canvasHeight * safezoneMargin;
+          const safeWidth = canvasWidth * (1 - 2 * safezoneMargin);
+          const safeHeight = canvasHeight * (1 - 2 * safezoneMargin);
+
+          // Ensure element stays within safezone
+          left = Math.max(safeLeft, Math.min(safeLeft + safeWidth - elementWidth * scale, left));
+          top = Math.max(safeTop, Math.min(safeTop + safeHeight - elementHeight * scale, top));
+        }
         
         // Create fabric image
         const fabricImage = new FabricImage(tempCanvas, {
@@ -932,7 +946,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       canvas.renderAll();
     }
     
-  }, [generatedLayout, layerImages, customPositions, safezoneWidth, margin, isGenerating, animateElements, currentRenderOrder]);
+  }, [generatedLayout, layerImages, customPositions, margin, isGenerating, animateElements, currentRenderOrder, availableOptions]);
 
   // Function to find all sync sets in the layers with support for multiple alternatives
   const findSyncSets = (layers: PsdLayerMetadata[], labels: Record<string, string>, links: LayerLink[]): SyncLayerSet[] => {
@@ -1151,7 +1165,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       console.log('Visible layers:', visibleLayers.map(l => l.name));
 
       const generatedLayoutResult = generateLayout(visibleLayers, selectedOption, {
-        safezone: safezoneWidth,
+        safezone: margin,
         margin: margin
       });
 
@@ -1441,24 +1455,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     });
     fabricCanvas.add(background);
     
-    // Add safezone outline if needed
-    if (safezoneWidth > 0) {
-      const safezone = new Rect({
-        left: safezoneWidth * scale,
-        top: safezoneWidth * scale,
-        width: canvasWidth - (safezoneWidth * scale * 2),
-        height: canvasHeight - (safezoneWidth * scale * 2),
-        fill: 'transparent',
-        stroke: '#0ea5e9',
-        strokeWidth: 1,
-        strokeDashArray: [5, 5],
-        selectable: false,
-        evented: false,
-        excludeFromExport: true
-      });
-      fabricCanvas.add(safezone);
-    }
-    
     // Add elements in reverse order (bottom to top)
     const elementsToRender = [...layout.elements].reverse();
     
@@ -1659,7 +1655,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           }));
 
           const layout = generateLayout(visibleLayers, selectedOption, {
-            safezone: safezoneWidth,
+            safezone: margin,
             margin: margin
           });
 
@@ -1919,27 +1915,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                   </div>
                 </>
               )}
-
-              <div>
-              <Label htmlFor="safezone-width" className="text-sm font-medium mb-2">
-                Safezone
-              </Label>
-              <Select 
-                value={safezoneWidth.toString()} 
-                onValueChange={(value) => setSafezoneWidth(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select safezone width" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({length: 11}, (_, i) => i * 5).map((value) => (
-                    <SelectItem key={value} value={value.toString()}>
-                      {value}px
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              </div>
 
               {/* Generate buttons */}
               {selectedChannelId && selectedAspectRatio && selectedOption && (

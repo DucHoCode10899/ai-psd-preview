@@ -82,18 +82,7 @@ const getLayerLabels = (): Record<string, string> => {
   return {};
 };
 
-// Get visibility states from sessionStorage
-const getVisibilityStates = (): Record<string, boolean> => {
-  try {
-    const storedVisibility = sessionStorage.getItem('psd_layer_visibility');
-    if (storedVisibility) {
-      return JSON.parse(storedVisibility);
-    }
-  } catch (err) {
-    console.error('Error loading visibility states:', err);
-  }
-  return {};
-};
+
 
 // Find layers with specific labels
 const findLayersByLabel = (
@@ -148,6 +137,14 @@ declare module '@/types/layout' {
     position: string;
     maxWidthPercent: number;
     maxHeightPercent: number;
+    alignment?: string;
+    margin?: {
+      top?: number;
+      right?: number;
+      bottom?: number;
+      left?: number;
+    };
+    applySafezone?: boolean;
   }
   
   interface GeneratedElement {
@@ -159,13 +156,13 @@ declare module '@/types/layout' {
 export const generateLayout = (
   psdLayers: PsdLayerMetadata[],
   optionName: string,
-  safezoneWidth: number = 10
+  options: {
+    safezone: number;
+    margin: number;
+  }
 ): GeneratedLayout | null => {
   // Get layer labels from sessionStorage
   const labelMap = getLayerLabels();
-  
-  // Get visibility states from sessionStorage
-  const visibilityStates = getVisibilityStates();
   
   // Find all layers grouped by label
   const labeledLayers = findLayersByLabel(psdLayers, labelMap);
@@ -201,41 +198,6 @@ export const generateLayout = (
     height: selectedLayout.height,
     aspectRatio: selectedLayout.aspectRatio,
     elements: []
-  };
-
-  // Helper function to check if a layer should be visible
-  const shouldLayerBeVisible = (layer: PsdLayerMetadata): boolean => {
-    // Get the layer's own visibility state from sessionStorage or use its default
-    const layerVisibility = visibilityStates[layer.id] ?? layer.visible;
-
-    // If the layer is hidden, all descendants should be hidden
-    if (!layerVisibility) return false;
-
-    // Check parent chain - if any parent is hidden, this layer should be hidden
-    let currentLayer = layer;
-    while (currentLayer.parent) {
-      const parentVisibility = visibilityStates[currentLayer.parent] ?? true;
-      if (!parentVisibility) return false;
-      
-      // Find the parent layer
-      const parent = findLayerInTree(psdLayers, currentLayer.parent);
-      if (!parent) break;
-      currentLayer = parent;
-    }
-
-    return true;
-  };
-
-  // Helper function to find a layer in the layer tree
-  const findLayerInTree = (layers: PsdLayerMetadata[], layerId: string): PsdLayerMetadata | null => {
-    for (const layer of layers) {
-      if (layer.id === layerId) return layer;
-      if (layer.children) {
-        const found = findLayerInTree(layer.children, layerId);
-        if (found) return found;
-      }
-    }
-    return null;
   };
   
   // Process each label type
@@ -288,11 +250,10 @@ export const generateLayout = (
         finalHeight,
         selectedLayout.width,
         selectedLayout.height,
-        safezoneWidth
+        options.safezone
       );
       
-      console.log(`Calculated position: x=${x}, y=${y}`);
-
+      // Add element to layout
       result.elements.push({
         id: layer.id,
         name: layer.name,
@@ -301,7 +262,7 @@ export const generateLayout = (
         y,
         width: finalWidth,
         height: finalHeight,
-        visible: isVisible && shouldLayerBeVisible(layer),
+        visible: isVisible,
         parent: layer.parent,
         originalBounds: layer.bounds,
         position
@@ -309,9 +270,6 @@ export const generateLayout = (
     });
   });
   
-  // Add rules to the generated layout for reference
-  result.rules = selectedOption.rules;
-
   return result;
 };
 

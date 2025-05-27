@@ -60,6 +60,7 @@ export interface PositionOptions {
   safezone?: number;
   padding?: number;
   margin?: number;
+  elementType?: string;
 }
 
 /**
@@ -124,8 +125,14 @@ export function calculatePosition(
   const { 
     safezone = 0,
     padding = 0,
-    margin = 0
+    margin = 0,
+    elementType
   } = options;
+
+  // Special handling for background elements - always position at 0,0
+  if (elementType === 'background') {
+    return { x: 0, y: 0 };
+  }
 
   // Calculate effective container dimensions after safezone
   const effectiveWidth = container.width - (safezone * 2);
@@ -135,7 +142,7 @@ export function calculatePosition(
   const effectiveElementWidth = element.width + (padding * 2) + (margin * 2);
   const effectiveElementHeight = element.height + (padding * 2) + (margin * 2);
   
-  // Handle oversized elements (like backgrounds with cover scaling)
+  // Handle oversized elements (excluding backgrounds which are handled above)
   if (effectiveElementWidth > container.width || effectiveElementHeight > container.height) {
     const x = (container.width - effectiveElementWidth) / 2;
     const y = (container.height - effectiveElementHeight) / 2;
@@ -409,7 +416,7 @@ export function calculateElementLayout(
     position,
     dimensions,
     { width: containerWidth, height: containerHeight },
-    options
+    { ...options, elementType }
   );
   
   return {
