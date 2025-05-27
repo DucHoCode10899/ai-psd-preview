@@ -54,25 +54,38 @@ interface AdvancedLayoutGeneratorProps {
 }
 
 // Add type definitions
+interface PsdLayerMetadataWithSafezone extends PsdLayerMetadata {
+  applySafezone?: boolean;
+}
+
+interface PositionOptions {
+  safezone: number;
+  margin: number;
+  applySafezoneByLayer?: boolean;
+}
+
+interface PositioningRule {
+  position: string;
+  maxWidthPercent: number;
+  maxHeightPercent: number;
+  alignment?: string;
+  margin?: {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
+  };
+  applySafezone?: boolean;
+}
+
 interface LayoutOption {
   name: string;
   rules: {
     visibility: Record<string, boolean>;
-    positioning: Record<string, {
-      position: string;
-      maxWidthPercent: number;
-      maxHeightPercent: number;
-      alignment?: string;
-      margin?: {
-        top?: number;
-        right?: number;
-        bottom?: number;
-        left?: number;
-      };
-      applySafezone?: boolean;
-    }>;
+    positioning: Record<string, PositioningRule>;
     renderOrder?: string[];
   };
+  safezoneMargin?: number;
 }
 
 interface LayoutRule {
@@ -96,25 +109,7 @@ interface LayoutRuleResponse {
       aspectRatio: string;
       width: number;
       height: number;
-      options: Array<{
-        name: string;
-        rules: {
-          visibility: Record<string, boolean>;
-          positioning: Record<string, {
-            position: string;
-            maxWidthPercent: number;
-            maxHeightPercent: number;
-            alignment?: string;
-            margin?: {
-              top?: number;
-              right?: number;
-              bottom?: number;
-              left?: number;
-            };
-          }>;
-          renderOrder?: string[];
-        };
-      }>;
+      options: Array<LayoutOption>;
     }>;
   }>;
 }
@@ -130,6 +125,10 @@ interface SyncLayerSet {
   mainLayer: string;  // ID of the main layer (e.g., main-subject)
   syncedLayers: string[][];  // Array of alternative synced layer groups
   label: string;  // The label of the main layer
+}
+
+interface SafezoneState {
+  [label: string]: boolean;
 }
 
 export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayoutGeneratorProps) {
@@ -174,7 +173,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   const [generatedLayout, setGeneratedLayout] = useState<GeneratedLayout | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [margin] = useState(5);
+  const [margin, setMargin] = useState<number>(0.043); // Default margin of 4.3%
   const [sourceRatio, setSourceRatio] = useState<string | null>(null);
   const [layerImages, setLayerImages] = useState<Map<string, ImageData>>(new Map());
   const [customPositions, setCustomPositions] = useState<Record<string, Record<string, { 
@@ -229,6 +228,12 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   // Add new state for storing render order
   const [currentRenderOrder, setCurrentRenderOrder] = useState<string[] | null>(null);
 
+  // Add new state for safezone states
+  const [safezoneByLabel, setSafezoneByLabel] = useState<SafezoneState>({});
+
+  // Add new state for sync gallery modal
+  const [showSyncGallery, setShowSyncGallery] = useState(false);
+
   // Add function to calculate grid columns based on width
   const calculateGridColumns = (width: number) => {
     if (width < 768) return 1;
@@ -267,227 +272,35 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     };
   }, []);
 
-  // Add new function to generate all sync layouts
-  const handleGenerateAllSyncLayouts = async () => {
-    if (!psdLayers || !selectedAspectRatio || !selectedOption) {
-      toast.error('Please select all required options');
-      return;
-    }
-
-    // Only check segmentation if there are personalized layers
-    if (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue)) {
-      toast.error('Please select segmentation options');
-      return;
-    }
-
-    // Load necessary data from storage
-    const layerLabels = sessionStorage.getItem('psd_layer_labels');
-    const storedLinks = localStorage.getItem('psd_layer_links');
+  // Add function to update safezone states
+  const updateSafezoneStates = (option: LayoutOption) => {
+    const newSafezoneState: SafezoneState = {};
     
-    if (!layerLabels || !storedLinks) {
-      toast.error('Missing layer data or sync links');
-      return;
-    }
+    // Get all labels from positioning rules
+    Object.entries(option.rules.positioning).forEach(([label, rules]) => {
+      // Default to true unless explicitly set to false
+      newSafezoneState[label] = rules.applySafezone !== false;
+    });
 
-    try {
-      const labels = JSON.parse(layerLabels);
-      const links = JSON.parse(storedLinks) as LayerLink[];
-      let personalizationRules = {};
+    setSafezoneByLabel(newSafezoneState);
+    console.log('Updated safezone states:', newSafezoneState);
+  };
 
-      // Only load personalization rules if we have personalized layers
-      if (hasPersonalization) {
-        const storedRules = localStorage.getItem('psd_personalization_rules');
-        if (!storedRules) {
-          toast.error('Missing personalization rules');
-          return;
-        }
-        personalizationRules = JSON.parse(storedRules);
-      }
-
-      setIsGenerating(true);
-      const description = [];
-
-      // Find all sync sets with alternatives
-      const sets = findSyncSets(psdLayers, labels, links);
-      console.log('Found sync sets with alternatives:', sets);
-      
-      if (sets.length === 0) {
-        toast.error('No synchronized sets found');
-        setIsGenerating(false);
-        return;
-      }
-
-      description.push(`Found ${sets.length} synchronized sets:`);
-      sets.forEach(set => {
-        const mainLayerName = psdLayers.find(l => l.id === set.mainLayer)?.name || set.mainLayer;
-        description.push(`- ${set.label}: Main layer ${mainLayerName} with alternatives:`);
-        set.syncedLayers.forEach((group, index) => {
-          const syncedLayerNames = group.map(id => 
-            psdLayers.find(l => l.id === id)?.name || id
-          );
-          description.push(`  Alternative ${index + 1}: ${syncedLayerNames.join(', ')}`);
-        });
-      });
-
-      // Group sets by label
-      const setsByLabel = new Map<string, typeof sets>();
-      sets.forEach(set => {
-        if (!setsByLabel.has(set.label)) {
-          setsByLabel.set(set.label, []);
-        }
-        setsByLabel.get(set.label)?.push(set);
-      });
-
-      // Get all valid sets for each label
-      const validSetsByLabel = new Map<string, typeof sets>();
-      setsByLabel.forEach((labelSets, labelKey) => {
-        // Only apply personalization rules if we have personalized layers
-        if (hasPersonalization) {
-          const validSets = labelSets.filter(set =>
-            doesLayerMatchRules(set.mainLayer, personalizationRules) &&
-            set.syncedLayers.flat().every(id => doesLayerMatchRules(id, personalizationRules))
-          );
-          if (validSets.length > 0) {
-            validSetsByLabel.set(labelKey, validSets);
+  // Update safezone states when option changes
+  useEffect(() => {
+    if (selectedChannelId && selectedAspectRatio && selectedOption) {
+      const channel = availableChannels.find(c => c.id === selectedChannelId);
+      if (channel) {
+        const layout = channel.layouts.find(l => l.aspectRatio === selectedAspectRatio);
+        if (layout) {
+          const option = layout.options.find(o => o.name === selectedOption);
+          if (option) {
+            updateSafezoneStates(option);
           }
-        } else {
-          // If no personalization, all sets are valid
-          validSetsByLabel.set(labelKey, labelSets);
         }
-      });
-
-      // Generate all possible combinations
-      const layouts: GeneratedLayout[] = [];
-      const generateCombinations = (
-        currentLabel: string | undefined,
-        selectedSets: Map<string, { mainLayer: string; selectedGroup: string[] }>,
-        remainingLabels: string[]
-      ) => {
-        if (!currentLabel) {
-          // Base case: generate layout from current combination
-          const visibleLayerIds = new Set<string>();
-          const processedLayerIds = new Set<string>();
-          const excludedLayerIds = new Set<string>();
-
-          // Mark excluded layers from all sync sets
-          sets.forEach(set => {
-            set.syncedLayers.flat().forEach(id => {
-              excludedLayerIds.add(id.replace('layer_', ''));
-              excludedLayerIds.add(`layer_${id.replace('layer_', '')}`);
-            });
-          });
-
-          // Add selected sync sets to visible layers
-          selectedSets.forEach(({ mainLayer, selectedGroup }) => {
-            const selectedLayerIds = new Set([
-              mainLayer,
-              ...selectedGroup,
-              mainLayer.replace('layer_', ''),
-              ...selectedGroup.map(id => id.replace('layer_', ''))
-            ]);
-            selectedLayerIds.forEach(id => {
-              processedLayerIds.add(id);
-              visibleLayerIds.add(id);
-            });
-          });
-
-          // Add non-synced layers
-          const layersByLabel = new Map<string, PsdLayerMetadata[]>();
-          psdLayers.forEach(layer => {
-            const layerId = layer.id;
-            const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
-            const layerLabel = labels[normalizedId] || labels[layerId];
-            if (layerLabel && !selectedSets.has(layerLabel)) {
-              if (!layersByLabel.has(layerLabel)) {
-                layersByLabel.set(layerLabel, []);
-              }
-              layersByLabel.get(layerLabel)?.push(layer);
-            }
-          });
-
-          // Process non-synced layers
-          layersByLabel.forEach((layers) => {
-            const unprocessedLayers = layers.filter(layer => !processedLayerIds.has(layer.id));
-            const availableLayers = unprocessedLayers.filter(layer =>
-              !excludedLayerIds.has(layer.id) && !excludedLayerIds.has(`layer_${layer.id}`)
-            );
-            const matchingLayers = availableLayers.filter(layer => doesLayerMatchRules(layer.id, personalizationRules));
-
-            if (matchingLayers.length > 0) {
-              const selectedLayer = matchingLayers[Math.floor(Math.random() * matchingLayers.length)];
-              visibleLayerIds.add(selectedLayer.id);
-            }
-          });
-
-          // Generate layout with current visible layers
-          const visibleLayers = psdLayers.filter(layer =>
-            visibleLayerIds.has(layer.id) || visibleLayerIds.has(`layer_${layer.id}`)
-          );
-
-          const layout = generateLayout(visibleLayers, selectedOption, {
-            safezone: margin,
-            margin: margin
-          });
-
-          if (layout) {
-            layouts.push(layout);
-          }
-          return;
-        }
-
-        // Get valid sets for current label
-        const validSets = validSetsByLabel.get(currentLabel) || [];
-        const nextLabel = remainingLabels[0];
-        const nextRemainingLabels = remainingLabels.slice(1);
-
-        // Try each valid set and each alternative group
-        validSets.forEach(set => {
-          set.syncedLayers.forEach(group => {
-            const newSelectedSets = new Map(selectedSets);
-            newSelectedSets.set(currentLabel, { mainLayer: set.mainLayer, selectedGroup: group });
-            generateCombinations(nextLabel, newSelectedSets, nextRemainingLabels);
-          });
-        });
-      };
-
-      // Start generating combinations
-      const labelKeys = Array.from(validSetsByLabel.keys());
-      generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
-
-      description.push(`\nGenerated ${layouts.length} layout combinations`);
-      setGenerationDescription(description.join('\n'));
-      setMultipleLayouts(layouts);
-      setGeneratedLayout(layouts[0]); // Show first layout initially
-
-      setTimeout(() => {
-        setIsGenerating(false);
-      }, 1000);
-
-    } catch (error) {
-      console.error('Error generating all sync layouts:', error);
-      toast.error('Error generating layouts');
-      setIsGenerating(false);
+      }
     }
-  };
-
-  // Add layout navigation controls
-  const [currentLayoutIndex, setCurrentLayoutIndex] = useState(0);
-
-  const showNextLayout = () => {
-    if (multipleLayouts.length > 0) {
-      const nextIndex = (currentLayoutIndex + 1) % multipleLayouts.length;
-      setCurrentLayoutIndex(nextIndex);
-      setGeneratedLayout(multipleLayouts[nextIndex]);
-    }
-  };
-
-  const showPreviousLayout = () => {
-    if (multipleLayouts.length > 0) {
-      const prevIndex = (currentLayoutIndex - 1 + multipleLayouts.length) % multipleLayouts.length;
-      setCurrentLayoutIndex(prevIndex);
-      setGeneratedLayout(multipleLayouts[prevIndex]);
-    }
-  };
+  }, [selectedChannelId, selectedAspectRatio, selectedOption, availableChannels]);
 
   // Load available channels
   useEffect(() => {
@@ -674,15 +487,31 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     return true;
   });
 
-  // Update canvas rendering effect
+  // Update canvas rendering effect to use safezone states
   useEffect(() => {
     if (!fabricCanvasRef.current || !generatedLayout) return;
+    
+    // Get layer labels from session storage
+    const storedLabels = sessionStorage.getItem('psd_layer_labels');
+    if (!storedLabels) {
+      console.error('Missing layer labels data');
+      return;
+    }
+
+    let labels: Record<string, string>;
+    try {
+      labels = JSON.parse(storedLabels);
+    } catch (error) {
+      console.error('Error parsing layer labels:', error);
+      return;
+    }
     
     console.log('Rendering layout on canvas:', generatedLayout.name);
     console.log('Elements to render:', generatedLayout.elements.length);
     console.log('Layer images available:', layerImages.size);
     console.log('Animation enabled:', animateElements);
     console.log('Current render order:', currentRenderOrder);
+    console.log('Current safezone states:', safezoneByLabel);
     
     const canvas = fabricCanvasRef.current;
     
@@ -730,8 +559,8 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     });
     canvas.add(background);
 
-    // Add safezone boundaries (5% margin)
-    const safezoneMargin = margin / 100; // Convert margin to decimal
+    // Add safezone boundaries based on layout option's safezone margin
+    const safezoneMargin = margin; // Margin is already in decimal form
     const safezone = new Rect({
       left: canvasWidth * safezoneMargin,
       top: canvasHeight * safezoneMargin,
@@ -752,7 +581,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     
     // Get any custom positions for this layout
     const layoutCustomPositions = customPositions[generatedLayout.name] || {};
-    
+
     // Sort elements based on render order
     let elementsToRender = [...generatedLayout.elements];
     if (currentRenderOrder) {
@@ -785,9 +614,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         return 0;
       });
     }
-
-    // Get current layout option to check for safezone settings
-    const currentOption = availableOptions.find(opt => opt.name === generatedLayout.name);
 
     // Render elements in order
     for (const element of elementsToRender) {
@@ -848,8 +674,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         let left = (customPosition ? customPosition.x : element.x) * scale;
         let top = (customPosition ? customPosition.y : element.y) * scale;
 
-        // Apply safezone if enabled for this element
-        if (currentOption?.rules.positioning[element.label]?.applySafezone !== false) {
+        // Apply safezone if enabled for this element's label
+        const elementLabel = labels[element.id] || labels[`layer_${element.id}`];
+        if (safezoneByLabel[elementLabel] !== false) {
           const safeLeft = canvasWidth * safezoneMargin;
           const safeTop = canvasHeight * safezoneMargin;
           const safeWidth = canvasWidth * (1 - 2 * safezoneMargin);
@@ -946,7 +773,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       canvas.renderAll();
     }
     
-  }, [generatedLayout, layerImages, customPositions, margin, isGenerating, animateElements, currentRenderOrder, availableOptions]);
+  }, [generatedLayout, layerImages, customPositions, margin, isGenerating, animateElements, currentRenderOrder, availableOptions, safezoneByLabel]);
 
   // Function to find all sync sets in the layers with support for multiple alternatives
   const findSyncSets = (layers: PsdLayerMetadata[], labels: Record<string, string>, links: LayerLink[]): SyncLayerSet[] => {
@@ -1046,7 +873,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     });
   };
 
-  // Modify handleGenerateLayout to fetch latest data
+  // Modify handleGenerateLayout to use updated safezone states
   const handleGenerateLayout = async () => {
     if (!psdLayers || !selectedAspectRatio || !selectedOption) {
       toast.error('Please select all required options');
@@ -1071,7 +898,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       const response = await fetch('/api/layout-rules');
       const layoutRulesData = await response.json() as LayoutRuleResponse;
       
-      // Find current channel and layout option to get latest render order
+      // Find current channel and layout option to get latest render order and safezone settings
       const currentChannel = layoutRulesData.channels.find(c => c.id === selectedChannelId);
       if (!currentChannel) {
         toast.error('Selected channel not found');
@@ -1090,9 +917,16 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         return;
       }
 
+      // Update safezone states with latest data
+      updateSafezoneStates(currentOption);
+
       // Update current render order with latest data
       const renderOrder = currentOption.rules.renderOrder;
       setCurrentRenderOrder(renderOrder || null);
+
+      // Update safezone margin with latest data
+      const safezoneMargin = currentOption.safezoneMargin || margin;
+      setMargin(safezoneMargin);
 
       const labels = JSON.parse(layerLabels);
       let personalizationRules = {};
@@ -1110,7 +944,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       setIsGenerating(true);
 
       // Group layers by label
-      const layersByLabel = new Map<string, PsdLayerMetadata[]>();
+      const layersByLabel = new Map<string, PsdLayerMetadataWithSafezone[]>();
       psdLayers.forEach(layer => {
         const layerId = layer.id;
         const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
@@ -1119,24 +953,35 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           if (!layersByLabel.has(label)) {
             layersByLabel.set(label, []);
           }
-          layersByLabel.get(label)?.push(layer);
+          layersByLabel.get(label)?.push(layer as PsdLayerMetadataWithSafezone);
         }
       });
 
       // Process each label group independently
-      const processedLayers = Array.from(layersByLabel.entries()).flatMap(([, layers]) => {
+      const processedLayers = Array.from(layersByLabel.entries()).flatMap(([label, layers]) => {
+        // Get safezone setting for this label from latest rules
+        const labelRules = currentOption.rules.positioning[label];
+        const applySafezone = labelRules?.applySafezone !== false; // Default to true if not specified
+
+        // Update safezone state for this label
+        setSafezoneByLabel(prev => ({
+          ...prev,
+          [label]: applySafezone
+        }));
+
         // Only apply personalization rules if we have personalized layers
         if (hasPersonalization) {
           const matchingLayers = layers.filter(layer => doesLayerMatchRules(layer.id, personalizationRules));
           
           if (matchingLayers.length === 0) {
-            return layers.map(layer => ({ ...layer, visible: false }));
+            return layers.map(layer => ({ ...layer, visible: false, applySafezone }));
           }
 
           const selectedLayer = matchingLayers[Math.floor(Math.random() * matchingLayers.length)];
           return layers.map(layer => ({
             ...layer,
-            visible: layer.id === selectedLayer.id
+            visible: layer.id === selectedLayer.id,
+            applySafezone
           }));
         } else {
           // If no personalization, randomly select a layer from each group
@@ -1148,26 +993,32 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
           if (visibleLayers.length === 0) {
             // If no visible layers, mark all as invisible
-            return layers.map(layer => ({ ...layer, visible: false }));
+            return layers.map(layer => ({ ...layer, visible: false, applySafezone }));
           }
 
           // Randomly select from visible layers
           const selectedLayer = visibleLayers[Math.floor(Math.random() * visibleLayers.length)];
           return layers.map(layer => ({
             ...layer,
-            visible: layer.id === selectedLayer.id
+            visible: layer.id === selectedLayer.id,
+            applySafezone
           }));
         }
       });
 
       // Filter visible layers and generate layout
-      const visibleLayers = processedLayers.filter(layer => layer.visible);
-      console.log('Visible layers:', visibleLayers.map(l => l.name));
+      const visibleLayers = processedLayers.filter(layer => layer.visible) as PsdLayerMetadataWithSafezone[];
+      console.log('Visible layers with safezone:', visibleLayers.map(l => ({
+        name: l.name,
+        label: labels[l.id] || labels[`layer_${l.id}`],
+        applySafezone: l.applySafezone
+      })));
 
       const generatedLayoutResult = generateLayout(visibleLayers, selectedOption, {
-        safezone: margin,
-        margin: margin
-      });
+        safezone: safezoneMargin,
+        margin: safezoneMargin,
+        applySafezoneByLayer: true
+      } as PositionOptions);
 
       if (!generatedLayoutResult) {
         toast.error('Failed to generate layout');
@@ -1226,10 +1077,15 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         const layout = channel.layouts.find(l => l.aspectRatio === selectedAspectRatio);
         if (layout) {
           const option = layout.options.find(o => o.name === optionName);
-          if (option && option.rules.renderOrder) {
-            setCurrentRenderOrder(option.rules.renderOrder);
-          } else {
-            setCurrentRenderOrder(null);
+          if (option) {
+            // Set render order if available
+            if (option.rules.renderOrder) {
+              setCurrentRenderOrder(option.rules.renderOrder);
+            } else {
+              setCurrentRenderOrder(null);
+            }
+            // Set margin if available, otherwise use default
+            setMargin(option.safezoneMargin || 0.043);
           }
         }
       }
@@ -1761,6 +1617,229 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
+  // Add new function to generate all sync layouts
+  const handleGenerateAllSyncLayouts = async () => {
+    if (!psdLayers || !selectedAspectRatio || !selectedOption) {
+      toast.error('Please select all required options');
+      return;
+    }
+
+    // Only check segmentation if there are personalized layers
+    if (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue)) {
+      toast.error('Please select segmentation options');
+      return;
+    }
+
+    // Load necessary data from storage
+    const layerLabels = sessionStorage.getItem('psd_layer_labels');
+    const storedLinks = localStorage.getItem('psd_layer_links');
+    
+    if (!layerLabels || !storedLinks) {
+      toast.error('Missing layer data or sync links');
+      return;
+    }
+
+    try {
+      const labels = JSON.parse(layerLabels);
+      const links = JSON.parse(storedLinks) as LayerLink[];
+      let personalizationRules = {};
+
+      // Only load personalization rules if we have personalized layers
+      if (hasPersonalization) {
+        const storedRules = localStorage.getItem('psd_personalization_rules');
+        if (!storedRules) {
+          toast.error('Missing personalization rules');
+          return;
+        }
+        personalizationRules = JSON.parse(storedRules);
+      }
+
+      setIsGenerating(true);
+      const description = [];
+
+      // Find all sync sets with alternatives
+      const sets = findSyncSets(psdLayers, labels, links);
+      console.log('Found sync sets with alternatives:', sets);
+      
+      if (sets.length === 0) {
+        toast.error('No synchronized sets found');
+        setIsGenerating(false);
+        return;
+      }
+
+      description.push(`Found ${sets.length} synchronized sets:`);
+      sets.forEach(set => {
+        const mainLayerName = psdLayers.find(l => l.id === set.mainLayer)?.name || set.mainLayer;
+        description.push(`- ${set.label}: Main layer ${mainLayerName} with alternatives:`);
+        set.syncedLayers.forEach((group, index) => {
+          const syncedLayerNames = group.map(id => 
+            psdLayers.find(l => l.id === id)?.name || id
+          );
+          description.push(`  Alternative ${index + 1}: ${syncedLayerNames.join(', ')}`);
+        });
+      });
+
+      // Group sets by label
+      const setsByLabel = new Map<string, typeof sets>();
+      sets.forEach(set => {
+        if (!setsByLabel.has(set.label)) {
+          setsByLabel.set(set.label, []);
+        }
+        setsByLabel.get(set.label)?.push(set);
+      });
+
+      // Get all valid sets for each label
+      const validSetsByLabel = new Map<string, typeof sets>();
+      setsByLabel.forEach((labelSets, labelKey) => {
+        // Only apply personalization rules if we have personalized layers
+        if (hasPersonalization) {
+          const validSets = labelSets.filter(set =>
+            doesLayerMatchRules(set.mainLayer, personalizationRules) &&
+            set.syncedLayers.flat().every(id => doesLayerMatchRules(id, personalizationRules))
+          );
+          if (validSets.length > 0) {
+            validSetsByLabel.set(labelKey, validSets);
+          }
+        } else {
+          // If no personalization, all sets are valid
+          validSetsByLabel.set(labelKey, labelSets);
+        }
+      });
+
+      // Generate all possible combinations
+      const layouts: GeneratedLayout[] = [];
+      const generateCombinations = (
+        currentLabel: string | undefined,
+        selectedSets: Map<string, { mainLayer: string; selectedGroup: string[] }>,
+        remainingLabels: string[]
+      ) => {
+        if (!currentLabel) {
+          // Base case: generate layout from current combination
+          const visibleLayerIds = new Set<string>();
+          const processedLayerIds = new Set<string>();
+          const excludedLayerIds = new Set<string>();
+
+          // Mark excluded layers from all sync sets
+          sets.forEach(set => {
+            set.syncedLayers.flat().forEach(id => {
+              excludedLayerIds.add(id.replace('layer_', ''));
+              excludedLayerIds.add(`layer_${id.replace('layer_', '')}`);
+            });
+          });
+
+          // Add selected sync sets to visible layers
+          selectedSets.forEach(({ mainLayer, selectedGroup }) => {
+            const selectedLayerIds = new Set([
+              mainLayer,
+              ...selectedGroup,
+              mainLayer.replace('layer_', ''),
+              ...selectedGroup.map(id => id.replace('layer_', ''))
+            ]);
+            selectedLayerIds.forEach(id => {
+              processedLayerIds.add(id);
+              visibleLayerIds.add(id);
+            });
+          });
+
+          // Add non-synced layers
+          const layersByLabel = new Map<string, PsdLayerMetadata[]>();
+          psdLayers.forEach(layer => {
+            const layerId = layer.id;
+            const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
+            const layerLabel = labels[normalizedId] || labels[layerId];
+            if (layerLabel && !selectedSets.has(layerLabel)) {
+              if (!layersByLabel.has(layerLabel)) {
+                layersByLabel.set(layerLabel, []);
+              }
+              layersByLabel.get(layerLabel)?.push(layer);
+            }
+          });
+
+          // Process non-synced layers
+          layersByLabel.forEach((layers) => {
+            const unprocessedLayers = layers.filter(layer => !processedLayerIds.has(layer.id));
+            const availableLayers = unprocessedLayers.filter(layer =>
+              !excludedLayerIds.has(layer.id) && !excludedLayerIds.has(`layer_${layer.id}`)
+            );
+            const matchingLayers = availableLayers.filter(layer => doesLayerMatchRules(layer.id, personalizationRules));
+
+            if (matchingLayers.length > 0) {
+              const selectedLayer = matchingLayers[Math.floor(Math.random() * matchingLayers.length)];
+              visibleLayerIds.add(selectedLayer.id);
+            }
+          });
+
+          // Generate layout with current visible layers
+          const visibleLayers = psdLayers.filter(layer =>
+            visibleLayerIds.has(layer.id) || visibleLayerIds.has(`layer_${layer.id}`)
+          );
+
+          const layout = generateLayout(visibleLayers, selectedOption, {
+            safezone: margin,
+            margin: margin
+          });
+
+          if (layout) {
+            layouts.push(layout);
+          }
+          return;
+        }
+
+        // Get valid sets for current label
+        const validSets = validSetsByLabel.get(currentLabel) || [];
+        const nextLabel = remainingLabels[0];
+        const nextRemainingLabels = remainingLabels.slice(1);
+
+        // Try each valid set and each alternative group
+        validSets.forEach(set => {
+          set.syncedLayers.forEach(group => {
+            const newSelectedSets = new Map(selectedSets);
+            newSelectedSets.set(currentLabel, { mainLayer: set.mainLayer, selectedGroup: group });
+            generateCombinations(nextLabel, newSelectedSets, nextRemainingLabels);
+          });
+        });
+      };
+
+      // Start generating combinations
+      const labelKeys = Array.from(validSetsByLabel.keys());
+      generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
+
+      description.push(`\nGenerated ${layouts.length} layout combinations`);
+      setGenerationDescription(description.join('\n'));
+      setMultipleLayouts(layouts);
+      setGeneratedLayout(layouts[0]); // Show first layout initially
+      setShowSyncGallery(true); // Open the sync gallery modal automatically
+
+      setTimeout(() => {
+        setIsGenerating(false);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error generating all sync layouts:', error);
+      toast.error('Error generating layouts');
+      setIsGenerating(false);
+    }
+  };
+
+  // Add layout navigation controls
+  const [currentLayoutIndex, setCurrentLayoutIndex] = useState(0);
+
+  const showNextLayout = () => {
+    if (multipleLayouts.length > 0) {
+      const nextIndex = (currentLayoutIndex + 1) % multipleLayouts.length;
+      setCurrentLayoutIndex(nextIndex);
+      setGeneratedLayout(multipleLayouts[nextIndex]);
+    }
+  };
+
+  const showPreviousLayout = () => {
+    if (multipleLayouts.length > 0) {
+      const prevIndex = (currentLayoutIndex - 1 + multipleLayouts.length) % multipleLayouts.length;
+      setCurrentLayoutIndex(prevIndex);
+      setGeneratedLayout(multipleLayouts[prevIndex]);
+    }
+  };
+
   // If no layers, show upload message
   if (!psdLayers) {
     return (
@@ -2123,6 +2202,137 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               {/* Grid Layout - Scrollable Content */}
               <div className="flex-1 overflow-auto p-6">
                 {/* Calculate grid column based on the modal width */}
+                <div className="grid gap-6" style={{
+                  gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`
+                }}>
+                  {multipleLayouts.map((layout, index) => (
+                    <div 
+                      key={index}
+                      className={cn(
+                        "relative overflow-hidden rounded-md transition-all duration-200 hover:shadow-lg",
+                        currentLayoutIndex === index 
+                          ? "border-primary ring-2 ring-primary/20 shadow-xl" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                      onClick={() => {
+                        setCurrentLayoutIndex(index);
+                        setGeneratedLayout(layout);
+                      }}
+                    >
+                      <div className="relative overflow-hidden cursor-pointer flex items-center justify-center" style={{
+                        aspectRatio: `${layout.width} / ${layout.height}`,
+                        width: '100%'
+                      }}>
+                        <canvas
+                          ref={(canvas) => {
+                            if (canvas) {
+                              try {
+                                const fabricCanvas = renderLayoutPreview(canvas, layout);
+                                return () => {
+                                  fabricCanvas.dispose();
+                                };
+                              } catch (error) {
+                                console.error('Error rendering layout preview:', error);
+                              }
+                            }
+                          }}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Rnd>
+        </>
+      )}
+
+      {/* Add new sync gallery modal */}
+      {showSyncGallery && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-40 pointer-events-none"
+          />
+          
+          {/* Floating Modal */}
+          <Rnd
+            default={{
+              x: -1080,
+              y: 0,
+              width: modalDimensions.width,
+              height: modalDimensions.height
+            }}
+            minWidth={400}
+            minHeight={300}
+            bounds="window"
+            className="z-50"
+            onResize={(e, direction, ref) => {
+              setGridColumns(calculateGridColumns(ref.offsetWidth));
+              setModalDimensions({
+                width: ref.offsetWidth,
+                height: ref.offsetHeight
+              });
+            }}
+            size={{
+              width: modalDimensions.width,
+              height: modalDimensions.height
+            }}
+            onResizeStop={(e, direction, ref) => {
+              setModalDimensions({
+                width: ref.offsetWidth,
+                height: ref.offsetHeight
+              });
+            }}
+          >
+            <div className="w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden">
+              {/* Header */}
+              <div className="sticky top-0 z-10 bg-white border-b cursor-move handle">
+                <div className="px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">Sync Layout Gallery</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {multipleLayouts.length} synchronized layouts generated • Click on a layout to select it
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border">
+                        <span className="text-sm font-medium">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={showPreviousLayout}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronUpIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={showNextLayout}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronDownIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => setShowSyncGallery(false)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Close Gallery
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid Layout - Scrollable Content */}
+              <div className="flex-1 overflow-auto p-6">
                 <div className="grid gap-6" style={{
                   gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`
                 }}>

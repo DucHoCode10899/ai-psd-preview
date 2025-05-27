@@ -22,6 +22,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 // Types for layout rules
 interface LayoutOption {
   name: string;
+  safezoneMargin?: number;
   rules: {
     visibility: Record<string, boolean>;
     positioning: Record<string, {
@@ -1111,8 +1112,8 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
     });
     canvas.add(background);
 
-    // Add safezone boundaries (5% margin)
-    const safezoneMargin = 0; // 5% margin
+    // Add safezone boundaries using custom margin
+    const safezoneMargin = currentOption.safezoneMargin || 0.02; // Use custom margin or default to 2%
     const safezone = new Rect({
       left: currentLayout.width * safezoneMargin * scale,
       top: currentLayout.height * safezoneMargin * scale,
@@ -1613,6 +1614,56 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
             
             {currentLabelSettings ? (
               <>
+                {/* Safezone Margin */}
+                <div className="space-y-2">
+                  <Label>Safezone Margin (%)</Label>
+                  <div className="flex items-center space-x-2">
+                    <Slider
+                      value={[(currentOption?.safezoneMargin || 0.02) * 100]}
+                      onValueChange={([value]) => {
+                        if (!currentChannel || !currentLayout || !selectedOption) return;
+                        
+                        const updatedChannels = channels.map(channel => {
+                          if (channel.id === selectedChannelId) {
+                            return {
+                              ...channel,
+                              layouts: channel.layouts.map(layout => {
+                                if (layout.aspectRatio === selectedAspectRatio) {
+                                  return {
+                                    ...layout,
+                                    options: layout.options.map(option => {
+                                      if (option.name === selectedOption) {
+                                        return {
+                                          ...option,
+                                          safezoneMargin: value / 100
+                                        };
+                                      }
+                                      return option;
+                                    })
+                                  };
+                                }
+                                return layout;
+                              })
+                            };
+                          }
+                          return channel;
+                        });
+                        
+                        setChannels(updatedChannels);
+                        addToHistory(updatedChannels);
+                        setIsDirty(true);
+                      }}
+                      min={0}
+                      max={10}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <div className="w-12 text-right">
+                      {Math.round((currentOption?.safezoneMargin || 0.02) * 1000) / 10}%
+                    </div>
+                  </div>
+                </div>
+
                 {/* Visibility */}
                 <div className="flex items-center space-x-2">
                   <Checkbox

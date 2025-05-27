@@ -37,7 +37,7 @@
                     "applySafezone": true
                   },
                   "main-subject": {
-                    "position": "top-left",
+                    "position": "top-right",
                     "maxWidthPercent": 0.22,
                     "maxHeightPercent": 0.21,
                     "applySafezone": false
@@ -49,14 +49,14 @@
                     "applySafezone": true
                   },
                   "product-name": {
-                    "position": "bottom-right",
+                    "position": "bottom-left",
                     "maxWidthPercent": 0.6,
                     "maxHeightPercent": 0.15,
                     "alignment": "center",
                     "margin": {
                       "top": 20
                     },
-                    "applySafezone": false
+                    "applySafezone": true
                   },
                   "sub-content-1": {
                     "position": "bottom-center",
@@ -77,10 +77,10 @@
                     "applySafezone": true
                   },
                   "disclaimer": {
-                    "position": "left-center",
+                    "position": "bottom-center",
                     "maxWidthPercent": 0.5,
                     "maxHeightPercent": 0.1,
-                    "applySafezone": true
+                    "applySafezone": false
                   }
                 },
                 "renderOrder": [
@@ -94,7 +94,8 @@
                   "cta",
                   "disclaimer"
                 ]
-              }
+              },
+              "safezoneMargin": 0.047
             },
             {
               "name": "Default Template 1:1",
@@ -114,7 +115,8 @@
                   "background": {
                     "position": "center",
                     "maxWidthPercent": 1,
-                    "maxHeightPercent": 1
+                    "maxHeightPercent": 1,
+                    "applySafezone": false
                   },
                   "logo": {
                     "position": "top-right",

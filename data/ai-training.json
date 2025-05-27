@@ -643,25 +643,25 @@
       {
         "pattern": "background - bronze",
         "confidence": 0.6,
-        "matches": 16
+        "matches": 17
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 16
+        "matches": 17
       },
       {
         "pattern": "bronze",
         "confidence": 0.6,
-        "matches": 16
+        "matches": 17
       },
       {
         "pattern": "background bronze",
         "confidence": 0.6,
-        "matches": 16
+        "matches": 17
       }
     ],
-    "lastUpdated": "2025-05-27T04:01:04.282Z",
+    "lastUpdated": "2025-05-27T07:41:17.993Z",
     "history": [
       {
         "label": "background",
@@ -742,6 +742,11 @@
         "label": "background",
         "timestamp": "2025-05-27T04:01:04.282Z",
         "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T07:41:17.993Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -752,25 +757,25 @@
       {
         "pattern": "background - red",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       },
       {
         "pattern": "red",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       },
       {
         "pattern": "background red",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       }
     ],
-    "lastUpdated": "2025-05-24T04:47:01.654Z",
+    "lastUpdated": "2025-05-27T07:41:19.062Z",
     "history": [
       {
         "label": "background",
@@ -816,6 +821,16 @@
         "label": "background",
         "timestamp": "2025-05-24T04:47:01.654Z",
         "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T07:01:48.960Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T07:41:19.062Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -826,25 +841,25 @@
       {
         "pattern": "background - blue",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "blue",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "background blue",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       }
     ],
-    "lastUpdated": "2025-05-24T04:47:02.154Z",
+    "lastUpdated": "2025-05-27T07:41:19.654Z",
     "history": [
       {
         "label": "background",
@@ -890,6 +905,11 @@
         "label": "background",
         "timestamp": "2025-05-24T04:47:02.154Z",
         "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T07:41:19.654Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -900,25 +920,25 @@
       {
         "pattern": "voucher - blue",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       },
       {
         "pattern": "blue",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       },
       {
         "pattern": "voucher blue",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 11
       }
     ],
-    "lastUpdated": "2025-05-26T15:11:48.676Z",
+    "lastUpdated": "2025-05-27T07:43:43.278Z",
     "history": [
       {
         "label": "main-subject",
@@ -969,6 +989,11 @@
         "label": "main-subject",
         "timestamp": "2025-05-26T15:11:48.676Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T07:43:43.278Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -979,25 +1004,25 @@
       {
         "pattern": "voucher - red",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 12
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 12
       },
       {
         "pattern": "red",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 12
       },
       {
         "pattern": "voucher red",
         "confidence": 0.6,
-        "matches": 10
+        "matches": 12
       }
     ],
-    "lastUpdated": "2025-05-26T15:11:47.934Z",
+    "lastUpdated": "2025-05-27T07:43:42.216Z",
     "history": [
       {
         "label": "main-subject",
@@ -1048,6 +1073,16 @@
         "label": "main-subject",
         "timestamp": "2025-05-26T15:11:47.934Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T07:01:48.067Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T07:43:42.216Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1058,25 +1093,25 @@
       {
         "pattern": "voucher - yellow",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       },
       {
         "pattern": "yellow",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       },
       {
         "pattern": "voucher yellow",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 13
       }
     ],
-    "lastUpdated": "2025-05-26T14:27:40.910Z",
+    "lastUpdated": "2025-05-27T07:43:41.555Z",
     "history": [
       {
         "label": "main-subject",
@@ -1137,6 +1172,11 @@
         "label": "main-subject",
         "timestamp": "2025-05-26T14:27:40.910Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T07:43:41.555Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1147,25 +1187,25 @@
       {
         "pattern": "voucher - bronze",
         "confidence": 0.6,
-        "matches": 15
+        "matches": 16
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 15
+        "matches": 16
       },
       {
         "pattern": "bronze",
         "confidence": 0.6,
-        "matches": 15
+        "matches": 16
       },
       {
         "pattern": "voucher bronze",
         "confidence": 0.6,
-        "matches": 15
+        "matches": 16
       }
     ],
-    "lastUpdated": "2025-05-27T04:01:03.528Z",
+    "lastUpdated": "2025-05-27T07:41:17.152Z",
     "history": [
       {
         "label": "background",
@@ -1241,6 +1281,11 @@
         "label": "main-subject",
         "timestamp": "2025-05-27T04:01:03.528Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T07:41:17.152Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1251,10 +1296,10 @@
       {
         "pattern": "disclaimer",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       }
     ],
-    "lastUpdated": "2025-05-27T04:12:41.095Z",
+    "lastUpdated": "2025-05-27T07:43:21.943Z",
     "history": [
       {
         "label": "disclaimer",
@@ -1310,6 +1355,11 @@
         "label": "disclaimer",
         "timestamp": "2025-05-27T04:12:41.095Z",
         "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-27T07:43:21.943Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1320,20 +1370,20 @@
       {
         "pattern": "main content",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "main",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "content",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       }
     ],
-    "lastUpdated": "2025-05-27T04:12:39.993Z",
+    "lastUpdated": "2025-05-27T07:43:22.866Z",
     "history": [
       {
         "label": "product-name",
@@ -1389,6 +1439,11 @@
         "label": "product-name",
         "timestamp": "2025-05-27T04:12:39.993Z",
         "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-27T07:43:22.866Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1399,25 +1454,25 @@
       {
         "pattern": "background - yellow",
         "confidence": 0.6,
-        "matches": 14
+        "matches": 15
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 14
+        "matches": 15
       },
       {
         "pattern": "yellow",
         "confidence": 0.6,
-        "matches": 14
+        "matches": 15
       },
       {
         "pattern": "background yellow",
         "confidence": 0.6,
-        "matches": 14
+        "matches": 15
       }
     ],
-    "lastUpdated": "2025-05-26T14:27:41.707Z",
+    "lastUpdated": "2025-05-27T07:41:17.991Z",
     "history": [
       {
         "label": "background",
@@ -1487,6 +1542,11 @@
       {
         "label": "background",
         "timestamp": "2025-05-26T14:27:41.707Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T07:41:17.991Z",
         "confidence": 0.6
       }
     ]
