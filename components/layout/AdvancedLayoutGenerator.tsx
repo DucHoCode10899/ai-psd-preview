@@ -53,18 +53,38 @@ interface AdvancedLayoutGeneratorProps {
   psdBuffer?: ArrayBuffer;
 }
 
-// Define types for layout API responses
+// Add type definitions
 interface LayoutOption {
   name: string;
+  rules: {
+    visibility: Record<string, boolean>;
+    positioning: Record<string, {
+      position: string;
+      maxWidthPercent: number;
+      maxHeightPercent: number;
+      alignment?: string;
+      margin?: {
+        top?: number;
+        right?: number;
+        bottom?: number;
+        left?: number;
+      };
+    }>;
+    renderOrder?: string[];
+  };
 }
 
-interface LayoutRatio {
+interface LayoutRule {
   aspectRatio: string;
+  width: number;
+  height: number;
+  options: LayoutOption[];
 }
 
 interface Channel {
   id: string;
   name: string;
+  layouts: LayoutRule[];
 }
 
 interface LayoutRuleResponse {
@@ -91,6 +111,7 @@ interface LayoutRuleResponse {
               left?: number;
             };
           }>;
+          renderOrder?: string[];
         };
       }>;
     }>;
@@ -144,7 +165,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   };
 
   const [availableChannels, setAvailableChannels] = useState<Channel[]>([]);
-  const [availableLayouts, setAvailableLayouts] = useState<LayoutRatio[]>([]);
+  const [availableLayouts, setAvailableLayouts] = useState<LayoutRule[]>([]);
   const [availableOptions, setAvailableOptions] = useState<LayoutOption[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<string | null>(null);
@@ -204,6 +225,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     width: window.innerWidth - 400,
     height: window.innerHeight - 100
   });
+
+  // Add new state for storing render order
+  const [currentRenderOrder, setCurrentRenderOrder] = useState<string[] | null>(null);
 
   // Add function to calculate grid columns based on width
   const calculateGridColumns = (width: number) => {
@@ -473,7 +497,8 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         const data = await response.json() as LayoutRuleResponse;
         setAvailableChannels(data.channels.map(channel => ({
           id: channel.id,
-          name: channel.name
+          name: channel.name,
+          layouts: channel.layouts
         })));
       } catch (error) {
         console.error('Error loading channels:', error);
@@ -498,10 +523,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         const channel = data.channels.find(c => c.id === selectedChannelId);
         
         if (channel) {
-          const layouts = channel.layouts.map(layout => ({
-            aspectRatio: layout.aspectRatio
-          }));
-          setAvailableLayouts(layouts);
+          setAvailableLayouts(channel.layouts);
         } else {
           setAvailableLayouts([]);
         }
@@ -531,10 +553,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           const layout = channel.layouts.find(l => l.aspectRatio === selectedAspectRatio);
           
           if (layout && layout.options) {
-            const options = layout.options.map(option => ({
-              name: option.name
-            }));
-            setAvailableOptions(options);
+            setAvailableOptions(layout.options);
           } else {
             setAvailableOptions([]);
           }
@@ -655,7 +674,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     return true;
   });
 
-  // Render the layout on canvas
+  // Update canvas rendering effect
   useEffect(() => {
     if (!fabricCanvasRef.current || !generatedLayout) return;
     
@@ -663,6 +682,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     console.log('Elements to render:', generatedLayout.elements.length);
     console.log('Layer images available:', layerImages.size);
     console.log('Animation enabled:', animateElements);
+    console.log('Current render order:', currentRenderOrder);
     
     const canvas = fabricCanvasRef.current;
     
@@ -734,204 +754,59 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     // Get any custom positions for this layout
     const layoutCustomPositions = customPositions[generatedLayout.name] || {};
     
-    // Add elements to canvas in reverse order (bottom to top)
-    const elementsToRender = [...generatedLayout.elements].reverse();
-    
-    console.log(`Rendering ${elementsToRender.length} elements on canvas`);
-    
-    // Draw background elements first
-    for (const element of elementsToRender.filter(el => el.label === 'background')) {
-      try {
-        if (!element.visible) continue;
-        
-        // Handle background element specially using the cover approach
-        console.log(`Rendering background element ${element.name} with dimensions ${element.width}x${element.height}`);
-        
-        // Get the custom position if it exists
-        const customPosition = layoutCustomPositions[element.id];
-        
-        // Create temporary canvas for the layer
-        const tempCanvas = document.createElement('canvas');
-        const elementWidth = customPosition ? customPosition.width : element.width;
-        const elementHeight = customPosition ? customPosition.height : element.height;
-        
-        // Check if element has original bounds for comparison
-        if (element.originalBounds) {
-          const originalWidth = element.originalBounds.right - element.originalBounds.left;
-          const originalHeight = element.originalBounds.bottom - element.originalBounds.top;
-          console.log(`Background original size: ${originalWidth}x${originalHeight}, covered size: ${elementWidth}x${elementHeight}`);
+    // Sort elements based on render order
+    let elementsToRender = [...generatedLayout.elements];
+    if (currentRenderOrder) {
+      // Create a map for quick label lookup
+      const elementsByLabel = new Map();
+      elementsToRender.forEach(element => {
+        if (!elementsByLabel.has(element.label)) {
+          elementsByLabel.set(element.label, []);
         }
-        
-        tempCanvas.width = Math.max(1, elementWidth);
-        tempCanvas.height = Math.max(1, elementHeight);
-        const ctx = tempCanvas.getContext('2d');
-        
-        if (ctx) {
-          // Try to get image data for the layer
-          const imageData = layerImages.get(element.name);
-          
-          if (imageData && imageData.width > 0 && imageData.height > 0) {
-            // Draw the layer image, scaled to fit
-            const originalCanvas = document.createElement('canvas');
-            originalCanvas.width = Math.max(1, imageData.width);
-            originalCanvas.height = Math.max(1, imageData.height);
-            const originalCtx = originalCanvas.getContext('2d');
-            
-            if (originalCtx) {
-              originalCtx.putImageData(imageData, 0, 0);
-              
-              try {
-                ctx.drawImage(
-                  originalCanvas,
-                  0, 0, imageData.width, imageData.height,
-                  0, 0, elementWidth, elementHeight
-                );
-                console.log(`Drew background image for ${element.name} from ${imageData.width}x${imageData.height} to ${elementWidth}x${elementHeight}`);
-              } catch (error) {
-                console.error(`Error drawing background image for layer ${element.name}:`, error);
-                // Fallback to colored rectangle
-                ctx.fillStyle = getLabelColor(element.label);
-                ctx.fillRect(0, 0, elementWidth, elementHeight);
-              }
-            }
-          } else {
-            // No image data, use colored rectangle
-            ctx.fillStyle = getLabelColor(element.label);
-            ctx.fillRect(0, 0, elementWidth, elementHeight);
-            
-            // Add label text
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 14px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(element.label, elementWidth / 2, elementHeight / 2);
-          }
-        }
-        
-        // Calculate final position with scale
-        const left = (customPosition ? customPosition.x : element.x) * scale;
-        const top = (customPosition ? customPosition.y : element.y) * scale;
-        
-        // Create fabric image - ensure we use the properly scaled dimensions
-        const fabricImage = new FabricImage(tempCanvas, {
-          left: animateElements ? (element.originalBounds ? element.originalBounds.left * scale : -elementWidth * scale) : left,
-          top: animateElements ? (element.originalBounds ? element.originalBounds.top * scale : canvas.height / 2) : top,
-          // Fabric will handle scaling internally based on these dimensions
-          width: elementWidth,
-          height: elementHeight,
-          // Avoid using scale factors that could cause double scaling
-          scaleX: scale,
-          scaleY: scale,
-          selectable: true,
-          hasControls: true,
-          hasBorders: true,
-          lockRotation: false,
-          transparentCorners: false,
-          cornerColor: '#3b82f6',
-          cornerSize: 8,
-          cornerStyle: 'circle',
-          borderColor: '#3b82f6',
-          borderScaleFactor: 1,
-          angle: customPosition?.angle || 0,
-          // opacity: animateElements ? 0 : (isGenerating ? 0.7 : 1)
-          opacity: 1
-        });
-        
-        // Add custom properties
-        fabricImage.set('id', element.id);
-        fabricImage.set('elementName', element.name);
-        fabricImage.set('elementLabel', element.label);
-        fabricImage.set('position', element.position);
-        
-        // Add modified event handler
-        fabricImage.on('modified', () => {
-          console.log(`Element ${element.name} modified: `, 
-            `position (${fabricImage.left}, ${fabricImage.top})`,
-            `dimensions (${fabricImage.width} × ${fabricImage.scaleX}) x (${fabricImage.height} × ${fabricImage.scaleY})`,
-            `angle: ${fabricImage.angle}`
-          );
-          
-          const newPosition = {
-            position: element.position as PositionKeyword,
-            x: Math.round(fabricImage.left! / scale),
-            y: Math.round(fabricImage.top! / scale),
-            // Calculate actual dimensions accounting for the scale factor
-            width: Math.round(fabricImage.width! * fabricImage.scaleX! / scale),
-            height: Math.round(fabricImage.height! * fabricImage.scaleY! / scale),
-            angle: fabricImage.angle
-          };
-          
-          console.log(`New element position in layout coordinates: `, newPosition);
-          
-          // Store the custom position for this layout
-          setCustomPositions(prev => ({
-            ...prev,
-            [generatedLayout.name]: {
-              ...(prev[generatedLayout.name] || {}),
-              [element.id]: newPosition
-            }
-          }));
-        });
-        
-        // Add the fabric image to canvas
-        canvas.add(fabricImage);
-        elementsAdded++;
-        
-        // Animate the element into position if animation is enabled
-        if (animateElements && !isGenerating) {
-          // Delay animation based on element index to create a staggered effect
-          const delay = 150 * elementsAdded;
-          
-          setTimeout(() => {
-            // Animate position and opacity
-            fabricImage.animate({
-              left: left,
-              top: top,
-              opacity: 1
-            }, {
-              duration: 300,
-              onChange: canvas.renderAll.bind(canvas),
-              easing: fabricUtil.ease.easeOutCubic
-            });
-          }, delay);
-        }
-      } catch (error) {
-        console.error(`Error rendering background element ${element.name}:`, error);
-      }
+        elementsByLabel.get(element.label).push(element);
+      });
+
+      // Sort elements according to render order
+      elementsToRender = currentRenderOrder.flatMap(label => 
+        elementsByLabel.get(label) || []
+      );
+
+      // Add any remaining elements not in render order at the end
+      const remainingElements = elementsToRender.filter(element => 
+        !currentRenderOrder.includes(element.label)
+      );
+      elementsToRender = [...elementsToRender, ...remainingElements];
+
+      console.log('Elements sorted by render order:', elementsToRender.map(e => e.label));
+    } else {
+      // If no render order specified, render background first, then other elements
+      elementsToRender.sort((a, b) => {
+        if (a.label === 'background') return -1;
+        if (b.label === 'background') return 1;
+        return 0;
+      });
     }
-    
-    // Draw non-background elements
-    for (const element of elementsToRender.filter(el => el.label !== 'background')) {
+
+    // Render elements in order
+    for (const element of elementsToRender) {
       try {
         if (!element.visible) continue;
         
-        // Get the custom position if it exists
-        const customPosition = layoutCustomPositions[element.id];
-        
         // Create temporary canvas for the layer
         const tempCanvas = document.createElement('canvas');
-        const elementWidth = customPosition ? customPosition.width : element.width;
-        const elementHeight = customPosition ? customPosition.height : element.height;
+        const elementWidth = layoutCustomPositions[element.id]?.width || element.width;
+        const elementHeight = layoutCustomPositions[element.id]?.height || element.height;
         
-        console.log(`Rendering element ${element.name} with dimensions ${elementWidth}x${elementHeight}`);
-        
-        // Check if element has original bounds for comparison
-        if (element.originalBounds) {
-          const originalWidth = element.originalBounds.right - element.originalBounds.left;
-          const originalHeight = element.originalBounds.bottom - element.originalBounds.top;
-          console.log(`Original bounds: ${originalWidth}x${originalHeight}, scale factor: ${elementWidth/originalWidth}x${elementHeight/originalHeight}`);
-        }
+        console.log(`Rendering element ${element.name} (${element.label}) with dimensions ${elementWidth}x${elementHeight}`);
         
         tempCanvas.width = Math.max(1, elementWidth);
         tempCanvas.height = Math.max(1, elementHeight);
         const ctx = tempCanvas.getContext('2d');
         
         if (ctx) {
-          // Try to get image data for the layer
           const imageData = layerImages.get(element.name);
           
           if (imageData && imageData.width > 0 && imageData.height > 0) {
-            // Draw the layer image, scaled to fit
             const originalCanvas = document.createElement('canvas');
             originalCanvas.width = Math.max(1, imageData.width);
             originalCanvas.height = Math.max(1, imageData.height);
@@ -949,13 +824,11 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                 console.log(`Drew image for ${element.name} from ${imageData.width}x${imageData.height} to ${elementWidth}x${elementHeight}`);
               } catch (error) {
                 console.error(`Error drawing image for layer ${element.name}:`, error);
-                // Fallback to colored rectangle
                 ctx.fillStyle = getLabelColor(element.label);
                 ctx.fillRect(0, 0, elementWidth, elementHeight);
               }
             }
           } else {
-            // No image data, use colored rectangle
             ctx.fillStyle = getLabelColor(element.label);
             ctx.fillRect(0, 0, elementWidth, elementHeight);
             
@@ -969,17 +842,16 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         }
         
         // Calculate final position with scale
+        const customPosition = layoutCustomPositions[element.id];
         const left = (customPosition ? customPosition.x : element.x) * scale;
         const top = (customPosition ? customPosition.y : element.y) * scale;
         
-        // Create fabric image - ensure we use the properly scaled dimensions
+        // Create fabric image
         const fabricImage = new FabricImage(tempCanvas, {
           left: animateElements ? (element.originalBounds ? element.originalBounds.left * scale : -elementWidth * scale) : left,
           top: animateElements ? (element.originalBounds ? element.originalBounds.top * scale : canvas.height / 2) : top,
-          // Fabric will handle scaling internally based on these dimensions
           width: elementWidth,
           height: elementHeight,
-          // Avoid using scale factors that could cause double scaling
           scaleX: scale,
           scaleY: scale,
           selectable: true,
@@ -1014,7 +886,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             position: element.position as PositionKeyword,
             x: Math.round(fabricImage.left! / scale),
             y: Math.round(fabricImage.top! / scale),
-            // Calculate actual dimensions accounting for the scale factor
             width: Math.round(fabricImage.width! * fabricImage.scaleX! / scale),
             height: Math.round(fabricImage.height! * fabricImage.scaleY! / scale),
             angle: fabricImage.angle
@@ -1022,7 +893,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           
           console.log(`New element position in layout coordinates: `, newPosition);
           
-          // Store the custom position for this layout
           setCustomPositions(prev => ({
             ...prev,
             [generatedLayout.name]: {
@@ -1038,11 +908,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         
         // Animate the element into position if animation is enabled
         if (animateElements && !isGenerating) {
-          // Delay animation based on element index to create a staggered effect
           const delay = 150 * elementsAdded;
           
           setTimeout(() => {
-            // Animate position and opacity
             fabricImage.animate({
               left: left,
               top: top,
@@ -1064,7 +932,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       canvas.renderAll();
     }
     
-  }, [generatedLayout, layerImages, customPositions, safezoneWidth, margin, isGenerating, animateElements]);
+  }, [generatedLayout, layerImages, customPositions, safezoneWidth, margin, isGenerating, animateElements, currentRenderOrder]);
 
   // Function to find all sync sets in the layers with support for multiple alternatives
   const findSyncSets = (layers: PsdLayerMetadata[], labels: Record<string, string>, links: LayerLink[]): SyncLayerSet[] => {
@@ -1164,7 +1032,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     });
   };
 
-  // Modify handleGenerateLayout to use the shared doesLayerMatchRules function
+  // Modify handleGenerateLayout to fetch latest data
   const handleGenerateLayout = async () => {
     if (!psdLayers || !selectedAspectRatio || !selectedOption) {
       toast.error('Please select all required options');
@@ -1185,6 +1053,33 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
 
     try {
+      // Fetch latest layout rules data
+      const response = await fetch('/api/layout-rules');
+      const layoutRulesData = await response.json() as LayoutRuleResponse;
+      
+      // Find current channel and layout option to get latest render order
+      const currentChannel = layoutRulesData.channels.find(c => c.id === selectedChannelId);
+      if (!currentChannel) {
+        toast.error('Selected channel not found');
+        return;
+      }
+
+      const currentLayoutRule = currentChannel.layouts.find(l => l.aspectRatio === selectedAspectRatio);
+      if (!currentLayoutRule) {
+        toast.error('Selected layout not found');
+        return;
+      }
+
+      const currentOption = currentLayoutRule.options.find(o => o.name === selectedOption);
+      if (!currentOption) {
+        toast.error('Selected option not found');
+        return;
+      }
+
+      // Update current render order with latest data
+      const renderOrder = currentOption.rules.renderOrder;
+      setCurrentRenderOrder(renderOrder || null);
+
       const labels = JSON.parse(layerLabels);
       let personalizationRules = {};
 
@@ -1255,18 +1150,18 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       const visibleLayers = processedLayers.filter(layer => layer.visible);
       console.log('Visible layers:', visibleLayers.map(l => l.name));
 
-      const layout = generateLayout(visibleLayers, selectedOption, {
+      const generatedLayoutResult = generateLayout(visibleLayers, selectedOption, {
         safezone: safezoneWidth,
         margin: margin
       });
 
-      if (!layout) {
+      if (!generatedLayoutResult) {
         toast.error('Failed to generate layout');
         setIsGenerating(false);
         return;
       }
 
-      setGeneratedLayout(layout);
+      setGeneratedLayout(generatedLayoutResult);
       
       setTimeout(() => {
         setIsGenerating(false);
@@ -1306,9 +1201,25 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   };
 
   // Handle option selection
-  const handleOptionSelect = (option: string) => {
-    setSelectedOption(option);
+  const handleOptionSelect = (optionName: string) => {
+    setSelectedOption(optionName);
     setGeneratedLayout(null);
+    
+    // Get and store render order from selected option
+    if (selectedChannelId && selectedAspectRatio) {
+      const channel = availableChannels.find(c => c.id === selectedChannelId);
+      if (channel) {
+        const layout = channel.layouts.find(l => l.aspectRatio === selectedAspectRatio);
+        if (layout) {
+          const option = layout.options.find(o => o.name === optionName);
+          if (option && option.rules.renderOrder) {
+            setCurrentRenderOrder(option.rules.renderOrder);
+          } else {
+            setCurrentRenderOrder(null);
+          }
+        }
+      }
+    }
   };
 
   // Get color for label

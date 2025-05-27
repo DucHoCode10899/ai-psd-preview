@@ -638,25 +638,25 @@
       {
         "pattern": "background - bronze",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 16
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 16
       },
       {
         "pattern": "bronze",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 16
       },
       {
         "pattern": "background bronze",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 16
       }
     ],
-    "lastUpdated": "2025-05-26T05:53:07.904Z",
+    "lastUpdated": "2025-05-27T04:01:04.282Z",
     "history": [
       {
         "label": "background",
@@ -721,6 +721,21 @@
       {
         "label": "background",
         "timestamp": "2025-05-26T05:53:07.904Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T03:54:16.315Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T03:54:57.667Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T04:01:04.282Z",
         "confidence": 0.6
       }
     ]
@@ -1127,25 +1142,25 @@
       {
         "pattern": "voucher - bronze",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 15
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 15
       },
       {
         "pattern": "bronze",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 15
       },
       {
         "pattern": "voucher bronze",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 15
       }
     ],
-    "lastUpdated": "2025-05-26T05:53:03.844Z",
+    "lastUpdated": "2025-05-27T04:01:03.528Z",
     "history": [
       {
         "label": "background",
@@ -1206,6 +1221,21 @@
         "label": "main-subject",
         "timestamp": "2025-05-26T05:53:03.844Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T03:54:15.065Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T03:54:56.809Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T04:01:03.528Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1216,10 +1246,10 @@
       {
         "pattern": "disclaimer",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       }
     ],
-    "lastUpdated": "2025-05-24T04:47:00.039Z",
+    "lastUpdated": "2025-05-27T04:12:41.095Z",
     "history": [
       {
         "label": "disclaimer",
@@ -1265,6 +1295,16 @@
         "label": "disclaimer",
         "timestamp": "2025-05-24T04:47:00.039Z",
         "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-27T03:54:17.709Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "disclaimer",
+        "timestamp": "2025-05-27T04:12:41.095Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1275,20 +1315,20 @@
       {
         "pattern": "main content",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       },
       {
         "pattern": "main",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       },
       {
         "pattern": "content",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 11
       }
     ],
-    "lastUpdated": "2025-05-24T04:46:59.141Z",
+    "lastUpdated": "2025-05-27T04:12:39.993Z",
     "history": [
       {
         "label": "product-name",
@@ -1333,6 +1373,16 @@
       {
         "label": "product-name",
         "timestamp": "2025-05-24T04:46:59.141Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-27T03:54:17.116Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-27T04:12:39.993Z",
         "confidence": 0.6
       }
     ]

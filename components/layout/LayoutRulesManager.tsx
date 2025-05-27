@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { toast } from 'sonner';
 import { Canvas, Rect, Text } from 'fabric';
-import { Undo2, Redo2, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
+import { Undo2, Redo2, Plus, Pencil, Trash2, RefreshCw, GripVertical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -36,6 +36,7 @@ interface LayoutOption {
         left?: number;
       };
     }>;
+    renderOrder?: string[]; // Add renderOrder to store label order
   };
 }
 
@@ -167,6 +168,10 @@ export function LayoutRulesManager() {
   // Add history state
   const [history, setHistory] = useState<Channel[][]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+
+  // Drag and drop state
+  const [draggedLabel, setDraggedLabel] = useState<string | null>(null);
+  const [dragOverLabel, setDragOverLabel] = useState<string | null>(null);
 
   // Function to add state to history
   const addToHistory = (newChannels: Channel[]) => {
@@ -536,19 +541,91 @@ export function LayoutRulesManager() {
     };
   }, []);
 
-  // Update canvas when layout or settings change
+  // Function to get current render order
+  const getCurrentRenderOrder = () => {
+    if (!currentOption) return labelTypes;
+    return currentOption.rules.renderOrder || labelTypes;
+  };
+
+  // Function to update render order
+  const handleUpdateRenderOrder = (newOrder: string[]) => {
+    if (!selectedChannelId || !selectedAspectRatio || !selectedOption) return;
+
+    const updatedChannels = channels.map(channel => {
+      if (channel.id === selectedChannelId) {
+        return {
+          ...channel,
+          layouts: channel.layouts.map(layout => {
+            if (layout.aspectRatio === selectedAspectRatio) {
+              return {
+                ...layout,
+                options: layout.options.map(option => {
+                  if (option.name === selectedOption) {
+                    return {
+                      ...option,
+                      rules: {
+                        ...option.rules,
+                        renderOrder: newOrder
+                      }
+                    };
+                  }
+                  return option;
+                })
+              };
+            }
+            return layout;
+          })
+        };
+      }
+      return channel;
+    });
+
+    setChannels(updatedChannels);
+    addToHistory(updatedChannels);
+    setIsDirty(true);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (label: string) => {
+    setDraggedLabel(label);
+  };
+
+  const handleDragOver = (e: React.DragEvent, label: string) => {
+    e.preventDefault();
+    if (draggedLabel === label) return;
+    setDragOverLabel(label);
+  };
+
+  const handleDrop = (targetLabel: string) => {
+    if (!draggedLabel || draggedLabel === targetLabel) return;
+
+    const currentOrder = getCurrentRenderOrder();
+    const newOrder = [...currentOrder];
+    
+    const draggedIndex = newOrder.indexOf(draggedLabel);
+    const targetIndex = newOrder.indexOf(targetLabel);
+    
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedLabel);
+    
+    handleUpdateRenderOrder(newOrder);
+    setDraggedLabel(null);
+    setDragOverLabel(null);
+  };
+
+  // Update canvas useEffect to respect render order
   useEffect(() => {
     if (!fabricCanvasRef.current || !currentLayout || !currentOption) return;
-    
+
     const canvas = fabricCanvasRef.current;
     canvas.clear();
-    
+
     // Calculate scale to fit canvas
     const scale = Math.min(
       canvas.width! / currentLayout.width,
       canvas.height! / currentLayout.height
     );
-    
+
     // Add layout background
     const background = new Rect({
       left: 0,
@@ -561,14 +638,16 @@ export function LayoutRulesManager() {
       selectable: false
     });
     canvas.add(background);
-    
-    // Add each label as a rectangle
-    Object.entries(currentOption.rules.positioning).forEach(([label, settings]) => {
-      if (!currentOption.rules.visibility[label]) return;
-      
+
+    // Get render order and add labels in that order
+    const renderOrder = getCurrentRenderOrder();
+    renderOrder.forEach(label => {
+      const settings = currentOption.rules.positioning[label];
+      if (!settings || !currentOption.rules.visibility[label]) return;
+
       const maxWidth = settings.maxWidthPercent * currentLayout.width;
       const maxHeight = settings.maxHeightPercent * currentLayout.height;
-      
+
       // Calculate position based on settings.position
       let left = 0;
       let top = 0;
@@ -1270,13 +1349,22 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-2">
-                {labelTypes.map(label => (
+                {[...getCurrentRenderOrder()].reverse().map(label => (
                   <Button
                     key={label}
                     variant={selectedLabel === label ? "default" : "outline"}
                     onClick={() => handleLabelSelect(label)}
-                    className="justify-start h-auto py-2"
+                    className={`justify-start h-auto py-2 ${dragOverLabel === label ? 'border-blue-500' : ''}`}
+                    draggable
+                    onDragStart={() => handleDragStart(label)}
+                    onDragOver={(e) => handleDragOver(e, label)}
+                    onDrop={() => handleDrop(label)}
+                    onDragEnd={() => {
+                      setDraggedLabel(null);
+                      setDragOverLabel(null);
+                    }}
                   >
+                    <GripVertical className="h-4 w-4 mr-2 cursor-move" />
                     <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: getLabelColor(label) }} />
                     {label}
                   </Button>

@@ -73,7 +73,18 @@
                     "maxWidthPercent": 0.5,
                     "maxHeightPercent": 0.1
                   }
-                }
+                },
+                "renderOrder": [
+                  "background",
+                  "logo",
+                  "domain",
+                  "main-subject",
+                  "product-name",
+                  "sub-content-1",
+                  "sub-content-2",
+                  "cta",
+                  "disclaimer"
+                ]
               }
             },
             {
@@ -274,7 +285,18 @@
                     "maxWidthPercent": 0.5,
                     "maxHeightPercent": 0.1
                   }
-                }
+                },
+                "renderOrder": [
+                  "background",
+                  "logo",
+                  "domain",
+                  "product-name",
+                  "main-subject",
+                  "sub-content-1",
+                  "sub-content-2",
+                  "cta",
+                  "disclaimer"
+                ]
               }
             },
             {
