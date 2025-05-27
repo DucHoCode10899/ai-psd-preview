@@ -276,6 +276,73 @@
                   }
                 }
               }
+            },
+            {
+              "name": "Eureka (CTS) 1:1",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": false,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": true,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.7,
+                    "maxHeightPercent": 0.7
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-20",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.15,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "left-center-30",
+                    "maxWidthPercent": 0.45,
+                    "maxHeightPercent": 0.15
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.2,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.9,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
             }
           ]
         },
@@ -472,6 +539,73 @@
                   "disclaimer": {
                     "position": "bottom-left",
                     "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  }
+                }
+              }
+            },
+            {
+              "name": "Default Template 16:9 (Eureka)",
+              "rules": {
+                "visibility": {
+                  "background": true,
+                  "logo": true,
+                  "main-subject": true,
+                  "domain": true,
+                  "product-name": true,
+                  "sub-content-1": true,
+                  "sub-content-2": false,
+                  "cta": false,
+                  "disclaimer": false
+                },
+                "positioning": {
+                  "background": {
+                    "position": "center",
+                    "maxWidthPercent": 1,
+                    "maxHeightPercent": 1
+                  },
+                  "logo": {
+                    "position": "top-right",
+                    "maxWidthPercent": 0.3,
+                    "maxHeightPercent": 0.1
+                  },
+                  "main-subject": {
+                    "position": "middle-bottom-center",
+                    "maxWidthPercent": 0.75,
+                    "maxHeightPercent": 0.75
+                  },
+                  "domain": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.15,
+                    "maxHeightPercent": 0.1
+                  },
+                  "product-name": {
+                    "position": "top-center-10",
+                    "maxWidthPercent": 0.6,
+                    "maxHeightPercent": 0.15,
+                    "alignment": "center",
+                    "margin": {
+                      "top": 20
+                    }
+                  },
+                  "sub-content-1": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "sub-content-2": {
+                    "position": "bottom-left",
+                    "maxWidthPercent": 0.5,
+                    "maxHeightPercent": 0.1
+                  },
+                  "cta": {
+                    "position": "bottom-right",
+                    "maxWidthPercent": 0.25,
+                    "maxHeightPercent": 0.15
+                  },
+                  "disclaimer": {
+                    "position": "bottom-center",
+                    "maxWidthPercent": 0.9,
                     "maxHeightPercent": 0.1
                   }
                 }

@@ -15,44 +15,8 @@
       ]
     },
     {
-      "id": "age",
-      "label": "Age Group",
-      "values": [
-        {
-          "id": "18-24",
-          "label": "18-24 years"
-        },
-        {
-          "id": "25-34",
-          "label": "25-34 years"
-        },
-        {
-          "id": "35-44",
-          "label": "35-44 years"
-        }
-      ]
-    },
-    {
-      "id": "location",
-      "label": "Location",
-      "values": [
-        {
-          "id": "urban",
-          "label": "Urban"
-        },
-        {
-          "id": "suburban",
-          "label": "Suburban"
-        },
-        {
-          "id": "rural",
-          "label": "Rural"
-        }
-      ]
-    },
-    {
       "id": "interest",
-      "label": "Interest",
+      "label": "Passion Point",
       "values": [
         {
           "id": "sports",
@@ -69,6 +33,16 @@
         {
           "id": "food",
           "label": "Food & Dining"
+        }
+      ]
+    },
+    {
+      "id": "feature",
+      "label": "Feature",
+      "values": [
+        {
+          "id": "circle-to-search",
+          "label": "Circle to Search"
         }
       ]
     }

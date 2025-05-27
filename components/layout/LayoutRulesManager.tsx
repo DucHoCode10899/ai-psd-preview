@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { toast } from 'sonner';
 import { Canvas, Rect, Text } from 'fabric';
-import { Undo2, Redo2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Undo2, Redo2, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -138,6 +138,8 @@ export function LayoutRulesManager() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [labelTypes, setLabelTypes] = useState<string[]>([]);
+  const [isLoadingLabels, setIsLoadingLabels] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<Canvas | null>(null);
   
@@ -194,23 +196,50 @@ export function LayoutRulesManager() {
     }
   };
 
-  // Load layout rules
+  // Add fetchLabels function
+  const fetchLabels = async () => {
+    try {
+      setIsLoadingLabels(true);
+      const response = await fetch('/api/labels');
+      const data = await response.json();
+      if (response.ok) {
+        setLabelTypes(data.labels);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err) {
+      console.error('Error fetching labels:', err);
+      toast.error('Failed to fetch labels');
+    } finally {
+      setIsLoadingLabels(false);
+    }
+  };
+
+  // Modify useEffect to fetch labels
   useEffect(() => {
-    const loadLayoutRules = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch('/api/layout-rules');
-        const data = await response.json();
-        setChannels(data.channels);
+        const [layoutResponse, labelsResponse] = await Promise.all([
+          fetch('/api/layout-rules'),
+          fetch('/api/labels')
+        ]);
+        
+        const layoutData = await layoutResponse.json();
+        const labelsData = await labelsResponse.json();
+        
+        setChannels(layoutData.channels);
+        setLabelTypes(labelsData.labels);
+        
         // Initialize history with initial state
-        setHistory([JSON.parse(JSON.stringify(data.channels))]);
+        setHistory([JSON.parse(JSON.stringify(layoutData.channels))]);
         setCurrentHistoryIndex(0);
       } catch (error) {
-        console.error('Error loading layout rules:', error);
-        toast.error('Failed to load layout rules');
+        console.error('Error loading data:', error);
+        toast.error('Failed to load data');
       }
     };
     
-    loadLayoutRules();
+    loadData();
   }, []);
 
   // Get current channel, layout and option
@@ -1228,9 +1257,20 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
           {/* Label Selection */}
           {selectedChannelId && selectedAspectRatio && selectedOption && (
             <div className="p-4 border-b">
-              <Label className="mb-2 block">Label</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Label</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={fetchLabels}
+                  disabled={isLoadingLabels}
+                  className="h-8 px-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoadingLabels ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
               <div className="grid grid-cols-1 gap-2">
-                {LABEL_TYPES.map(label => (
+                {labelTypes.map(label => (
                   <Button
                     key={label}
                     variant={selectedLabel === label ? "default" : "outline"}

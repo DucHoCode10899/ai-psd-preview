@@ -23,7 +23,8 @@ import {
   Settings2,
   Info,
   Wand2,
-  X
+  X,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { 
@@ -47,6 +48,8 @@ import {
 } from "@/components/ui/select";
 import { useSegmentationRules } from '@/hooks/useSegmentationRules';
 import { useAutoAI } from '@/hooks/useAutoAI';
+import { toast } from 'sonner';
+import { Label } from "@/components/ui/label";
 
 // Update type to use string instead of union
 type SegmentationType = string;
@@ -63,18 +66,7 @@ interface LayerPersonalization {
 
 // Remove the hardcoded SEGMENTATION_OPTIONS since we'll use the API
 
-// Predefined label options
-const LABEL_OPTIONS = [
-  { id: "background", name: "Background", color: "bg-gray-100 text-gray-700" },
-  { id: "logo", name: "Logo", color: "bg-red-100 text-red-700" },
-  { id: "main-subject", name: "Main Subject", color: "bg-blue-100 text-blue-700" },
-  { id: "domain", name: "Domain", color: "bg-purple-100 text-purple-700" },
-  { id: "product-name", name: "Product Name", color: "bg-green-100 text-green-700" },
-  { id: "sub-content-1", name: "Sub Content 1", color: "bg-pink-100 text-pink-700" },
-  { id: "sub-content-2", name: "Sub Content 2", color: "bg-indigo-100 text-indigo-700" },
-  { id: "cta", name: "CTA", color: "bg-orange-100 text-orange-700" },
-  { id: "disclaimer", name: "Disclaimer", color: "bg-amber-100 text-amber-700" },
-];
+// Label types are now fetched from the API
 
 // Add new interfaces for layer links
 interface LayerLink {
@@ -1095,7 +1087,7 @@ export function LayerTree({
             Selected layers: {selectedLayers.size}
           </div>
           <div className="space-y-2">
-            {LABEL_OPTIONS.map(option => (
+            {labels.map(option => (
               <Button
                 key={option.id}
                 variant="ghost"
@@ -1641,7 +1633,7 @@ export function LayerTree({
       const isSelected = selectedLayers.has(layer.id);
       
       // Find the label option if there's a label set
-      const labelOption = LABEL_OPTIONS.find(option => option.id === layerLabel);
+      const labelOption = labels.find(option => option.id === layerLabel);
 
       return (
         <div key={layer.id}>
@@ -1723,9 +1715,9 @@ export function LayerTree({
                 <div className="inline-flex items-center ml-2 gap-1">
                   <span className={cn(
                     "text-xs font-semibold px-1.5 py-0.5 rounded opacity-70",
-                    LABEL_OPTIONS.find(opt => opt.id === predictions[layer.id].label)?.color
+                    labels.find(opt => opt.id === predictions[layer.id].label)?.color
                   )}>
-                    {LABEL_OPTIONS.find(opt => opt.id === predictions[layer.id].label)?.name}
+                    {labels.find(opt => opt.id === predictions[layer.id].label)?.name}
                   </span>
                   <Button
                     variant="ghost"
@@ -1781,7 +1773,7 @@ export function LayerTree({
                 <div className="text-xs font-medium text-gray-500 mb-1 px-2 pt-1">
                   Assign Label
                 </div>
-                {LABEL_OPTIONS.map(option => (
+                {labels.map(option => (
                   <Button
                     key={option.id}
                     variant="ghost"
@@ -2000,6 +1992,75 @@ export function LayerTree({
     }
   }, [layersState, loadTrainingData]);
 
+  // Remove the hardcoded LABEL_OPTIONS constant and add state for labels
+  const [labels, setLabels] = useState<Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>>([]);
+
+  // Add loading state for labels
+  const [isLoadingLabels, setIsLoadingLabels] = useState(false);
+
+  // Add fetchLabels function
+  const fetchLabels = async () => {
+    try {
+      setIsLoadingLabels(true);
+      const response = await fetch('/api/labels');
+      const data = await response.json();
+      if (response.ok) {
+        // Map the labels to include colors
+        const labelsWithColors = data.labels.map((label: string) => {
+          const colors = getLabelColor(label);
+          return {
+            id: label,
+            name: label.charAt(0).toUpperCase() + label.slice(1).replace(/-/g, ' '),
+            color: `${colors.bg} ${colors.text}`
+          };
+        });
+        setLabels(labelsWithColors);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err) {
+      console.error('Error fetching labels:', err);
+      toast.error('Failed to fetch labels');
+    } finally {
+      setIsLoadingLabels(false);
+    }
+  };
+
+  // Add useEffect to fetch labels on mount
+  useEffect(() => {
+    fetchLabels();
+  }, []);
+
+  // Keep the getLabelColor function
+  const getLabelColor = (label: string): { bg: string; text: string } => {
+    switch (label) {
+      case 'background':
+        return { bg: 'bg-gray-100', text: 'text-gray-700' };
+      case 'logo':
+        return { bg: 'bg-red-100', text: 'text-red-700' };
+      case 'main-subject':
+        return { bg: 'bg-blue-100', text: 'text-blue-700' };
+      case 'domain':
+        return { bg: 'bg-purple-100', text: 'text-purple-700' };
+      case 'product-name':
+        return { bg: 'bg-green-100', text: 'text-green-700' };
+      case 'sub-content-1':
+        return { bg: 'bg-pink-100', text: 'text-pink-700' };
+      case 'sub-content-2':
+        return { bg: 'bg-indigo-100', text: 'text-indigo-700' };
+      case 'cta':
+        return { bg: 'bg-orange-100', text: 'text-orange-700' };
+      case 'disclaimer':
+        return { bg: 'bg-amber-100', text: 'text-amber-700' };
+      default:
+        return { bg: 'bg-gray-100', text: 'text-gray-700' };
+    }
+  };
+
   if (!layerData) {
     return (
       <div className="p-4 border rounded-md bg-gray-50 text-center">
@@ -2012,29 +2073,30 @@ export function LayerTree({
     <div className="layer-tree border rounded-md overflow-hidden flex flex-col h-full">
       <StepsIndicator />
       <div className="p-2 border-b bg-gray-50">
-        <div className="flex items-center justify-between">
-          <h3 className="font-medium text-sm">Layers</h3>
-          <div className="flex gap-2">
-            {selectedLayers.size > 0 ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setBulkLabelModalOpen(true)}
-                >
-                  <Tag className="h-4 w-4 mr-1" />
-                  Label ({selectedLayers.size})
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setBulkPersonalizationModalOpen(true)}
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  Personalize ({selectedLayers.size})
-                </Button>
-              </>
-            ) : (
+              <div className="flex items-center justify-between">
+        <h3 className="font-medium text-sm">Layers</h3>
+        <div className="flex gap-2">
+          {selectedLayers.size > 0 ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setBulkLabelModalOpen(true)}
+              >
+                <Tag className="h-4 w-4 mr-1" />
+                Label ({selectedLayers.size})
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setBulkPersonalizationModalOpen(true)}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Personalize ({selectedLayers.size})
+              </Button>
+            </>
+          ) : (
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -2051,9 +2113,30 @@ export function LayerTree({
                 )} />
                 {aiProcessing ? "Processing..." : "Auto Label"}
               </Button>
-            )}
-          </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchLabels}
+                disabled={isLoadingLabels}
+                className={cn(
+                  "transition-all",
+                  isLoadingLabels && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <RefreshCw className={cn(
+                  "h-4 w-4",
+                  isLoadingLabels && "animate-spin"
+                )} />
+              </Button>
+            </div>
+          )}
         </div>
+      </div>
+      {isLoadingLabels && (
+        <div className="p-2 text-sm text-center text-gray-500">
+          <Label>Refreshing labels...</Label>
+        </div>
+      )}
         {aiError && (
           <div className="mt-2 text-xs text-red-500">
             Error: {aiError}

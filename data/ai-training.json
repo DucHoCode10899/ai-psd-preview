@@ -529,55 +529,55 @@
   },
   {
     "layerName": "Circle to Search with Google",
-    "correctLabel": "sub-content-1",
+    "correctLabel": "sub-content-2",
     "patterns": [
       {
         "pattern": "circle to search with google",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "circle",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "search",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "with",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "google",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "circle to",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "to search",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "search with",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       },
       {
         "pattern": "with google",
         "confidence": 0.6,
-        "matches": 9
+        "matches": 10
       }
     ],
-    "lastUpdated": "2025-05-26T15:41:09.529Z",
+    "lastUpdated": "2025-05-27T02:39:22.692Z",
     "history": [
       {
         "label": "sub-content-1",
@@ -622,6 +622,11 @@
       {
         "label": "sub-content-1",
         "timestamp": "2025-05-26T15:41:09.529Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "sub-content-2",
+        "timestamp": "2025-05-27T02:39:22.692Z",
         "confidence": 0.6
       }
     ]
@@ -2370,6 +2375,327 @@
       {
         "label": "product-name",
         "timestamp": "2025-05-26T08:02:35.060Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "TAGLINE",
+    "correctLabel": "product-name",
+    "patterns": [
+      {
+        "pattern": "tagline",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T02:39:26.268Z",
+    "history": [
+      {
+        "label": "product-name",
+        "timestamp": "2025-05-27T02:39:26.268Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Product Logo",
+    "correctLabel": "logo",
+    "patterns": [
+      {
+        "pattern": "product logo",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "product",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "logo",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T02:39:46.986Z",
+    "history": [
+      {
+        "label": "logo",
+        "timestamp": "2025-05-27T02:39:46.986Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "CXP - Khoanh tron de tiem kiem",
+    "correctLabel": "sub-content-1",
+    "patterns": [
+      {
+        "pattern": "cxp - khoanh tron de tiem kiem",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "cxp",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "khoanh",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "tron",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "tiem",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "kiem",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "cxp khoanh",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "khoanh tron",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "tron de",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "de tiem",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "tiem kiem",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T02:39:50.526Z",
+    "history": [
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-27T02:39:50.526Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Background - Photography",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background - photography",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "background",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "photography",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "background photography",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T03:15:14.280Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T03:15:14.280Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Background - Food",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background - food",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "background",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "food",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "background food",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T03:15:17.564Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T03:15:17.564Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Background - Fashion",
+    "correctLabel": "background",
+    "patterns": [
+      {
+        "pattern": "background - fashion",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "background",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "fashion",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "background fashion",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T03:15:17.744Z",
+    "history": [
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T03:15:17.744Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Screen - Photography",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "screen - photography",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "screen",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "photography",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "screen photography",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T03:15:22.552Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T03:15:22.552Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Screen - Food",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "screen - food",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "screen",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "food",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "screen food",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T03:15:24.422Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T03:15:24.422Z",
+        "confidence": 0.6
+      }
+    ]
+  },
+  {
+    "layerName": "Screen - Fashion",
+    "correctLabel": "main-subject",
+    "patterns": [
+      {
+        "pattern": "screen - fashion",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "screen",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "fashion",
+        "confidence": 0.6,
+        "matches": 1
+      },
+      {
+        "pattern": "screen fashion",
+        "confidence": 0.6,
+        "matches": 1
+      }
+    ],
+    "lastUpdated": "2025-05-27T03:15:27.658Z",
+    "history": [
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T03:15:27.658Z",
         "confidence": 0.6
       }
     ]
