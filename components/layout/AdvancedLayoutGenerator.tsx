@@ -1263,7 +1263,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
-  // Update renderLayoutPreview function to maintain aspect ratio
+  // Update renderLayoutPreview function to respect per-layer safezone settings
   const renderLayoutPreview = (canvas: HTMLCanvasElement, layout: GeneratedLayout) => {
     const fabricCanvas = new Canvas(canvas);
     
@@ -1310,12 +1310,35 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       excludeFromExport: true
     });
     fabricCanvas.add(background);
+
+    // Add safezone boundaries with the same margin as main canvas
+    const safezoneMargin = margin;
+    const safezone = new Rect({
+      left: canvasWidth * safezoneMargin,
+      top: canvasHeight * safezoneMargin,
+      width: canvasWidth * (1 - 2 * safezoneMargin),
+      height: canvasHeight * (1 - 2 * safezoneMargin),
+      fill: 'transparent',
+      stroke: '#2563eb',
+      strokeWidth: 1,
+      strokeDashArray: [5, 5],
+      selectable: false,
+      evented: false,
+      excludeFromExport: true
+    });
+    fabricCanvas.add(safezone);
     
-    // Add elements in reverse order (bottom to top)
-    const elementsToRender = [...layout.elements].reverse();
-    
+    // Get layer labels from session storage
+    const storedLabels = sessionStorage.getItem('psd_layer_labels');
+    let labels: Record<string, string> = {};
+    try {
+      labels = storedLabels ? JSON.parse(storedLabels) : {};
+    } catch (error) {
+      console.error('Error parsing layer labels:', error);
+    }
+
     // Draw background elements first
-    for (const element of elementsToRender.filter(el => el.label === 'background')) {
+    for (const element of layout.elements.filter(el => el.label === 'background')) {
       if (!element.visible) continue;
       
       try {
@@ -1350,11 +1373,26 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             ctx.fillRect(0, 0, elementWidth, elementHeight);
           }
         }
-        
-        // Create fabric image with proper scaling
+
+        // Calculate position with safezone consideration
+        const elementLabel = labels[element.id] || labels[`layer_${element.id}`];
+        const shouldApplySafezone = safezoneByLabel[elementLabel] !== false;
+        let left = element.x * scale;
+        let top = element.y * scale;
+
+        if (shouldApplySafezone) {
+          const safeLeft = canvasWidth * safezoneMargin;
+          const safeTop = canvasHeight * safezoneMargin;
+          const safeWidth = canvasWidth * (1 - 2 * safezoneMargin);
+          const safeHeight = canvasHeight * (1 - 2 * safezoneMargin);
+
+          left = Math.max(safeLeft, Math.min(safeLeft + safeWidth - elementWidth * scale, left));
+          top = Math.max(safeTop, Math.min(safeTop + safeHeight - elementHeight * scale, top));
+        }
+
         const fabricImage = new FabricImage(tempCanvas, {
-          left: element.x * scale,
-          top: element.y * scale,
+          left: left,
+          top: top,
           width: elementWidth,
           height: elementHeight,
           scaleX: scale,
@@ -1373,7 +1411,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
     
     // Draw non-background elements
-    for (const element of elementsToRender.filter(el => el.label !== 'background')) {
+    for (const element of layout.elements.filter(el => el.label !== 'background')) {
       if (!element.visible) continue;
       
       try {
@@ -1408,11 +1446,26 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             ctx.fillRect(0, 0, elementWidth, elementHeight);
           }
         }
-        
-        // Create fabric image with proper scaling
+
+        // Calculate position with safezone consideration
+        const elementLabel = labels[element.id] || labels[`layer_${element.id}`];
+        const shouldApplySafezone = safezoneByLabel[elementLabel] !== false;
+        let left = element.x * scale;
+        let top = element.y * scale;
+
+        if (shouldApplySafezone) {
+          const safeLeft = canvasWidth * safezoneMargin;
+          const safeTop = canvasHeight * safezoneMargin;
+          const safeWidth = canvasWidth * (1 - 2 * safezoneMargin);
+          const safeHeight = canvasHeight * (1 - 2 * safezoneMargin);
+
+          left = Math.max(safeLeft, Math.min(safeLeft + safeWidth - elementWidth * scale, left));
+          top = Math.max(safeTop, Math.min(safeTop + safeHeight - elementHeight * scale, top));
+        }
+
         const fabricImage = new FabricImage(tempCanvas, {
-          left: element.x * scale,
-          top: element.y * scale,
+          left: left,
+          top: top,
           width: elementWidth,
           height: elementHeight,
           scaleX: scale,
@@ -2160,7 +2213,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                 <div className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-2xl font-bold">Layout Gallery</h2>
+                      <p className="font-bold">Combination Layout Gallery</p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {multipleLayouts.length} layouts generated • Click on a layout to select it
                       </p>
