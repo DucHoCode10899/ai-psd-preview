@@ -34,6 +34,7 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { Rnd } from 'react-rnd';
+import { Switch } from "@/components/ui/switch";
 
 // Personalization types
 type SegmentationType = string;
@@ -133,6 +134,7 @@ interface SafezoneState {
 
 export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayoutGeneratorProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const [syncEnabled, setSyncEnabled] = useState(false);
 
   // Function to check for personalized layers
   const hasPersonalizedLayers = () => {
@@ -886,6 +888,12 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       return;
     }
 
+    // If sync is enabled, use sync layout generation
+    if (syncEnabled && hasSync) {
+      handleGenerateAllSyncLayouts();
+      return;
+    }
+
     // Load necessary data from storage
     const layerLabels = sessionStorage.getItem('psd_layer_labels');
     if (!layerLabels) {
@@ -1337,81 +1345,39 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       console.error('Error parsing layer labels:', error);
     }
 
-    // Draw background elements first
-    for (const element of layout.elements.filter(el => el.label === 'background')) {
-      if (!element.visible) continue;
-      
-      try {
-        // Create temporary canvas for the layer
-        const tempCanvas = document.createElement('canvas');
-        const elementWidth = element.width;
-        const elementHeight = element.height;
-        
-        tempCanvas.width = Math.max(1, elementWidth);
-        tempCanvas.height = Math.max(1, elementHeight);
-        const ctx = tempCanvas.getContext('2d');
-        
-        if (ctx) {
-          const imageData = layerImages.get(element.name);
-          
-          if (imageData && imageData.width > 0 && imageData.height > 0) {
-            const originalCanvas = document.createElement('canvas');
-            originalCanvas.width = Math.max(1, imageData.width);
-            originalCanvas.height = Math.max(1, imageData.height);
-            const originalCtx = originalCanvas.getContext('2d');
-            
-            if (originalCtx) {
-              originalCtx.putImageData(imageData, 0, 0);
-              ctx.drawImage(
-                originalCanvas,
-                0, 0, imageData.width, imageData.height,
-                0, 0, elementWidth, elementHeight
-              );
-            }
-          } else {
-            ctx.fillStyle = getLabelColor(element.label);
-            ctx.fillRect(0, 0, elementWidth, elementHeight);
-          }
+    // Sort elements based on render order
+    let elementsToRender = [...layout.elements];
+    if (currentRenderOrder) {
+      // Create a map for quick label lookup
+      const elementsByLabel = new Map();
+      elementsToRender.forEach(element => {
+        if (!elementsByLabel.has(element.label)) {
+          elementsByLabel.set(element.label, []);
         }
+        elementsByLabel.get(element.label).push(element);
+      });
 
-        // Calculate position with safezone consideration
-        const elementLabel = labels[element.id] || labels[`layer_${element.id}`];
-        const shouldApplySafezone = safezoneByLabel[elementLabel] !== false;
-        let left = element.x * scale;
-        let top = element.y * scale;
+      // Sort elements according to render order
+      elementsToRender = currentRenderOrder.flatMap(label => 
+        elementsByLabel.get(label) || []
+      );
 
-        if (shouldApplySafezone) {
-          const safeLeft = canvasWidth * safezoneMargin;
-          const safeTop = canvasHeight * safezoneMargin;
-          const safeWidth = canvasWidth * (1 - 2 * safezoneMargin);
-          const safeHeight = canvasHeight * (1 - 2 * safezoneMargin);
-
-          left = Math.max(safeLeft, Math.min(safeLeft + safeWidth - elementWidth * scale, left));
-          top = Math.max(safeTop, Math.min(safeTop + safeHeight - elementHeight * scale, top));
-        }
-
-        const fabricImage = new FabricImage(tempCanvas, {
-          left: left,
-          top: top,
-          width: elementWidth,
-          height: elementHeight,
-          scaleX: scale,
-          scaleY: scale,
-          selectable: false,
-          hasControls: false,
-          hasBorders: false,
-          opacity: 1
-        });
-        
-        fabricCanvas.add(fabricImage);
-        
-      } catch (error) {
-        console.error(`Error rendering preview element ${element.name}:`, error);
-      }
+      // Add any remaining elements not in render order at the end
+      const remainingElements = elementsToRender.filter(element => 
+        !currentRenderOrder.includes(element.label)
+      );
+      elementsToRender = [...elementsToRender, ...remainingElements];
+    } else {
+      // If no render order specified, render background first, then other elements
+      elementsToRender.sort((a, b) => {
+        if (a.label === 'background') return -1;
+        if (b.label === 'background') return 1;
+        return 0;
+      });
     }
-    
-    // Draw non-background elements
-    for (const element of layout.elements.filter(el => el.label !== 'background')) {
+
+    // Render elements in order
+    for (const element of elementsToRender) {
       if (!element.visible) continue;
       
       try {
@@ -1500,6 +1466,12 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       return;
     }
 
+    // If sync is enabled, use sync layout generation
+    if (syncEnabled && hasSync) {
+      handleGenerateAllSyncLayouts();
+      return;
+    }
+
     // Load necessary data from storage
     const layerLabels = sessionStorage.getItem('psd_layer_labels');
     if (!layerLabels) {
@@ -1508,6 +1480,40 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
 
     try {
+      // Fetch latest layout rules data
+      const response = await fetch('/api/layout-rules');
+      const layoutRulesData = await response.json() as LayoutRuleResponse;
+      
+      // Find current channel and layout option to get latest render order and safezone settings
+      const currentChannel = layoutRulesData.channels.find(c => c.id === selectedChannelId);
+      if (!currentChannel) {
+        toast.error('Selected channel not found');
+        return;
+      }
+
+      const currentLayoutRule = currentChannel.layouts.find(l => l.aspectRatio === selectedAspectRatio);
+      if (!currentLayoutRule) {
+        toast.error('Selected layout not found');
+        return;
+      }
+
+      const currentOption = currentLayoutRule.options.find(o => o.name === selectedOption);
+      if (!currentOption) {
+        toast.error('Selected option not found');
+        return;
+      }
+
+      // Update safezone states with latest data
+      updateSafezoneStates(currentOption);
+
+      // Update current render order with latest data
+      const renderOrder = currentOption.rules.renderOrder;
+      setCurrentRenderOrder(renderOrder || null);
+
+      // Update safezone margin with latest data
+      const safezoneMargin = currentOption.safezoneMargin || margin;
+      setMargin(safezoneMargin);
+
       const labels = JSON.parse(layerLabels);
       let personalizationRules = {};
 
@@ -1564,11 +1570,41 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           }));
 
           const layout = generateLayout(visibleLayers, selectedOption, {
-            safezone: margin,
-            margin: margin
+            safezone: safezoneMargin,
+            margin: safezoneMargin
           });
 
           if (layout) {
+            // Sort elements according to render order before adding to layouts
+            if (renderOrder) {
+              const elementsByLabel = new Map();
+              layout.elements.forEach(element => {
+                if (!elementsByLabel.has(element.label)) {
+                  elementsByLabel.set(element.label, []);
+                }
+                elementsByLabel.get(element.label).push(element);
+              });
+
+              // Sort elements according to render order
+              const sortedElements = renderOrder.flatMap(label => 
+                elementsByLabel.get(label) || []
+              );
+
+              // Add any remaining elements not in render order at the end
+              const remainingElements = layout.elements.filter(element => 
+                !renderOrder.includes(element.label)
+              );
+
+              layout.elements = [...sortedElements, ...remainingElements];
+            } else {
+              // If no render order, sort background first
+              layout.elements.sort((a, b) => {
+                if (a.label === 'background') return -1;
+                if (b.label === 'background') return 1;
+                return 0;
+              });
+            }
+
             layouts.push(layout);
           }
           return;
@@ -1693,6 +1729,40 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
 
     try {
+      // Fetch latest layout rules data
+      const response = await fetch('/api/layout-rules');
+      const layoutRulesData = await response.json() as LayoutRuleResponse;
+      
+      // Find current channel and layout option to get latest render order and safezone settings
+      const currentChannel = layoutRulesData.channels.find(c => c.id === selectedChannelId);
+      if (!currentChannel) {
+        toast.error('Selected channel not found');
+        return;
+      }
+
+      const currentLayoutRule = currentChannel.layouts.find(l => l.aspectRatio === selectedAspectRatio);
+      if (!currentLayoutRule) {
+        toast.error('Selected layout not found');
+        return;
+      }
+
+      const currentOption = currentLayoutRule.options.find(o => o.name === selectedOption);
+      if (!currentOption) {
+        toast.error('Selected option not found');
+        return;
+      }
+
+      // Update safezone states with latest data
+      updateSafezoneStates(currentOption);
+
+      // Update current render order with latest data
+      const renderOrder = currentOption.rules.renderOrder;
+      setCurrentRenderOrder(renderOrder || null);
+
+      // Update safezone margin with latest data
+      const safezoneMargin = currentOption.safezoneMargin || margin;
+      setMargin(safezoneMargin);
+
       const labels = JSON.parse(layerLabels);
       const links = JSON.parse(storedLinks) as LayerLink[];
       let personalizationRules = {};
@@ -1828,11 +1898,41 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           );
 
           const layout = generateLayout(visibleLayers, selectedOption, {
-            safezone: margin,
-            margin: margin
+            safezone: safezoneMargin,
+            margin: safezoneMargin
           });
 
           if (layout) {
+            // Sort elements according to render order before adding to layouts
+            if (renderOrder) {
+              const elementsByLabel = new Map();
+              layout.elements.forEach(element => {
+                if (!elementsByLabel.has(element.label)) {
+                  elementsByLabel.set(element.label, []);
+                }
+                elementsByLabel.get(element.label).push(element);
+              });
+
+              // Sort elements according to render order
+              const sortedElements = renderOrder.flatMap(label => 
+                elementsByLabel.get(label) || []
+              );
+
+              // Add any remaining elements not in render order at the end
+              const remainingElements = layout.elements.filter(element => 
+                !renderOrder.includes(element.label)
+              );
+
+              layout.elements = [...sortedElements, ...remainingElements];
+            } else {
+              // If no render order, sort background first
+              layout.elements.sort((a, b) => {
+                if (a.label === 'background') return -1;
+                if (b.label === 'background') return 1;
+                return 0;
+              });
+            }
+
             layouts.push(layout);
           }
           return;
@@ -2050,7 +2150,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
               {/* Generate buttons */}
               {selectedChannelId && selectedAspectRatio && selectedOption && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 align-middle">
                   <Button 
                     onClick={handleGenerateLayout} 
                     disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
@@ -2058,17 +2158,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                   >
                     {isGenerating ? 'Generating...' : 'Generate Layout'}
                   </Button>
-                  
-                  {hasSync && (
-                    <Button 
-                      onClick={handleGenerateAllSyncLayouts}
-                      disabled={!selectedOption || isGenerating || (hasPersonalization && (!selectedSegmentationType || !selectedSegmentationValue))}
-                      size="lg"
-                      variant="secondary"
-                    >
-                      {isGenerating ? 'Generating...' : 'Generate All Sync Layouts'}
-                    </Button>
-                  )}
 
                   <Button 
                     onClick={handleGenerateAllCombinations}
@@ -2078,6 +2167,21 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                   >
                     {isGenerating ? 'Generating...' : 'Generate All Combinations'}
                   </Button>
+
+                  {/* Sync toggle - only show if sync links exist */}
+                  {hasSync && (
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="sync-toggle" className="text-sm font-medium">
+                        Use Sync Links
+                      </Label>
+                      <Switch
+                        id="sync-toggle"
+                        checked={syncEnabled}
+                        onCheckedChange={setSyncEnabled}
+                        disabled={!selectedOption}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2155,7 +2259,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       </div>
 
       {/* Canvas container */}
-      <div className="border rounded-lg overflow-hidden w-full bg-white shadow-sm" style={{ minHeight: '200px' }}>
+      <div className="border overflow-hidden w-full bg-white shadow-sm" style={{ minHeight: '200px' }}>
         <div className="w-full h-full flex items-center justify-center">
           <canvas ref={canvasRef} className="w-full h-full"  />
         </div>
@@ -2262,7 +2366,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                     <div 
                       key={index}
                       className={cn(
-                        "relative overflow-hidden rounded-md transition-all duration-200 hover:shadow-lg",
+                        "relative overflow-hidden transition-all duration-200 hover:shadow-lg",
                         currentLayoutIndex === index 
                           ? "border-primary ring-2 ring-primary/20 shadow-xl" 
                           : "border-border hover:border-primary/50"
@@ -2393,7 +2497,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                     <div 
                       key={index}
                       className={cn(
-                        "relative overflow-hidden rounded-md transition-all duration-200 hover:shadow-lg",
+                        "relative overflow-hidden transition-all duration-200 hover:shadow-lg",
                         currentLayoutIndex === index 
                           ? "border-primary ring-2 ring-primary/20 shadow-xl" 
                           : "border-border hover:border-primary/50"
