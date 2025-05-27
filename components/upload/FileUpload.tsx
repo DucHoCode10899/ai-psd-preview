@@ -47,7 +47,6 @@ export function FileUpload({ onFileUpload, onPsdParsed }: FileUploadProps) {
     
     try {
       const layers = await parsePsdFile(uploadedFile);
-      console.log('PSD layers extracted:', layers);
       
       if (onPsdParsed) {
         onPsdParsed(layers);

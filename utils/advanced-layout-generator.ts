@@ -8,16 +8,11 @@ import {
 import { 
   calculateElementLayout,
   PositionOptions,
-  PositionKeyword
+  CoordinatePosition
 } from '@/utils/position-calculator';
 import layoutConfigData from '@/data/layoutRules.json';
 
-// Define positioning rule type
-interface PositioningRule {
-  position: PositionKeyword;
-  maxWidthPercent: number;
-  maxHeightPercent: number;
-}
+
 
 /**
  * Get fresh layout configuration data
@@ -216,8 +211,6 @@ export function generateLayout(
     return null;
   }
   
-  console.log(`Generating layout: ${optionName} (${selectedLayout.width}x${selectedLayout.height})`);
-  
   // Get layer labels and visibility states
   const labelMap = getLayerLabels();
   const visibilityStates = getVisibilityStates();
@@ -247,11 +240,12 @@ export function generateLayout(
     if (!positioningRule) return;
     
     // Get position and sizing info
-    const position = (positioningRule as PositioningRule).position || 'center';
+    const coordinatePosition = positioningRule.coordinatePosition || {
+      horizontalAlignment: 'center' as const,
+      verticalAlignment: 'middle' as const
+    };
     const maxWidthPercent = positioningRule.maxWidthPercent;
     const maxHeightPercent = positioningRule.maxHeightPercent;
-    
-    console.log(`Processing ${label} elements: position=${position}, maxWidth=${maxWidthPercent * 100}%, maxHeight=${maxHeightPercent * 100}%`);
     
     // Process each layer with this label
     layers.forEach(layer => {
@@ -264,14 +258,9 @@ export function generateLayout(
       const layerVisible = isVisible && shouldLayerBeVisible(layer, visibilityStates, psdLayers);
       if (!layerVisible) return;
       
-      // Log original bounds
-      const originalWidth = layer.bounds.right - layer.bounds.left;
-      const originalHeight = layer.bounds.bottom - layer.bounds.top;
-      console.log(`Layer ${layer.name} original size: ${originalWidth}x${originalHeight}`);
-      
       // Calculate layout for this element
       const layout = calculateElementLayout(
-        position,
+        coordinatePosition,
         layer.bounds,
         selectedLayout.width,
         selectedLayout.height,
@@ -280,9 +269,6 @@ export function generateLayout(
         options,
         label
       );
-      
-      // Log calculated dimensions
-      console.log(`Layer ${layer.name} (${label}) calculated size: ${layout.dimensions.width}x${layout.dimensions.height} at position ${layout.position.x},${layout.position.y}`);
       
       // Create the element
       const element: GeneratedElement = {
@@ -296,15 +282,13 @@ export function generateLayout(
         visible: true,
         parent: layer.parent,
         originalBounds: layer.bounds,
-        position
+        coordinatePosition
       };
       
       // Add to result
       result.elements.push(element);
     });
   });
-  
-  console.log(`Generated ${result.elements.length} elements for layout ${optionName}`);
   
   // Add rules to the generated layout for reference
   result.rules = selectedOption.rules;

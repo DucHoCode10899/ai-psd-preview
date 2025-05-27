@@ -241,8 +241,6 @@ export const generateLayout = (
       // Get position from positioning rule
       const position = (positioningRule as unknown as { position: string }).position || 'center';
       
-      console.log(`Positioning ${layer.name} (${label}) at ${position}`);
-      
       // Calculate x and y positions based on position keyword
       const { x, y } = calculatePosition(
         position,

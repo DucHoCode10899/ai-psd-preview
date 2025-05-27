@@ -2003,7 +2003,7 @@ export function LayerTree({
   const [isLoadingLabels, setIsLoadingLabels] = useState(false);
 
   // Add fetchLabels function
-  const fetchLabels = async () => {
+  const fetchLabels = useCallback(async () => {
     try {
       setIsLoadingLabels(true);
       const response = await fetch('/api/labels');
@@ -2028,12 +2028,12 @@ export function LayerTree({
     } finally {
       setIsLoadingLabels(false);
     }
-  };
+  }, []);
 
   // Add useEffect to fetch labels on mount
   useEffect(() => {
     fetchLabels();
-  }, []);
+  }, [fetchLabels]);
 
   // Keep the getLabelColor function
   const getLabelColor = (label: string): { bg: string; text: string } => {

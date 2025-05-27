@@ -1,6 +1,12 @@
 import { Bounds } from "@/types/layout";
 
-// Define position types
+// Define horizontal alignment options
+export type HorizontalAlignment = 'left' | 'center' | 'right';
+
+// Define vertical alignment options  
+export type VerticalAlignment = 'top' | 'middle' | 'bottom';
+
+// Define position types - keeping existing for backward compatibility
 export type PositionKeyword = 
   // Center positions
   | 'center' 
@@ -39,7 +45,22 @@ export type PositionKeyword =
   | 'left-25' | 'left-33' | 'left-66' | 'left-75'
   | 'right-25' | 'right-33' | 'right-66' | 'right-75'
   | 'top-25' | 'top-33' | 'top-66' | 'top-75'
-  | 'bottom-25' | 'bottom-33' | 'bottom-66' | 'bottom-75';
+  | 'bottom-25' | 'bottom-33' | 'bottom-66' | 'bottom-75'
+  // Custom coordinate position
+  | 'custom';
+
+// New interface for coordinate-based positioning
+export interface CoordinatePosition {
+  horizontalAlignment: HorizontalAlignment;
+  verticalAlignment: VerticalAlignment;
+  horizontalOffset?: number; // Percentage offset from alignment point (0-100)
+  verticalOffset?: number;   // Percentage offset from alignment point (0-100)
+  customX?: number;         // Custom X coordinate (percentage of container width)
+  customY?: number;         // Custom Y coordinate (percentage of container height)
+}
+
+// Union type for all position types
+export type Position = PositionKeyword | CoordinatePosition;
 
 export interface PositionResult {
   x: number;
@@ -90,8 +111,6 @@ export function coverScaleElement(
     width = containerHeight * imageRatio;
   }
   
-  console.log(`Cover scaling: original=${originalWidth}x${originalHeight}, container=${containerWidth}x${containerHeight}, final=${Math.ceil(width)}x${Math.ceil(height)}`);
-  
   return {
     width: Math.ceil(width),
     height: Math.ceil(height)
@@ -114,10 +133,80 @@ function getPositionRatio(position: string): number {
 }
 
 /**
- * Calculate position based on position keyword
+ * Calculate position using coordinate-based positioning
+ */
+function calculateCoordinatePosition(
+  coordinatePos: CoordinatePosition,
+  element: ElementDimensions,
+  container: ContainerDimensions,
+  options: PositionOptions = {}
+): PositionResult {
+  const { safezone = 0, margin = 0 } = options;
+  
+  // Calculate effective container dimensions after safezone
+  const effectiveWidth = container.width - (safezone * 2);
+  const effectiveHeight = container.height - (safezone * 2);
+  
+  let x: number = safezone + (effectiveWidth / 2) - (element.width / 2); // Default to center
+  let y: number = safezone + (effectiveHeight / 2) - (element.height / 2); // Default to center
+  
+  // Handle custom coordinates
+  if (coordinatePos.customX !== undefined && coordinatePos.customY !== undefined) {
+    x = (coordinatePos.customX / 100) * container.width - (element.width / 2);
+    y = (coordinatePos.customY / 100) * container.height - (element.height / 2);
+    return { x, y };
+  }
+  
+  // Calculate base position based on alignment
+  switch (coordinatePos.horizontalAlignment) {
+    case 'left':
+      x = safezone + margin;
+      break;
+    case 'center':
+      x = safezone + (effectiveWidth / 2) - (element.width / 2);
+      break;
+    case 'right':
+      x = container.width - element.width - safezone - margin;
+      break;
+    default:
+      // Already set to center as default
+      break;
+  }
+  
+  switch (coordinatePos.verticalAlignment) {
+    case 'top':
+      y = safezone + margin;
+      break;
+    case 'middle':
+      y = safezone + (effectiveHeight / 2) - (element.height / 2);
+      break;
+    case 'bottom':
+      y = container.height - element.height - safezone - margin;
+      break;
+    default:
+      // Already set to center as default
+      break;
+  }
+  
+  // Apply offsets if specified
+  if (coordinatePos.horizontalOffset !== undefined) {
+    const offsetX = (coordinatePos.horizontalOffset / 100) * effectiveWidth;
+    x += offsetX;
+  }
+  
+  if (coordinatePos.verticalOffset !== undefined) {
+    const offsetY = (coordinatePos.verticalOffset / 100) * effectiveHeight;
+    y += offsetY;
+  }
+  
+  return { x, y };
+}
+
+/**
+ * Calculate position based on position keyword or coordinate position
  */
 export function calculatePosition(
-  position: PositionKeyword | string,
+  position: Position,
   element: ElementDimensions,
   container: ContainerDimensions,
   options: PositionOptions = {}
@@ -128,6 +217,27 @@ export function calculatePosition(
     margin = 0,
     elementType
   } = options;
+
+  // Handle null/undefined position - default to center
+  if (!position) {
+    position = 'center';
+  }
+
+  // Handle coordinate-based positioning
+  if (typeof position === 'object') {
+    return calculateCoordinatePosition(position, element, container, options);
+  }
+
+  // Convert position to string for legacy handling
+  const positionStr = position as string;
+
+  // Additional safety check for string validity
+  if (typeof positionStr !== 'string' || positionStr.trim() === '') {
+    console.warn('Invalid position string, defaulting to center');
+    const centerX = safezone + (container.width - (safezone * 2)) / 2 - element.width / 2;
+    const centerY = safezone + (container.height - (safezone * 2)) / 2 - element.height / 2;
+    return { x: centerX, y: centerY };
+  }
 
   // Special handling for background elements - always position at 0,0
   if (elementType === 'background') {
@@ -154,9 +264,9 @@ export function calculatePosition(
   let y = safezone + (effectiveHeight / 2) - (effectiveElementHeight / 2);
 
   // Handle percentage-based positions with format 'direction-center-percent'
-  if (position.match(/^(top|left|right|bottom)-center-\d+$/)) {
-    const ratio = getPositionRatio(position);
-    const positionParts = position.split('-');
+  if (positionStr && positionStr.match(/^(top|left|right|bottom)-center-\d+$/)) {
+    const ratio = getPositionRatio(positionStr);
+    const positionParts = positionStr.split('-');
     const direction = positionParts[0];
     
     switch (direction) {
@@ -177,9 +287,9 @@ export function calculatePosition(
   }
 
   // Handle other percentage-based positions
-  if (position.match(/-(10|20|25|30|33|40|66|75)$/)) {
-    const ratio = getPositionRatio(position);
-    const basePosition = position.replace(/-(10|20|25|30|33|40|66|75)$/, '');
+  if (positionStr && positionStr.match(/-(10|20|25|30|33|40|66|75)$/)) {
+    const ratio = getPositionRatio(positionStr);
+    const basePosition = positionStr.replace(/-(10|20|25|30|33|40|66|75)$/, '');
 
     // Calculate the position at the specified ratio
     const ratioX = safezone + (effectiveWidth * ratio) - (effectiveElementWidth / 2);
@@ -223,7 +333,7 @@ export function calculatePosition(
   }
 
   // Calculate based on position keyword
-  switch (position) {
+  switch (positionStr) {
     // Center positions
     case 'center':
     case 'middle-center':
@@ -312,7 +422,7 @@ export function calculatePosition(
       break;
       
     default:
-      console.warn(`Unknown position: ${position}, defaulting to center`);
+      console.warn(`Unknown position: ${positionStr}, defaulting to center`);
   }
   
   return { x, y };
@@ -339,9 +449,6 @@ export function scaleElement(
     height = maxHeight;
     width = height * aspectRatio;
   }
-  
-  // Log scaling calculations
-  console.log(`Scaling: original=${originalWidth}x${originalHeight}, max=${maxWidth}x${maxHeight}, final=${Math.floor(width)}x${Math.floor(height)}`);
   
   return {
     width: Math.floor(width),
@@ -382,8 +489,6 @@ export function calculateElementSize(
   const maxWidth = Math.floor(maxWidthPercent * containerWidth);
   const maxHeight = Math.floor(maxHeightPercent * containerHeight);
   
-  console.log(`Element size calculation: container=${containerWidth}x${containerHeight}, percentages=${maxWidthPercent}x${maxHeightPercent}, max allowed=${maxWidth}x${maxHeight}`);
-  
   // Scale to fit within max dimensions while maintaining aspect ratio
   return scaleElement(originalWidth, originalHeight, maxWidth, maxHeight);
 }
@@ -392,7 +497,7 @@ export function calculateElementSize(
  * Calculate the final element position and dimensions
  */
 export function calculateElementLayout(
-  position: PositionKeyword | string,
+  position: Position,
   originalBounds: Bounds | undefined,
   containerWidth: number,
   containerHeight: number,
@@ -426,6 +531,55 @@ export function calculateElementLayout(
 }
 
 /**
+ * Helper function to create coordinate position
+ */
+export function createCoordinatePosition(
+  horizontalAlignment: HorizontalAlignment,
+  verticalAlignment: VerticalAlignment,
+  horizontalOffset?: number,
+  verticalOffset?: number,
+  customX?: number,
+  customY?: number
+): CoordinatePosition {
+  return {
+    horizontalAlignment,
+    verticalAlignment,
+    horizontalOffset,
+    verticalOffset,
+    customX,
+    customY
+  };
+}
+
+/**
+ * Helper function to convert legacy position string to coordinate position
+ */
+export function legacyPositionToCoordinate(position: string): CoordinatePosition | null {
+  switch (position) {
+    case 'center':
+      return createCoordinatePosition('center', 'middle');
+    case 'top-left':
+      return createCoordinatePosition('left', 'top');
+    case 'top-center':
+      return createCoordinatePosition('center', 'top');
+    case 'top-right':
+      return createCoordinatePosition('right', 'top');
+    case 'left-center':
+      return createCoordinatePosition('left', 'middle');
+    case 'right-center':
+      return createCoordinatePosition('right', 'middle');
+    case 'bottom-left':
+      return createCoordinatePosition('left', 'bottom');
+    case 'bottom-center':
+      return createCoordinatePosition('center', 'bottom');
+    case 'bottom-right':
+      return createCoordinatePosition('right', 'bottom');
+    default:
+      return null;
+  }
+}
+
+/**
  * Test function for new position types - can be removed in production
  */
 export function testNewPositions() {
@@ -435,32 +589,19 @@ export function testNewPositions() {
   // Test element
   const element = { width: 100, height: 100 };
   
-  // Test new position types
-  const positions: PositionKeyword[] = [
-    'top-center-10',
-    'top-center-20', 
-    'top-center-30', 
-    'top-center-40',
-    'left-center-10', 
-    'left-center-20', 
-    'left-center-30', 
-    'left-center-40',
-    'right-center-10', 
-    'right-center-20', 
-    'right-center-30', 
-    'right-center-40',
-    'bottom-center-10', 
-    'bottom-center-20', 
-    'bottom-center-30', 
-    'bottom-center-40'
+  // Test new coordinate positions
+  const coordinatePositions: CoordinatePosition[] = [
+    createCoordinatePosition('left', 'top'),
+    createCoordinatePosition('center', 'middle'),
+    createCoordinatePosition('right', 'bottom'),
+    createCoordinatePosition('left', 'middle', 25), // 25% offset from left
+    createCoordinatePosition('center', 'top', 0, 10), // 10% offset from top
   ];
-  
-  // Log results
-  console.log('Testing new position types:');
-  positions.forEach(pos => {
-    const result = calculatePosition(pos, element, container);
-    console.log(`${pos}: (${Math.round(result.x)}, ${Math.round(result.y)})`);
+
+  // Test calculations to verify functionality
+  coordinatePositions.forEach(pos => {
+    calculateCoordinatePosition(pos, element, container);
   });
-  
+
   return true;
 } 

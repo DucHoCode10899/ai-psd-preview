@@ -45,24 +45,8 @@ export async function parsePsdFile(file: File): Promise<PsdLayerMetadata[]> {
       throw new Error('Invalid PSD file or no layers found');
     }
     
-    console.log('PSD dimensions:', {
-      width: psd.width,
-      height: psd.height,
-      children: psd.children.length,
-      colorMode: psd.colorMode
-    });
-    
     // Process all layers recursively
     const result = await processLayers(psd.children);
-    
-    // Log some sample layers to check bounds
-    console.log('Sample layer bounds:', 
-      result.slice(0, Math.min(3, result.length)).map(layer => ({
-        name: layer.name,
-        bounds: layer.bounds,
-        type: layer.type
-      }))
-    );
     
     // Store in localStorage
     localStorage.setItem('psd_structure', JSON.stringify(result));

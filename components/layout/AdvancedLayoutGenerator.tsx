@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Download } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { PositionKeyword } from '@/utils/position-calculator';
+import { PositionKeyword, CoordinatePosition } from '@/utils/position-calculator';
 import { toast, Toaster } from 'sonner';
 import type { Node, Layer as PsdLayer } from "@webtoon/psd";
 import { useSegmentationRules } from '@/hooks/useSegmentationRules';
@@ -66,7 +66,6 @@ interface PositionOptions {
 }
 
 interface PositioningRule {
-  position: string;
   maxWidthPercent: number;
   maxHeightPercent: number;
   alignment?: string;
@@ -77,6 +76,8 @@ interface PositioningRule {
     left?: number;
   };
   applySafezone?: boolean;
+  // Coordinate-based positioning (now default)
+  coordinatePosition: CoordinatePosition;
 }
 
 interface LayoutOption {
@@ -219,13 +220,65 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   const [exportFormat, setExportFormat] = useState<'png' | 'jpeg'>('png');
 
   // Add state for grid columns
-  const [gridColumns, setGridColumns] = useState(3);
+  const [gridColumns, setGridColumns] = useState(4);
 
-  // Add state for modal dimensions
-  const [modalDimensions, setModalDimensions] = useState({
-    width: window.innerWidth - 400,
-    height: window.innerHeight - 100
-  });
+  // Add state for modal fullscreen mode
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Calculate initial dimensions (90% of viewport)
+  const calculateInitialModalDimensions = () => {
+    return {
+      width: Math.floor(window.innerWidth * 0.9),
+      height: Math.floor(window.innerHeight * 0.9)
+    };
+  };
+
+  // Calculate center position
+  const calculateCenterPosition = (dimensions: { width: number; height: number }) => {
+    return {
+      x: Math.floor((window.innerWidth - dimensions.width)/2),
+      y: Math.floor((window.innerHeight - dimensions.height)/2)
+    };
+  };
+
+  // State for modal position and dimensions
+  const [modalDimensions, setModalDimensions] = useState(calculateInitialModalDimensions());
+  const [modalPosition, setModalPosition] = useState(calculateCenterPosition(calculateInitialModalDimensions()));
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const newDimensions = isFullscreen ? 
+        { width: window.innerWidth, height: window.innerHeight } : 
+        calculateInitialModalDimensions();
+      
+      setModalDimensions(newDimensions);
+      if (!isFullscreen) {
+        setModalPosition(calculateCenterPosition(newDimensions));
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isFullscreen]);
+
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    const newIsFullscreen = !isFullscreen;
+    setIsFullscreen(newIsFullscreen);
+    
+    if (newIsFullscreen) {
+      setModalDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+      setModalPosition({ x: 0, y: 0 });
+    } else {
+      const newDimensions = calculateInitialModalDimensions();
+      setModalDimensions(newDimensions);
+      setModalPosition(calculateCenterPosition(newDimensions));
+    }
+  };
 
   // Add new state for storing render order
   const [currentRenderOrder, setCurrentRenderOrder] = useState<string[] | null>(null);
@@ -235,6 +288,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
   // Add new state for sync gallery modal
   const [showSyncGallery, setShowSyncGallery] = useState(false);
+
+  // Add state to force gallery re-renders when custom positions change
+  const [galleryRenderKey, setGalleryRenderKey] = useState(0);
 
   // Add function to calculate grid columns based on width
   const calculateGridColumns = (width: number) => {
@@ -274,6 +330,11 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     };
   }, []);
 
+  // Force gallery re-render when custom positions change
+  useEffect(() => {
+    setGalleryRenderKey(prev => prev + 1);
+  }, [customPositions]);
+
   // Add function to update safezone states
   const updateSafezoneStates = (option: LayoutOption) => {
     const newSafezoneState: SafezoneState = {};
@@ -285,7 +346,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     });
 
     setSafezoneByLabel(newSafezoneState);
-    console.log('Updated safezone states:', newSafezoneState);
   };
 
   // Update safezone states when option changes
@@ -388,8 +448,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   useEffect(() => {
     if (!canvasRef.current) return;
     
-    console.log('Initializing fabric canvas');
-    
     fabricCanvasRef.current = new Canvas(canvasRef.current, {
       backgroundColor: '#f9f9f9',
       width: 800,
@@ -401,8 +459,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       selectionBorderColor: '#6366F1',
       selectionLineWidth: 1
     });
-    
-    console.log('Canvas initialized:', fabricCanvasRef.current ? 'success' : 'failed');
     
     return () => {
       if (fabricCanvasRef.current) {
@@ -482,7 +538,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     if (!sourceRatio) return false;
     
     if (areRatiosEquivalent(layout.aspectRatio, sourceRatio)) {
-      console.log(`Excluding layout with ratio ${layout.aspectRatio} because it matches source ratio ${sourceRatio}`);
       return false;
     }
     
@@ -507,13 +562,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       console.error('Error parsing layer labels:', error);
       return;
     }
-    
-    console.log('Rendering layout on canvas:', generatedLayout.name);
-    console.log('Elements to render:', generatedLayout.elements.length);
-    console.log('Layer images available:', layerImages.size);
-    console.log('Animation enabled:', animateElements);
-    console.log('Current render order:', currentRenderOrder);
-    console.log('Current safezone states:', safezoneByLabel);
     
     const canvas = fabricCanvasRef.current;
     
@@ -607,7 +655,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       );
       elementsToRender = [...elementsToRender, ...remainingElements];
 
-      console.log('Elements sorted by render order:', elementsToRender.map(e => e.label));
     } else {
       // If no render order specified, render background first, then other elements
       elementsToRender.sort((a, b) => {
@@ -626,8 +673,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         const tempCanvas = document.createElement('canvas');
         const elementWidth = layoutCustomPositions[element.id]?.width || element.width;
         const elementHeight = layoutCustomPositions[element.id]?.height || element.height;
-        
-        console.log(`Rendering element ${element.name} (${element.label}) with dimensions ${elementWidth}x${elementHeight}`);
         
         tempCanvas.width = Math.max(1, elementWidth);
         tempCanvas.height = Math.max(1, elementHeight);
@@ -651,7 +696,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                   0, 0, imageData.width, imageData.height,
                   0, 0, elementWidth, elementHeight
                 );
-                console.log(`Drew image for ${element.name} from ${imageData.width}x${imageData.height} to ${elementWidth}x${elementHeight}`);
               } catch (error) {
                 console.error(`Error drawing image for layer ${element.name}:`, error);
                 ctx.fillStyle = getLabelColor(element.label);
@@ -719,12 +763,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         
         // Add modified event handler
         fabricImage.on('modified', () => {
-          console.log(`Element ${element.name} modified: `, 
-            `position (${fabricImage.left}, ${fabricImage.top})`,
-            `dimensions (${fabricImage.width} × ${fabricImage.scaleX}) x (${fabricImage.height} × ${fabricImage.scaleY})`,
-            `angle: ${fabricImage.angle}`
-          );
-          
           const newPosition = {
             position: element.position as PositionKeyword,
             x: Math.round(fabricImage.left! / scale),
@@ -734,15 +772,33 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             angle: fabricImage.angle
           };
           
-          console.log(`New element position in layout coordinates: `, newPosition);
-          
-          setCustomPositions(prev => ({
-            ...prev,
-            [generatedLayout.name]: {
-              ...(prev[generatedLayout.name] || {}),
+          // Update custom positions for current layout and sync to all layouts that contain this element
+          setCustomPositions(prev => {
+            const updatedPositions = { ...prev };
+            
+            // Update current layout
+            updatedPositions[generatedLayout.name] = {
+              ...(updatedPositions[generatedLayout.name] || {}),
               [element.id]: newPosition
-            }
-          }));
+            };
+            
+            // Sync to all other layouts that contain this element
+            // We capture multipleLayouts at the time of event handler creation
+            const currentMultipleLayouts = multipleLayouts;
+            currentMultipleLayouts.forEach(layout => {
+              if (layout.name !== generatedLayout.name) {
+                const hasElement = layout.elements.some(el => el.id === element.id);
+                if (hasElement) {
+                  updatedPositions[layout.name] = {
+                    ...(updatedPositions[layout.name] || {}),
+                    [element.id]: newPosition
+                  };
+                }
+              }
+            });
+            
+            return updatedPositions;
+          });
         });
         
         // Add the fabric image to canvas
@@ -775,6 +831,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       canvas.renderAll();
     }
     
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generatedLayout, layerImages, customPositions, margin, isGenerating, animateElements, currentRenderOrder, availableOptions, safezoneByLabel]);
 
   // Function to find all sync sets in the layers with support for multiple alternatives
@@ -1016,11 +1073,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
       // Filter visible layers and generate layout
       const visibleLayers = processedLayers.filter(layer => layer.visible) as PsdLayerMetadataWithSafezone[];
-      console.log('Visible layers with safezone:', visibleLayers.map(l => ({
-        name: l.name,
-        label: labels[l.id] || labels[`layer_${l.id}`],
-        applySafezone: l.applySafezone
-      })));
 
       const generatedLayoutResult = generateLayout(visibleLayers, selectedOption, {
         safezone: safezoneMargin,
@@ -1271,7 +1323,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
-  // Update renderLayoutPreview function to respect per-layer safezone settings
+  // Update renderLayoutPreview function to respect per-layer safezone settings and custom positions
   const renderLayoutPreview = (canvas: HTMLCanvasElement, layout: GeneratedLayout) => {
     const fabricCanvas = new Canvas(canvas);
     
@@ -1345,6 +1397,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       console.error('Error parsing layer labels:', error);
     }
 
+    // Get any custom positions for this layout
+    const layoutCustomPositions = customPositions[layout.name] || {};
+
     // Sort elements based on render order
     let elementsToRender = [...layout.elements];
     if (currentRenderOrder) {
@@ -1383,8 +1438,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       try {
         // Create temporary canvas for the layer
         const tempCanvas = document.createElement('canvas');
-        const elementWidth = element.width;
-        const elementHeight = element.height;
+        // Apply custom dimensions if available
+        const customPosition = layoutCustomPositions[element.id];
+        const elementWidth = customPosition?.width || element.width;
+        const elementHeight = customPosition?.height || element.height;
         
         tempCanvas.width = Math.max(1, elementWidth);
         tempCanvas.height = Math.max(1, elementHeight);
@@ -1413,11 +1470,13 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           }
         }
 
-        // Calculate position with safezone consideration
+        // Calculate position with custom positions and safezone consideration
         const elementLabel = labels[element.id] || labels[`layer_${element.id}`];
         const shouldApplySafezone = safezoneByLabel[elementLabel] !== false;
-        let left = element.x * scale;
-        let top = element.y * scale;
+        
+        // Use custom position if available, otherwise use original position
+        let left = (customPosition ? customPosition.x : element.x) * scale;
+        let top = (customPosition ? customPosition.y : element.y) * scale;
 
         if (shouldApplySafezone) {
           const safeLeft = canvasWidth * safezoneMargin;
@@ -1439,7 +1498,8 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
           selectable: false,
           hasControls: false,
           hasBorders: false,
-          opacity: 1
+          opacity: 1,
+          angle: customPosition?.angle || 0
         });
         
         fabricCanvas.add(fabricImage);
@@ -1782,7 +1842,6 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
       // Find all sync sets with alternatives
       const sets = findSyncSets(psdLayers, labels, links);
-      console.log('Found sync sets with alternatives:', sets);
       
       if (sets.length === 0) {
         toast.error('No synchronized sets found');
@@ -2276,44 +2335,42 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       {/* Replace Dialog with custom floating modal */}
       {showGallery && (
         <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40 pointer-events-none"
-          />
-          
           {/* Floating Modal */}
           <Rnd
             default={{
-              x: -1080,
-              y: 0,
+              x: modalPosition.x,
+              y: modalPosition.y,
               width: modalDimensions.width,
               height: modalDimensions.height
             }}
+            position={modalPosition}
+            size={modalDimensions}
             minWidth={400}
             minHeight={300}
             bounds="window"
-            className="z-50"
-            onResize={(e, direction, ref) => {
+            className={cn(
+              "z-50",
+              isFullscreen ? "!fixed !inset-0" : "absolute"
+            )}
+            onDragStop={(e, d) => {
+              setModalPosition({ x: d.x, y: d.y });
+            }}
+            onResize={(e, direction, ref, delta, position) => {
+              setModalDimensions({
+                width: ref.offsetWidth,
+                height: ref.offsetHeight
+              });
+              setModalPosition(position);
               setGridColumns(calculateGridColumns(ref.offsetWidth));
-              setModalDimensions({
-                width: ref.offsetWidth,
-                height: ref.offsetHeight
-              });
             }}
-            size={{
-              width: modalDimensions.width,
-              height: modalDimensions.height
-            }}
-            onResizeStop={(e, direction, ref) => {
-              setModalDimensions({
-                width: ref.offsetWidth,
-                height: ref.offsetHeight
-              });
-            }}
+            dragHandleClassName="handle"
           >
-            <div className="w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden">
+            <div className={cn(
+              "w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden",
+              isFullscreen && "rounded-none"
+            )}>
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-white border-b cursor-move handle">
+              <div className="sticky top-0 z-10 bg-white border-b handle">
                 <div className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -2345,6 +2402,28 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         </div>
                       </div>
                       <Button
+                        onClick={toggleFullscreen}
+                        variant="outline"
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                      >
+                        {isFullscreen ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
+                            <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
+                            <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
+                            <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 3h7v7H3z"></path>
+                            <path d="M14 3h7v7h-7z"></path>
+                            <path d="M14 14h7v7h-7z"></path>
+                            <path d="M3 14h7v7H3z"></path>
+                          </svg>
+                        )}
+                      </Button>
+                      <Button
                         onClick={() => setShowGallery(false)}
                         variant="outline"
                         size="sm"
@@ -2358,10 +2437,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
               {/* Grid Layout - Scrollable Content */}
               <div className="flex-1 overflow-auto p-6">
-                {/* Calculate grid column based on the modal width */}
-                <div className="grid gap-6" style={{
-                  gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`
-                }}>
+                <div className={cn(
+                  "grid gap-6",
+                  isFullscreen ? "grid-cols-4" : `grid-cols-${gridColumns}`
+                )} key={`gallery-${galleryRenderKey}`}>
                   {multipleLayouts.map((layout, index) => (
                     <div 
                       key={index}
@@ -2405,47 +2484,45 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         </>
       )}
 
-      {/* Add new sync gallery modal */}
+      {/* Update sync gallery modal with the same improvements */}
       {showSyncGallery && (
         <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40 pointer-events-none"
-          />
-          
           {/* Floating Modal */}
           <Rnd
             default={{
-              x: -1080,
-              y: 0,
+              x: modalPosition.x,
+              y: modalPosition.y,
               width: modalDimensions.width,
               height: modalDimensions.height
             }}
+            position={modalPosition}
+            size={modalDimensions}
             minWidth={400}
             minHeight={300}
             bounds="window"
-            className="z-50"
-            onResize={(e, direction, ref) => {
+            className={cn(
+              "z-50",
+              isFullscreen ? "!fixed !inset-0" : "absolute"
+            )}
+            onDragStop={(e, d) => {
+              setModalPosition({ x: d.x, y: d.y });
+            }}
+            onResize={(e, direction, ref, delta, position) => {
+              setModalDimensions({
+                width: ref.offsetWidth,
+                height: ref.offsetHeight
+              });
+              setModalPosition(position);
               setGridColumns(calculateGridColumns(ref.offsetWidth));
-              setModalDimensions({
-                width: ref.offsetWidth,
-                height: ref.offsetHeight
-              });
             }}
-            size={{
-              width: modalDimensions.width,
-              height: modalDimensions.height
-            }}
-            onResizeStop={(e, direction, ref) => {
-              setModalDimensions({
-                width: ref.offsetWidth,
-                height: ref.offsetHeight
-              });
-            }}
+            dragHandleClassName="handle"
           >
-            <div className="w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden">
+            <div className={cn(
+              "w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden",
+              isFullscreen && "rounded-none"
+            )}>
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-white border-b cursor-move handle">
+              <div className="sticky top-0 z-10 bg-white border-b handle">
                 <div className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -2477,6 +2554,28 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         </div>
                       </div>
                       <Button
+                        onClick={toggleFullscreen}
+                        variant="outline"
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                      >
+                        {isFullscreen ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
+                            <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
+                            <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
+                            <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 3h7v7H3z"></path>
+                            <path d="M14 3h7v7h-7z"></path>
+                            <path d="M14 14h7v7h-7z"></path>
+                            <path d="M3 14h7v7H3z"></path>
+                          </svg>
+                        )}
+                      </Button>
+                      <Button
                         onClick={() => setShowSyncGallery(false)}
                         variant="outline"
                         size="sm"
@@ -2490,9 +2589,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
               {/* Grid Layout - Scrollable Content */}
               <div className="flex-1 overflow-auto p-6">
-                <div className="grid gap-6" style={{
-                  gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`
-                }}>
+                <div className={cn(
+                  "grid gap-6",
+                  isFullscreen ? "grid-cols-6" : `grid-cols-${gridColumns}`
+                )} key={`sync-gallery-${galleryRenderKey}`}>
                   {multipleLayouts.map((layout, index) => (
                     <div 
                       key={index}

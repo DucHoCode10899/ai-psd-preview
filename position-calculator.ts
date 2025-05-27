@@ -89,8 +89,6 @@ export function coverScaleElement(
     width = containerHeight * imageRatio;
   }
   
-  console.log(`Cover scaling: original=${originalWidth}x${originalHeight}, container=${containerWidth}x${containerHeight}, final=${Math.ceil(width)}x${Math.ceil(height)}`);
-  
   return {
     width: Math.ceil(width),
     height: Math.ceil(height)
@@ -333,9 +331,6 @@ export function scaleElement(
     width = height * aspectRatio;
   }
   
-  // Log scaling calculations
-  console.log(`Scaling: original=${originalWidth}x${originalHeight}, max=${maxWidth}x${maxHeight}, final=${Math.floor(width)}x${Math.floor(height)}`);
-  
   return {
     width: Math.floor(width),
     height: Math.floor(height)
@@ -374,8 +369,6 @@ export function calculateElementSize(
   // Calculate max dimensions based on percentages
   const maxWidth = Math.floor(maxWidthPercent * containerWidth);
   const maxHeight = Math.floor(maxHeightPercent * containerHeight);
-  
-  console.log(`Element size calculation: container=${containerWidth}x${containerHeight}, percentages=${maxWidthPercent}x${maxHeightPercent}, max allowed=${maxWidth}x${maxHeight}`);
   
   // Scale to fit within max dimensions while maintaining aspect ratio
   return scaleElement(originalWidth, originalHeight, maxWidth, maxHeight);
@@ -447,13 +440,6 @@ export function testNewPositions() {
     'bottom-center-30', 
     'bottom-center-40'
   ];
-  
-  // Log results
-  console.log('Testing new position types:');
-  positions.forEach(pos => {
-    const result = calculatePosition(pos, element, container);
-    console.log(`${pos}: (${Math.round(result.x)}, ${Math.round(result.y)})`);
-  });
   
   return true;
 } 

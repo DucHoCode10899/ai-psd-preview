@@ -1,7 +1,10 @@
+import { CoordinatePosition } from '@/utils/position-calculator';
+
 export interface PositioningRule {
-  position: string;
   maxWidthPercent: number;
   maxHeightPercent: number;
+  applySafezone?: boolean;
+  coordinatePosition: CoordinatePosition;
 }
 
 export interface VisibilityRules {
@@ -51,7 +54,7 @@ export interface GeneratedElement {
   visible: boolean;
   parent?: string;
   originalBounds?: Bounds;
-  position?: string;
+  coordinatePosition?: CoordinatePosition;
 }
 
 export interface GeneratedLayout {

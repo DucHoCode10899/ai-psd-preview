@@ -757,25 +757,25 @@
       {
         "pattern": "background - red",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "background",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "red",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       },
       {
         "pattern": "background red",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 12
       }
     ],
-    "lastUpdated": "2025-05-27T07:41:19.062Z",
+    "lastUpdated": "2025-05-27T12:05:14.300Z",
     "history": [
       {
         "label": "background",
@@ -830,6 +830,11 @@
       {
         "label": "background",
         "timestamp": "2025-05-27T07:41:19.062Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "background",
+        "timestamp": "2025-05-27T12:05:14.300Z",
         "confidence": 0.6
       }
     ]
@@ -920,25 +925,25 @@
       {
         "pattern": "voucher - blue",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 13
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 13
       },
       {
         "pattern": "blue",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 13
       },
       {
         "pattern": "voucher blue",
         "confidence": 0.6,
-        "matches": 11
+        "matches": 13
       }
     ],
-    "lastUpdated": "2025-05-27T07:43:43.278Z",
+    "lastUpdated": "2025-05-27T14:37:02.413Z",
     "history": [
       {
         "label": "main-subject",
@@ -994,6 +999,16 @@
         "label": "main-subject",
         "timestamp": "2025-05-27T07:43:43.278Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T13:50:18.016Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T14:37:02.413Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1004,25 +1019,25 @@
       {
         "pattern": "voucher - red",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 14
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 14
       },
       {
         "pattern": "red",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 14
       },
       {
         "pattern": "voucher red",
         "confidence": 0.6,
-        "matches": 12
+        "matches": 14
       }
     ],
-    "lastUpdated": "2025-05-27T07:43:42.216Z",
+    "lastUpdated": "2025-05-27T14:37:01.877Z",
     "history": [
       {
         "label": "main-subject",
@@ -1083,6 +1098,16 @@
         "label": "main-subject",
         "timestamp": "2025-05-27T07:43:42.216Z",
         "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T13:50:17.503Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T14:37:01.877Z",
+        "confidence": 0.6
       }
     ]
   },
@@ -1093,25 +1118,25 @@
       {
         "pattern": "voucher - yellow",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 15
       },
       {
         "pattern": "voucher",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 15
       },
       {
         "pattern": "yellow",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 15
       },
       {
         "pattern": "voucher yellow",
         "confidence": 0.6,
-        "matches": 13
+        "matches": 15
       }
     ],
-    "lastUpdated": "2025-05-27T07:43:41.555Z",
+    "lastUpdated": "2025-05-27T14:37:01.828Z",
     "history": [
       {
         "label": "main-subject",
@@ -1176,6 +1201,16 @@
       {
         "label": "main-subject",
         "timestamp": "2025-05-27T07:43:41.555Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T13:50:16.948Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "main-subject",
+        "timestamp": "2025-05-27T14:37:01.828Z",
         "confidence": 0.6
       }
     ]

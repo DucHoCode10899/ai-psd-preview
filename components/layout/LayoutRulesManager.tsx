@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -18,6 +18,7 @@ import { Undo2, Redo2, Plus, Pencil, Trash2, RefreshCw, GripVertical } from 'luc
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { HorizontalAlignment, VerticalAlignment, CoordinatePosition, createCoordinatePosition } from '@/utils/position-calculator';
 
 // Types for layout rules
 interface LayoutOption {
@@ -26,7 +27,6 @@ interface LayoutOption {
   rules: {
     visibility: Record<string, boolean>;
     positioning: Record<string, {
-      position: string;
       maxWidthPercent: number;
       maxHeightPercent: number;
       alignment?: string;
@@ -37,6 +37,8 @@ interface LayoutOption {
         left?: number;
       };
       applySafezone?: boolean;
+      // Coordinate-based positioning (now default)
+      coordinatePosition: CoordinatePosition;
     }>;
     renderOrder?: string[]; // Add renderOrder to store label order
   };
@@ -55,44 +57,18 @@ interface Channel {
   layouts: LayoutRule[];
 }
 
-// Position options for labels
-const POSITION_OPTIONS = [
-  // Standard positions
-  "center",
-  "top-left",
-  "top-center",
-  "top-right",
-  "middle-top-center",
-  "middle-bottom-center",
-  "bottom-left",
-  "bottom-center",
-  "bottom-right",
-  "left-center",
-  "right-center",
-  
-  // Percentage-based positions from the top
-  "top-center-10",  // 10% from the top
-  "top-center-20",  // 20% from the top
-  "top-center-30",  // 30% from the top
-  "top-center-40",  // 40% from the top
-  
-  // Percentage-based positions from the left side
-  "left-center-10",  // 10% from the left
-  "left-center-20",  // 20% from the left
-  "left-center-30",  // 30% from the left
-  "left-center-40",  // 40% from the left
-  
-  // Percentage-based positions from the right side
-  "right-center-10",  // 10% from the right
-  "right-center-20",  // 20% from the right
-  "right-center-30",  // 30% from the right
-  "right-center-40",  // 40% from the right
-  
-  // Percentage-based positions from the bottom
-  "bottom-center-10",  // 10% from the bottom
-  "bottom-center-20",  // 20% from the bottom
-  "bottom-center-30",  // 30% from the bottom
-  "bottom-center-40"   // 40% from the bottom
+// Horizontal alignment options
+const HORIZONTAL_ALIGNMENTS: { value: HorizontalAlignment; label: string }[] = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' }
+];
+
+// Vertical alignment options
+const VERTICAL_ALIGNMENTS: { value: VerticalAlignment; label: string }[] = [
+  { value: 'top', label: 'Top' },
+  { value: 'middle', label: 'Middle' },
+  { value: 'bottom', label: 'Bottom' }
 ];
 
 // Label types that can be positioned
@@ -257,10 +233,10 @@ export function LayoutRulesManager() {
   // Get current label settings
   const currentLabelSettings = currentOption && selectedLabel ? {
     visible: currentOption.rules.visibility[selectedLabel],
-    position: currentOption.rules.positioning[selectedLabel]?.position,
     maxWidthPercent: currentOption.rules.positioning[selectedLabel]?.maxWidthPercent * 100,
     maxHeightPercent: currentOption.rules.positioning[selectedLabel]?.maxHeightPercent * 100,
-    applySafezone: currentOption.rules.positioning[selectedLabel]?.applySafezone ?? true
+    applySafezone: currentOption.rules.positioning[selectedLabel]?.applySafezone ?? true,
+    coordinatePosition: currentOption.rules.positioning[selectedLabel]?.coordinatePosition || createCoordinatePosition('center', 'middle')
   } : null;
 
   // Handle channel selection
@@ -330,8 +306,13 @@ export function LayoutRulesManager() {
     setIsDirty(true);
   };
 
-  // Handle position change
-  const handlePositionChange = (position: string) => {
+
+
+  // Handle coordinate position change
+  const handleCoordinatePositionChange = (
+    field: keyof CoordinatePosition,
+    value: string | number
+  ) => {
     if (!currentChannel || !currentLayout || !currentOption || !selectedLabel) return;
     
     const updatedChannels = channels.map(channel => {
@@ -344,6 +325,10 @@ export function LayoutRulesManager() {
                 ...layout,
                 options: layout.options.map(option => {
                   if (option.name === selectedOption) {
+                    const currentPositioning = option.rules.positioning[selectedLabel];
+                    const currentCoordPos = currentPositioning?.coordinatePosition || 
+                      createCoordinatePosition('center', 'middle');
+
                     return {
                       ...option,
                       rules: {
@@ -351,8 +336,11 @@ export function LayoutRulesManager() {
                         positioning: {
                           ...option.rules.positioning,
                           [selectedLabel]: {
-                            ...option.rules.positioning[selectedLabel],
-                            position
+                            ...currentPositioning,
+                            coordinatePosition: {
+                              ...currentCoordPos,
+                              [field]: value
+                            }
                           }
                         }
                       }
@@ -447,19 +435,19 @@ export function LayoutRulesManager() {
     // Create default rules
     const defaultVisibility: Record<string, boolean> = {};
     const defaultPositioning: Record<string, {
-      position: string;
       maxWidthPercent: number;
       maxHeightPercent: number;
       applySafezone: boolean;
+      coordinatePosition: CoordinatePosition;
     }> = {};
     
     LABEL_TYPES.forEach(label => {
       defaultVisibility[label] = true;
       defaultPositioning[label] = {
-        position: "center",
         maxWidthPercent: 0.5,
         maxHeightPercent: 0.5,
-        applySafezone: true
+        applySafezone: true,
+        coordinatePosition: createCoordinatePosition('center', 'middle')
       };
     });
     
@@ -547,10 +535,10 @@ export function LayoutRulesManager() {
   }, []);
 
   // Function to get current render order
-  const getCurrentRenderOrder = () => {
+  const getCurrentRenderOrder = useCallback(() => {
     if (!currentOption) return labelTypes;
     return currentOption.rules.renderOrder || labelTypes;
-  };
+  }, [currentOption, labelTypes]);
 
   // Function to update render order
   const handleUpdateRenderOrder = (newOrder: string[]) => {
@@ -653,135 +641,76 @@ export function LayoutRulesManager() {
       const maxWidth = settings.maxWidthPercent * currentLayout.width;
       const maxHeight = settings.maxHeightPercent * currentLayout.height;
 
-      // Calculate position based on settings.position
+      const applySafezone = settings.applySafezone ?? true;
+
+      // Calculate position using coordinate positioning
       let left = 0;
       let top = 0;
-      
-      switch (settings.position) {
-        case 'center':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-          
-        // Top positions
-        case 'top-left':
-          left = 0;
-          top = 0;
-          break;
-        case 'top-center':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = 0;
-          break;
-        case 'top-right':
-          left = currentLayout.width - maxWidth;
-          top = 0;
-          break;
-          
-        // Middle positions
-        case 'middle-top-center':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.25 - maxHeight / 2;
-          break;
-        case 'middle-bottom-center':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.75 - maxHeight / 2;
-          break;
-          
-        // Bottom positions
-        case 'bottom-left':
-          left = 0;
-          top = currentLayout.height - maxHeight;
-          break;
-        case 'bottom-center':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height - maxHeight;
-          break;
-        case 'bottom-right':
-          left = currentLayout.width - maxWidth;
-          top = currentLayout.height - maxHeight;
-          break;
-          
-        // Side positions
-        case 'left-center':
-          left = 0;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-        case 'right-center':
-          left = currentLayout.width - maxWidth;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-          
-        // New percentage-based positions from top
-        case 'top-center-10':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.1 - maxHeight / 2;
-          break;
-        case 'top-center-20':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.2 - maxHeight / 2;
-          break;
-        case 'top-center-30':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.3 - maxHeight / 2;
-          break;
-        case 'top-center-40':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.4 - maxHeight / 2;
-          break;
-          
-        // New percentage-based positions from left
-        case 'left-center-10':
-          left = currentLayout.width * 0.1 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-        case 'left-center-20':
-          left = currentLayout.width * 0.2 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-        case 'left-center-30':
-          left = currentLayout.width * 0.3 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-        case 'left-center-40':
-          left = currentLayout.width * 0.4 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-          
-        // New percentage-based positions from right
-        case 'right-center-10':
-          left = currentLayout.width * 0.9 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-        case 'right-center-20':
-          left = currentLayout.width * 0.8 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-        case 'right-center-30':
-          left = currentLayout.width * 0.7 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-        case 'right-center-40':
-          left = currentLayout.width * 0.6 - maxWidth / 2;
-          top = (currentLayout.height - maxHeight) / 2;
-          break;
-          
-        // New percentage-based positions from bottom
-        case 'bottom-center-10':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.9 - maxHeight / 2;
-          break;
-        case 'bottom-center-20':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.8 - maxHeight / 2;
-          break;
-        case 'bottom-center-30':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.7 - maxHeight / 2;
-          break;
-        case 'bottom-center-40':
-          left = (currentLayout.width - maxWidth) / 2;
-          top = currentLayout.height * 0.6 - maxHeight / 2;
-          break;
+
+      // Use coordinate positioning (now always enabled)
+      if (settings.coordinatePosition) {
+        const coordPos = settings.coordinatePosition;
+        
+        // Handle custom coordinates
+        if (coordPos.customX !== undefined && coordPos.customY !== undefined) {
+          left = (coordPos.customX / 100) * currentLayout.width - maxWidth / 2;
+          top = (coordPos.customY / 100) * currentLayout.height - maxHeight / 2;
+        } else {
+          // Apply safezone margin if enabled
+          const safezoneMargin = currentOption.safezoneMargin || 0.02;
+          const margin = applySafezone ? safezoneMargin : 0;
+          const safeWidth = currentLayout.width * (1 - 2 * margin);
+          const safeHeight = currentLayout.height * (1 - 2 * margin);
+          const safeLeft = currentLayout.width * margin;
+          const safeTop = currentLayout.height * margin;
+
+          // Calculate base position based on alignment
+          switch (coordPos.horizontalAlignment) {
+            case 'left':
+              left = safeLeft;
+              break;
+            case 'center':
+              left = safeLeft + (safeWidth - maxWidth) / 2;
+              break;
+            case 'right':
+              left = safeLeft + safeWidth - maxWidth;
+              break;
+          }
+
+          switch (coordPos.verticalAlignment) {
+            case 'top':
+              top = safeTop;
+              break;
+            case 'middle':
+              top = safeTop + (safeHeight - maxHeight) / 2;
+              break;
+            case 'bottom':
+              top = safeTop + safeHeight - maxHeight;
+              break;
+          }
+
+          // Apply offsets if specified
+          if (coordPos.horizontalOffset !== undefined) {
+            const offsetX = (coordPos.horizontalOffset / 100) * safeWidth;
+            left += offsetX;
+          }
+
+          if (coordPos.verticalOffset !== undefined) {
+            const offsetY = (coordPos.verticalOffset / 100) * safeHeight;
+            top += offsetY;
+          }
+        }
+      } else {
+        // Fallback to center if no coordinate position is set
+        const safezoneMargin = currentOption.safezoneMargin || 0.02;
+        const margin = applySafezone ? safezoneMargin : 0;
+        const safeWidth = currentLayout.width * (1 - 2 * margin);
+        const safeHeight = currentLayout.height * (1 - 2 * margin);
+        const safeLeft = currentLayout.width * margin;
+        const safeTop = currentLayout.height * margin;
+        
+        left = safeLeft + (safeWidth - maxWidth) / 2;
+        top = safeTop + (safeHeight - maxHeight) / 2;
       }
       
       // Create rectangle for label
@@ -819,7 +748,7 @@ export function LayoutRulesManager() {
     });
     
     canvas.renderAll();
-  }, [currentLayout, currentOption, selectedLabel]);
+  }, [currentLayout, currentOption, selectedLabel, getCurrentRenderOrder]);
 
   // Edit option name
   const handleEditOption = () => {
@@ -1137,88 +1066,72 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
       const maxHeight = settings.maxHeightPercent * currentLayout.height;
       const applySafezone = settings.applySafezone ?? true;
 
-      // Calculate position based on settings.position
+      // Calculate position based on coordinate position or legacy position
       let left = 0;
       let top = 0;
-      
-      // Apply safezone margin if enabled
-      const margin = applySafezone ? safezoneMargin : 0;
-      const safeWidth = currentLayout.width * (1 - 2 * margin);
-      const safeHeight = currentLayout.height * (1 - 2 * margin);
-      const safeLeft = currentLayout.width * margin;
-      const safeTop = currentLayout.height * margin;
 
-      switch (settings.position) {
-        case 'center':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + (safeHeight - maxHeight) / 2;
-          break;
-          
-        // Top positions
-        case 'top-left':
-          left = safeLeft;
-          top = safeTop;
-          break;
-        case 'top-center':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop;
-          break;
-        case 'top-right':
-          left = safeLeft + safeWidth - maxWidth;
-          top = safeTop;
-          break;
-          
-        // Middle positions
-        case 'middle-top-center':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + safeHeight * 0.25 - maxHeight / 2;
-          break;
-        case 'middle-bottom-center':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + safeHeight * 0.75 - maxHeight / 2;
-          break;
-          
-        // Bottom positions
-        case 'bottom-left':
-          left = safeLeft;
-          top = safeTop + safeHeight - maxHeight;
-          break;
-        case 'bottom-center':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + safeHeight - maxHeight;
-          break;
-        case 'bottom-right':
-          left = safeLeft + safeWidth - maxWidth;
-          top = safeTop + safeHeight - maxHeight;
-          break;
-          
-        // Side positions
-        case 'left-center':
-          left = safeLeft;
-          top = safeTop + (safeHeight - maxHeight) / 2;
-          break;
-        case 'right-center':
-          left = safeLeft + safeWidth - maxWidth;
-          top = safeTop + (safeHeight - maxHeight) / 2;
-          break;
-          
-        // Percentage-based positions
-        case 'top-center-10':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + safeHeight * 0.1 - maxHeight / 2;
-          break;
-        case 'top-center-20':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + safeHeight * 0.2 - maxHeight / 2;
-          break;
-        case 'top-center-30':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + safeHeight * 0.3 - maxHeight / 2;
-          break;
-        case 'top-center-40':
-          left = safeLeft + (safeWidth - maxWidth) / 2;
-          top = safeTop + safeHeight * 0.4 - maxHeight / 2;
-          break;
+      // Use coordinate positioning (now always enabled)
+      if (settings.coordinatePosition) {
+        const coordPos = settings.coordinatePosition;
+        
+        // Handle custom coordinates
+        if (coordPos.customX !== undefined && coordPos.customY !== undefined) {
+          left = (coordPos.customX / 100) * currentLayout.width - maxWidth / 2;
+          top = (coordPos.customY / 100) * currentLayout.height - maxHeight / 2;
+        } else {
+          // Apply safezone margin if enabled
+          const margin = applySafezone ? safezoneMargin : 0;
+          const safeWidth = currentLayout.width * (1 - 2 * margin);
+          const safeHeight = currentLayout.height * (1 - 2 * margin);
+          const safeLeft = currentLayout.width * margin;
+          const safeTop = currentLayout.height * margin;
+
+          // Calculate base position based on alignment
+          switch (coordPos.horizontalAlignment) {
+            case 'left':
+              left = safeLeft;
+              break;
+            case 'center':
+              left = safeLeft + (safeWidth - maxWidth) / 2;
+              break;
+            case 'right':
+              left = safeLeft + safeWidth - maxWidth;
+              break;
+          }
+
+          switch (coordPos.verticalAlignment) {
+            case 'top':
+              top = safeTop;
+              break;
+            case 'middle':
+              top = safeTop + (safeHeight - maxHeight) / 2;
+              break;
+            case 'bottom':
+              top = safeTop + safeHeight - maxHeight;
+              break;
+          }
+
+          // Apply offsets if specified
+          if (coordPos.horizontalOffset !== undefined) {
+            const offsetX = (coordPos.horizontalOffset / 100) * safeWidth;
+            left += offsetX;
+          }
+
+          if (coordPos.verticalOffset !== undefined) {
+            const offsetY = (coordPos.verticalOffset / 100) * safeHeight;
+            top += offsetY;
+          }
+        }
+      } else {
+        // Fallback to center if no coordinate position is set
+        const margin = applySafezone ? safezoneMargin : 0;
+        const safeWidth = currentLayout.width * (1 - 2 * margin);
+        const safeHeight = currentLayout.height * (1 - 2 * margin);
+        const safeLeft = currentLayout.width * margin;
+        const safeTop = currentLayout.height * margin;
+        
+        left = safeLeft + (safeWidth - maxWidth) / 2;
+        top = safeTop + (safeHeight - maxHeight) / 2;
       }
       
       // Create rectangle for label
@@ -1256,7 +1169,7 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
     });
     
     canvas.renderAll();
-  }, [currentLayout, currentOption, selectedLabel]);
+  }, [currentLayout, currentOption, selectedLabel, getCurrentRenderOrder]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -1674,37 +1587,98 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
                   <Label htmlFor="visibility">Visible in layout</Label>
                 </div>
 
-                {/* Safezone */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="safezone"
-                    checked={currentLabelSettings.applySafezone}
-                    onCheckedChange={handleSafezoneToggle}
-                  />
-                  <Label htmlFor="safezone">Apply safezone</Label>
-                </div>
+                                  {/* Safezone */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="safezone"
+                      checked={currentLabelSettings.applySafezone}
+                      onCheckedChange={handleSafezoneToggle}
+                    />
+                    <Label htmlFor="safezone">Apply safezone</Label>
+                  </div>
 
-                {/* Position */}
-                <div className="space-y-2">
-                  <Label>Position</Label>
-                  <Select 
-                    value={currentLabelSettings.position} 
-                    onValueChange={handlePositionChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select position" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {POSITION_OPTIONS.map(pos => (
-                        <SelectItem key={pos} value={pos}>
-                          {pos}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {/* Coordinate Position Controls */}
+                  <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                    <Label className="text-sm font-medium">Position</Label>
+                    
+                    {/* Horizontal Alignment */}
+                    <div className="space-y-2">
+                      <Label className="text-xs">Horizontal Alignment</Label>
+                      <Select 
+                        value={currentLabelSettings.coordinatePosition?.horizontalAlignment || 'center'} 
+                        onValueChange={(value) => handleCoordinatePositionChange('horizontalAlignment', value as HorizontalAlignment)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {HORIZONTAL_ALIGNMENTS.map(align => (
+                            <SelectItem key={align.value} value={align.value}>
+                              {align.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Size Constraints */}
+                    {/* Vertical Alignment */}
+                    <div className="space-y-2">
+                      <Label className="text-xs">Vertical Alignment</Label>
+                      <Select 
+                        value={currentLabelSettings.coordinatePosition?.verticalAlignment || 'middle'} 
+                        onValueChange={(value) => handleCoordinatePositionChange('verticalAlignment', value as VerticalAlignment)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {VERTICAL_ALIGNMENTS.map(align => (
+                            <SelectItem key={align.value} value={align.value}>
+                              {align.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Horizontal Offset */}
+                    <div className="space-y-2">
+                      <Label className="text-xs">Horizontal Offset (%)</Label>
+                      <div className="flex items-center space-x-2">
+                        <Slider
+                          value={[currentLabelSettings.coordinatePosition?.horizontalOffset || 0]}
+                          onValueChange={([value]) => handleCoordinatePositionChange('horizontalOffset', value)}
+                          min={-50}
+                          max={50}
+                          step={1}
+                          className="flex-1"
+                        />
+                        <div className="w-12 text-right text-xs">
+                          {currentLabelSettings.coordinatePosition?.horizontalOffset || 0}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Vertical Offset */}
+                    <div className="space-y-2">
+                      <Label className="text-xs">Vertical Offset (%)</Label>
+                      <div className="flex items-center space-x-2">
+                        <Slider
+                          value={[currentLabelSettings.coordinatePosition?.verticalOffset || 0]}
+                          onValueChange={([value]) => handleCoordinatePositionChange('verticalOffset', value)}
+                          min={-50}
+                          max={50}
+                          step={1}
+                          className="flex-1"
+                        />
+                        <div className="w-12 text-right text-xs">
+                          {currentLabelSettings.coordinatePosition?.verticalOffset || 0}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Size Constraints */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Maximum Width (%)</Label>
