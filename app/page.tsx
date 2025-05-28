@@ -6,6 +6,7 @@ import { PsdLayerMetadata } from "@/utils/psd-parser";
 import { SynchronizedPsdPreview } from "@/components/psd/SynchronizedPsdPreview";
 import { LayerTree } from "@/components/psd/LayerTree";
 import { AdvancedLayoutGenerator } from "@/components/layout/AdvancedLayoutGenerator";
+import { AnimationStudio } from "@/components/layout/AnimationStudio";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -209,9 +210,16 @@ export default function Home() {
 
                 {/* Layout Generator panel */}
                 <ResizablePanel defaultSize={60} className="overflow-auto">
-                  <div className="p-3 h-full overflow-y-auto">
+                  <div className="p-3 h-full overflow-y-auto space-y-4">
                     <div className="border rounded-lg p-4 bg-white">
                       <AdvancedLayoutGenerator 
+                        psdLayers={psdStructure}
+                        psdBuffer={psdBuffer || undefined}
+                      />
+                    </div>
+                    
+                    <div className="border rounded-lg p-4 bg-white">
+                      <AnimationStudio 
                         psdLayers={psdStructure}
                         psdBuffer={psdBuffer || undefined}
                       />
