@@ -335,6 +335,19 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     setGalleryRenderKey(prev => prev + 1);
   }, [customPositions]);
 
+  // Load custom positions from sessionStorage on mount for synchronization with AnimationStudio
+  useEffect(() => {
+    const storedPositions = sessionStorage.getItem('layout_custom_positions');
+    if (storedPositions) {
+      try {
+        const positions = JSON.parse(storedPositions);
+        setCustomPositions(positions);
+      } catch (error) {
+        console.error('Error parsing stored custom positions:', error);
+      }
+    }
+  }, []);
+
   // Add function to update safezone states
   const updateSafezoneStates = (option: LayoutOption) => {
     const newSafezoneState: SafezoneState = {};
@@ -797,6 +810,19 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               }
             });
             
+            // Store in sessionStorage for AnimationStudio synchronization
+            sessionStorage.setItem('layout_custom_positions', JSON.stringify(updatedPositions));
+            
+            // Dispatch event to notify AnimationStudio of position changes
+            window.dispatchEvent(new CustomEvent('layout_position_changed', {
+              detail: {
+                elementId: element.id,
+                layoutName: generatedLayout.name,
+                position: newPosition,
+                allPositions: updatedPositions
+              }
+            }));
+            
             return updatedPositions;
           });
         });
@@ -1088,6 +1114,12 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
       setGeneratedLayout(generatedLayoutResult);
       
+      // Store the generated layout in session storage for Animation Studio
+      sessionStorage.setItem('generated_layout', JSON.stringify(generatedLayoutResult));
+      
+      // Dispatch custom event to notify Animation Studio
+      window.dispatchEvent(new CustomEvent('layout_generated'));
+      
       setTimeout(() => {
         setIsGenerating(false);
       }, 1000);
@@ -1106,6 +1138,18 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     setCustomPositions(prev => {
       const newPositions = { ...prev };
       delete newPositions[generatedLayout.name];
+      
+      // Store updated positions in sessionStorage for AnimationStudio synchronization
+      sessionStorage.setItem('layout_custom_positions', JSON.stringify(newPositions));
+      
+      // Dispatch event to notify AnimationStudio of position reset
+      window.dispatchEvent(new CustomEvent('layout_position_reset', {
+        detail: {
+          layoutName: generatedLayout.name,
+          allPositions: newPositions
+        }
+      }));
+      
       return newPositions;
     });
   };
@@ -1116,6 +1160,15 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     setSelectedAspectRatio(null);
     setSelectedOption(null);
     setGeneratedLayout(null);
+    
+    // Save to localStorage for Animation Studio
+    const selections = {
+      channelId,
+      aspectRatio: null,
+      option: null
+    };
+    localStorage.setItem('layout_generator_selections', JSON.stringify(selections));
+    window.dispatchEvent(new CustomEvent('layout_generator_change'));
   };
 
   // Handle aspect ratio selection
@@ -1123,12 +1176,30 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     setSelectedAspectRatio(aspectRatio);
     setSelectedOption(null);
     setGeneratedLayout(null);
+    
+    // Save to localStorage for Animation Studio
+    const selections = {
+      channelId: selectedChannelId,
+      aspectRatio,
+      option: null
+    };
+    localStorage.setItem('layout_generator_selections', JSON.stringify(selections));
+    window.dispatchEvent(new CustomEvent('layout_generator_change'));
   };
 
   // Handle option selection
   const handleOptionSelect = (optionName: string) => {
     setSelectedOption(optionName);
     setGeneratedLayout(null);
+    
+    // Save to localStorage for Animation Studio
+    const selections = {
+      channelId: selectedChannelId,
+      aspectRatio: selectedAspectRatio,
+      option: optionName
+    };
+    localStorage.setItem('layout_generator_selections', JSON.stringify(selections));
+    window.dispatchEvent(new CustomEvent('layout_generator_change'));
     
     // Get and store render order from selected option
     if (selectedChannelId && selectedAspectRatio) {
@@ -1699,6 +1770,14 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       setGenerationDescription(description.join('\n'));
       setMultipleLayouts(layouts);
       setGeneratedLayout(layouts[0]); // Show first layout initially
+      
+      // Store the first generated layout in session storage for Animation Studio
+      if (layouts.length > 0) {
+        sessionStorage.setItem('generated_layout', JSON.stringify(layouts[0]));
+        // Dispatch custom event to notify Animation Studio
+        window.dispatchEvent(new CustomEvent('layout_generated'));
+      }
+      
       setShowGallery(true); // Open the gallery modal automatically
 
       setTimeout(() => {
@@ -2041,6 +2120,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       const nextIndex = (currentLayoutIndex + 1) % multipleLayouts.length;
       setCurrentLayoutIndex(nextIndex);
       setGeneratedLayout(multipleLayouts[nextIndex]);
+      
+      // Update session storage for Animation Studio
+      sessionStorage.setItem('generated_layout', JSON.stringify(multipleLayouts[nextIndex]));
+      window.dispatchEvent(new CustomEvent('layout_generated'));
     }
   };
 
@@ -2049,6 +2132,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       const prevIndex = (currentLayoutIndex - 1 + multipleLayouts.length) % multipleLayouts.length;
       setCurrentLayoutIndex(prevIndex);
       setGeneratedLayout(multipleLayouts[prevIndex]);
+      
+      // Update session storage for Animation Studio
+      sessionStorage.setItem('generated_layout', JSON.stringify(multipleLayouts[prevIndex]));
+      window.dispatchEvent(new CustomEvent('layout_generated'));
     }
   };
 
@@ -2453,6 +2540,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                       onClick={() => {
                         setCurrentLayoutIndex(index);
                         setGeneratedLayout(layout);
+                        
+                        // Update session storage for Animation Studio
+                        sessionStorage.setItem('generated_layout', JSON.stringify(layout));
+                        window.dispatchEvent(new CustomEvent('layout_generated'));
                       }}
                     >
                       <div className="relative overflow-hidden cursor-pointer flex items-center justify-center" style={{
@@ -2605,6 +2696,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                       onClick={() => {
                         setCurrentLayoutIndex(index);
                         setGeneratedLayout(layout);
+                        
+                        // Update session storage for Animation Studio
+                        sessionStorage.setItem('generated_layout', JSON.stringify(layout));
+                        window.dispatchEvent(new CustomEvent('layout_generated'));
                       }}
                     >
                       <div className="relative overflow-hidden cursor-pointer flex items-center justify-center" style={{

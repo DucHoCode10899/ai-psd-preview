@@ -55,11 +55,16 @@ interface LayerAnimation {
   label: string;
   visible: boolean;
   locked: boolean;
-  animationType: string | null; // 'fade-in', 'slide-in-left', etc. or null for no animation
+  animations: AnimationBlock[]; // Changed from single animation to array of animations
+  color: string;
+}
+
+interface AnimationBlock {
+  id: string;
+  animationType: string; // 'fade-in', 'slide-in-left', etc.
   startTime: number;
   duration: number;
   easing: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'bounce' | 'elastic';
-  color: string;
 }
 
 interface AnimationProject {
@@ -80,40 +85,37 @@ interface AnimationStudioProps {
 interface DragState {
   type: 'animation' | 'resize';
   layerId: string;
+  animationId?: string;
   startTime: number;
   startX: number;
   timelineRect: DOMRect;
   pixelsPerSecond: number;
+  resizeHandle?: 'start' | 'end';
 }
 
-interface Channel {
-  id: string;
-  name: string;
-  layouts: Layout[];
+// API Response interfaces for layout rules
+interface PositioningRule {
+  maxWidthPercent?: number;
+  maxHeightPercent?: number;
+  alignment?: string;
+  margin?: {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
+  };
+  applySafezone?: boolean;
+  coordinatePosition?: Record<string, unknown>;
 }
 
-interface Layout {
-  aspectRatio: string;
-  width: number;
-  height: number;
-  options?: LayoutOption[];
-}
-
-interface LayoutOption {
+interface LayoutOptionResponse {
   name: string;
   rules: {
     visibility: Record<string, boolean>;
-    positioning: Record<string, Record<string, number>>;
+    positioning: Record<string, PositioningRule>;
     renderOrder?: string[];
   };
   safezoneMargin?: number;
-}
-
-// API Response interfaces
-interface ChannelResponse {
-  id: string;
-  name: string;
-  layouts: LayoutResponse[];
 }
 
 interface LayoutResponse {
@@ -123,14 +125,10 @@ interface LayoutResponse {
   options?: LayoutOptionResponse[];
 }
 
-interface LayoutOptionResponse {
+interface ChannelResponse {
+  id: string;
   name: string;
-  rules: {
-    visibility: Record<string, boolean>;
-    positioning: Record<string, Record<string, number>>;
-    renderOrder?: string[];
-  };
-  safezoneMargin?: number;
+  layouts: LayoutResponse[];
 }
 
 interface ApiResponse {
@@ -226,7 +224,6 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
   const fabricCanvasRef = useRef<Canvas | null>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const lastTimeRef = useRef<number>(0);
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Layer images from PSD
   const [layerImages, setLayerImages] = useState<Map<string, ImageData>>(new Map());
@@ -237,18 +234,38 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
 
-  // Canvas resizing state
-  const [isResizing, setIsResizing] = useState(false);
-  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 450 });
+  // Read layout generator selections from localStorage
+  const [layoutGeneratorSelections, setLayoutGeneratorSelections] = useState<{
+    channelId: string | null;
+    aspectRatio: string | null;
+    option: string | null;
+  }>({
+    channelId: null,
+    aspectRatio: null,
+    option: null
+  });
 
-  // Layout selection state (similar to AdvancedLayoutGenerator)
-  const [availableChannels, setAvailableChannels] = useState<Channel[]>([]);
-  const [availableLayouts, setAvailableLayouts] = useState<Layout[]>([]);
-  const [availableOptions, setAvailableOptions] = useState<LayoutOption[]>([]);
-  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
-  const [selectedAspectRatio, setSelectedAspectRatio] = useState<string | null>(null);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [sourceRatio, setSourceRatio] = useState<string | null>(null);
+  // Current layout option data
+  const [currentLayoutOption, setCurrentLayoutOption] = useState<LayoutOptionResponse | null>(null);
+  const [safezoneMargin, setSafezoneMargin] = useState<number>(0.043);
+
+  // Add state to track if layout is ready
+  const [isLayoutReady, setIsLayoutReady] = useState(false);
+
+  // Add state for combination preview
+  const [showCombinationPreview, setShowCombinationPreview] = useState(false);
+  const [allLayoutCombinations, setAllLayoutCombinations] = useState<{ layout: { elements: { id: string; name: string; label: string; visible: boolean; x: number; y: number; width: number; height: number }[]; width: number; height: number; aspectRatio: string; name: string }; name: string }[]>([]);
+  const [isLoadingCombinations, setIsLoadingCombinations] = useState(false);
+
+  // Add state for custom positions synchronization with AdvancedLayoutGenerator
+  const [customPositions, setCustomPositions] = useState<Record<string, Record<string, { 
+    position: string;
+    x: number;
+    y: number;
+    width: number; 
+    height: number; 
+    angle?: number;
+  }>>>({});
 
   // Initialize canvas
   useEffect(() => {
@@ -256,11 +273,11 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
     
     fabricCanvasRef.current = new Canvas(canvasRef.current, {
       backgroundColor: '#f9f9f9',
-      width: canvasSize.width,
-      height: canvasSize.height,
+      width: 800,
+      height: 500,
       centeredScaling: true,
       preserveObjectStacking: true,
-      selection: false,
+      selection: true,
       selectionColor: 'rgba(100, 100, 255, 0.3)',
       selectionBorderColor: '#6366F1',
       selectionLineWidth: 1
@@ -271,7 +288,7 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
         fabricCanvasRef.current.dispose();
       }
     };
-  }, [canvasSize]);
+  }, []);
 
   // Process PSD buffer to extract layer images
   useEffect(() => {
@@ -325,6 +342,25 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
   const loadLabeledLayers = useCallback(() => {
     if (!psdLayers) return;
 
+    // Check if we have a generated layout first
+    const storedGeneratedLayout = sessionStorage.getItem('generated_layout');
+    if (!storedGeneratedLayout) {
+      console.log('No generated layout found, waiting for layout generation...');
+      setProject(prev => ({
+        ...prev,
+        layers: []
+      }));
+      return;
+    }
+
+    let generatedLayout;
+    try {
+      generatedLayout = JSON.parse(storedGeneratedLayout);
+    } catch (error) {
+      console.error('Error parsing generated layout:', error);
+      return;
+    }
+
     // Get layer labels from session storage
     const storedLabels = sessionStorage.getItem('psd_layer_labels');
     let labels: Record<string, string> = {};
@@ -332,19 +368,24 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
       labels = storedLabels ? JSON.parse(storedLabels) : {};
     } catch (error) {
       console.error('Error parsing layer labels:', error);
+      return;
     }
 
-    // Only include layers that have labels (not 'unlabeled')
+    // Check if we have any labels, if not, don't proceed
+    if (Object.keys(labels).length === 0) {
+      console.log('No layer labels found yet, waiting for labels to be assigned...');
+      return;
+    }
+
+    // Only include layers that are present in the generated layout
+    const generatedLayerIds = new Set(generatedLayout.elements.map((element: { id: string }) => element.id));
+    
     const animationLayers: LayerAnimation[] = psdLayers
       .filter(layer => {
         if (layer.type !== 'layer' || !layer.bounds) return false;
         
-        const layerId = layer.id;
-        const normalizedId = layerId.startsWith('layer_') ? layerId : `layer_${layerId}`;
-        const label = labels[normalizedId] || labels[layerId] || 'unlabeled';
-        
-        // Only include layers with actual labels (not 'unlabeled')
-        return label !== 'unlabeled';
+        // Only include layers that are in the generated layout
+        return generatedLayerIds.has(layer.id);
       })
       .map((layer) => {
         const layerId = layer.id;
@@ -357,10 +398,7 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
           label,
           visible: true,
           locked: false,
-          animationType: null, // No animation by default
-          startTime: 0,
-          duration: 1,
-          easing: 'ease-out' as const,
+          animations: [], // Initialize with empty animations array
           color: getLabelColor(label)
         };
       });
@@ -370,7 +408,9 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
       layers: animationLayers
     }));
 
-    toast.success(`Loaded ${animationLayers.length} labeled layers for animation`);
+    if (animationLayers.length > 0) {
+      toast.success(`Loaded ${animationLayers.length} layers from generated layout for animation`);
+    }
   }, [psdLayers]);
 
   // Function to refresh layers (force reload from session storage)
@@ -397,38 +437,46 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
 
   // Initialize project layers from PSD - only show labeled layers
   useEffect(() => {
-    if (!psdLayers || project.layers.length > 0) return;
-    loadLabeledLayers();
-  }, [psdLayers, project.layers.length, loadLabeledLayers]);
+    // Don't auto-load layers anymore - only load when layout is generated
+    // This effect is now just for cleanup
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
 
   // Listen for storage changes to auto-refresh layers when labels are updated
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'psd_layer_labels' && e.newValue !== e.oldValue) {
-        // Delay refresh to ensure the storage is fully updated
+        // Only refresh if we have a generated layout
+        const storedGeneratedLayout = sessionStorage.getItem('generated_layout');
+        if (storedGeneratedLayout) {
+          setTimeout(() => {
+            loadLabeledLayers();
+          }, 200);
+        }
+      }
+    };
+
+    // Also listen for custom events from the same tab
+    const handleCustomStorageChange = () => {
+      // Only refresh if we have a generated layout
+      const storedGeneratedLayout = sessionStorage.getItem('generated_layout');
+      if (storedGeneratedLayout) {
         setTimeout(() => {
-          refreshLayers();
+          loadLabeledLayers();
         }, 200);
       }
     };
 
-    // Listen for storage events (from other tabs/windows)
     window.addEventListener('storage', handleStorageChange);
-
-    // Also listen for custom events from the same tab
-    const handleCustomStorageChange = () => {
-      setTimeout(() => {
-        refreshLayers();
-      }, 200);
-    };
-
     window.addEventListener('psd_label_change', handleCustomStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('psd_label_change', handleCustomStorageChange);
     };
-  }, [refreshLayers]);
+  }, [loadLabeledLayers]);
 
   // Animation playback loop
   const animate = useCallback((timestamp: number) => {
@@ -467,181 +515,131 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
     };
   }, [isPlaying, animate]);
 
-  // Render canvas at current time with proper aspect ratio handling
+  // Improved global mouse event handlers for dragging with grid snapping and better precision
   useEffect(() => {
-    if (!fabricCanvasRef.current || !psdLayers) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragState) return;
 
-    const canvas = fabricCanvasRef.current;
-    canvas.clear();
-
-    // Calculate canvas dimensions maintaining aspect ratio and fitting viewport
-    const containerEl = canvas.getElement().parentElement;
-    if (!containerEl) return;
-
-    // Get container dimensions with some padding
-    const containerWidth = Math.min(canvasSize.width - 32, containerEl.clientWidth - 32) || 768;
-    const containerHeight = Math.min(canvasSize.height - 32, 400); // Max height for better UX
-    
-    // Use project dimensions (from selected layout or default)
-    const projectAspectRatio = project.width / project.height;
-    
-    let canvasWidth, canvasHeight;
-    
-    // Calculate dimensions to fit within container while maintaining aspect ratio
-    if (projectAspectRatio > containerWidth / containerHeight) {
-      // Project is wider than container ratio
-      canvasWidth = containerWidth;
-      canvasHeight = containerWidth / projectAspectRatio;
-    } else {
-      // Project is taller than container ratio
-      canvasHeight = containerHeight;
-      canvasWidth = containerHeight * projectAspectRatio;
-    }
-
-    // Ensure minimum dimensions
-    canvasWidth = Math.max(canvasWidth, 300);
-    canvasHeight = Math.max(canvasHeight, 200);
-
-    canvas.setDimensions({
-      width: canvasWidth,
-      height: canvasHeight
-    });
-
-    // Calculate scale factors
-    const scaleX = canvasWidth / project.width;
-    const scaleY = canvasHeight / project.height;
-    const scale = Math.min(scaleX, scaleY); // Use uniform scaling to maintain aspect ratio
-
-    // Add background with layout info
-    const background = new Rect({
-      left: 0,
-      top: 0,
-      width: canvasWidth,
-      height: canvasHeight,
-      fill: 'white',
-      stroke: '#cccccc',
-      strokeWidth: 1,
-      selectable: false,
-      evented: false,
-      excludeFromExport: true
-    });
-    canvas.add(background);
-
-    // Add layout info text if layout is selected
-    if (selectedChannelId && selectedAspectRatio) {
-      const channel = availableChannels.find(c => c.id === selectedChannelId);
-      if (channel) {
-        const layoutInfo = `${channel.name} - ${project.aspectRatio} (${project.width}x${project.height})`;
-        
-        // Create a temporary canvas for text
-        const textCanvas = document.createElement('canvas');
-        textCanvas.width = 400;
-        textCanvas.height = 30;
-        const textCtx = textCanvas.getContext('2d');
-        
-        if (textCtx) {
-          textCtx.fillStyle = '#6b7280';
-          textCtx.font = '12px sans-serif';
-          textCtx.textAlign = 'center';
-          textCtx.fillText(layoutInfo, 200, 20);
-          
-          const textImage = new FabricImage(textCanvas, {
-            left: (canvasWidth - 400) / 2,
-            top: 10,
-            selectable: false,
-            evented: false,
-            excludeFromExport: true,
-            opacity: 0.7
-          });
-          canvas.add(textImage);
-        }
+      // Calculate delta with scroll compensation
+      const scrollContainer = timelineRef.current;
+      const currentScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+      const deltaX = e.clientX + currentScrollLeft - dragState.startX;
+      
+      // Apply different sensitivity for different drag types with much more conservative settings
+      let sensitivity = 1.0;
+      if (dragState.type === 'resize') {
+        sensitivity = 0.4; // Much more conservative sensitivity for resizing
       }
-    }
-
-    // Sort layers by render order (similar to AdvancedLayoutGenerator)
-    const sortedLayers = [...project.layers].sort((a, b) => {
-      // Background layers first, then by original order
-      if (a.label === 'background') return -1;
-      if (b.label === 'background') return 1;
-      return 0;
-    });
-
-    // Render layers at current time
-    sortedLayers.forEach(layer => {
-      if (!layer.visible) return;
-
-      const psdLayer = psdLayers.find(l => l.id === layer.layerId);
-      if (!psdLayer || !psdLayer.bounds) return;
-
-      // Interpolate properties at current time
-      const properties = interpolateProperties(layer, currentTime);
       
-      // Calculate original layer dimensions
-      const originalWidth = psdLayer.bounds.right - psdLayer.bounds.left;
-      const originalHeight = psdLayer.bounds.bottom - psdLayer.bounds.top;
+      const adjustedDeltaX = deltaX * sensitivity;
+      const deltaTime = adjustedDeltaX / dragState.pixelsPerSecond;
       
-      // Create temporary canvas for the layer
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = Math.max(1, originalWidth);
-      tempCanvas.height = Math.max(1, originalHeight);
-      const ctx = tempCanvas.getContext('2d');
+      // More conservative grid snapping to 0.2 second intervals for resize, 0.1 for move
+      const gridSize = dragState.type === 'resize' ? 0.2 : 0.1;
+      const snappedDeltaTime = Math.round(deltaTime / gridSize) * gridSize;
 
-      if (ctx) {
-        const imageData = layerImages.get(psdLayer.name);
-        
-        if (imageData && imageData.width > 0 && imageData.height > 0) {
-          const originalCanvas = document.createElement('canvas');
-          originalCanvas.width = Math.max(1, imageData.width);
-          originalCanvas.height = Math.max(1, imageData.height);
-          const originalCtx = originalCanvas.getContext('2d');
+      switch (dragState.type) {
+        case 'animation':
+          // Move entire animation with grid snapping
+          const newStartTime = Math.max(0, Math.min(project.duration - 0.1, dragState.startTime + snappedDeltaTime));
+          const roundedStartTime = Math.round(newStartTime * 10) / 10; // Round to 1 decimal place
           
-          if (originalCtx) {
-            originalCtx.putImageData(imageData, 0, 0);
-            // Properly scale the image to fit the layer bounds
-            ctx.drawImage(
-              originalCanvas,
-              0, 0, imageData.width, imageData.height,
-              0, 0, originalWidth, originalHeight
-            );
+          if (Math.abs(roundedStartTime - dragState.startTime) >= 0.1) {
+            setProject(prev => ({
+              ...prev,
+              layers: prev.layers.map(layer =>
+                layer.layerId === dragState.layerId
+                  ? { 
+                      ...layer, 
+                      animations: layer.animations.map(anim =>
+                        anim.id === dragState.animationId ? { ...anim, startTime: roundedStartTime } : anim
+                      ) 
+                    }
+                  : layer
+              )
+            }));
           }
-        } else {
-          // Fallback colored rectangle using consistent label color
-          ctx.fillStyle = getLabelColor(layer.label);
-          ctx.fillRect(0, 0, originalWidth, originalHeight);
+          break;
           
-          // Add layer label
-          ctx.fillStyle = 'white';
-          ctx.font = 'bold 14px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(layer.label, originalWidth / 2, originalHeight / 2);
-        }
+        case 'resize':
+          // Resize animation duration with much improved sensitivity and grid snapping
+          const layer = project.layers.find(l => l.layerId === dragState.layerId);
+          const animation = layer?.animations.find(a => a.id === dragState.animationId);
+          if (layer && animation) {
+            // Use a larger minimum change threshold to prevent micro-adjustments
+            const minChangeThreshold = 0.2; // Minimum change of 0.2 seconds
+            
+            if (Math.abs(snappedDeltaTime) >= minChangeThreshold) {
+              let newDuration: number;
+              let newStartTime: number = animation.startTime;
+              
+              if (dragState.resizeHandle === 'start') {
+                // Resizing from the start - adjust start time and duration
+                newStartTime = Math.max(0, animation.startTime + snappedDeltaTime);
+                newDuration = Math.max(0.2, animation.duration - snappedDeltaTime);
+              } else {
+                // Resizing from the end - adjust duration only
+                newDuration = Math.max(0.2, Math.min(project.duration - animation.startTime, animation.duration + snappedDeltaTime));
+              }
+              
+              const roundedDuration = Math.round(newDuration * 5) / 5; // Round to 0.2 second intervals
+              const roundedStartTime = Math.round(newStartTime * 5) / 5;
+              
+              if (Math.abs(roundedDuration - animation.duration) >= 0.2 || 
+                  Math.abs(roundedStartTime - animation.startTime) >= 0.2) {
+                setProject(prev => ({
+                  ...prev,
+                  layers: prev.layers.map(l =>
+                    l.layerId === dragState.layerId
+                      ? { 
+                          ...l, 
+                          animations: l.animations.map(anim =>
+                            anim.id === dragState.animationId 
+                              ? { ...anim, duration: roundedDuration, startTime: roundedStartTime } 
+                              : anim
+                          )
+                        }
+                      : l
+                  )
+                }));
+              }
+            }
+          }
+          break;
       }
+    };
 
-      // Create fabric image with animated properties and proper scaling
-      const fabricImage = new FabricImage(tempCanvas, {
-        left: properties.x * scale,
-        top: properties.y * scale,
-        scaleX: properties.scaleX * scale,
-        scaleY: properties.scaleY * scale,
-        angle: properties.rotation,
-        opacity: properties.opacity,
-        selectable: false,
-        evented: false,
-        originX: 'left',
-        originY: 'top'
-      });
+    const handleMouseUp = () => {
+      setDragState(null);
+    };
 
-      canvas.add(fabricImage);
-    });
+    if (dragState) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [dragState, project.duration, project.layers]);
 
-    canvas.renderAll();
-  }, [currentTime, project, psdLayers, layerImages, selectedChannelId, selectedAspectRatio, availableChannels, canvasSize]);
-
-  // Interpolate properties for animation
-  const interpolateProperties = (layer: LayerAnimation, time: number): AnimationProperties => {
-    if (!layer.animationType || !psdLayers) {
-      // No animation - return original position
+  // Interpolate properties for animation - updated to handle multiple animations
+  const interpolateProperties = useCallback((layer: LayerAnimation, time: number, element?: { x: number; y: number; width: number; height: number }): AnimationProperties => {
+    if (!layer.animations || layer.animations.length === 0) {
+      // No animation - return generated layout position if available, otherwise original position
+      if (element) {
+        return {
+          x: element.x,
+          y: element.y,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          opacity: 1
+        };
+      }
+      
+      // Fallback to original PSD position if no element provided
       const psdLayer = psdLayers?.find(l => l.id === layer.layerId);
       if (psdLayer && psdLayer.bounds) {
         return {
@@ -656,69 +654,64 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
       return { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1 };
     }
 
-    const preset = ANIMATION_PRESETS[layer.animationType as keyof typeof ANIMATION_PRESETS];
-    if (!preset) {
-      // Fallback to original position
-      const psdLayer = psdLayers.find(l => l.id === layer.layerId);
-      if (psdLayer && psdLayer.bounds) {
-        return {
-          x: psdLayer.bounds.left,
-          y: psdLayer.bounds.top,
-          scaleX: 1,
-          scaleY: 1,
-          rotation: 0,
-          opacity: 1
-        };
-      }
-      return { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1 };
-    }
-
-    // Get original layer position
-    const psdLayer = psdLayers.find(l => l.id === layer.layerId);
-    const originalX = psdLayer?.bounds?.left || 0;
-    const originalY = psdLayer?.bounds?.top || 0;
-
-    // Calculate animation progress
-    const animationStart = layer.startTime;
-    const animationEnd = layer.startTime + layer.duration;
+    // Get base position from generated layout element if available, otherwise use original PSD position
+    let baseX = 0;
+    let baseY = 0;
     
-    if (time < animationStart) {
-      // Before animation starts - use start properties
-      return {
-        x: originalX + preset.startProperties.x,
-        y: originalY + preset.startProperties.y,
-        scaleX: preset.startProperties.scaleX,
-        scaleY: preset.startProperties.scaleY,
-        rotation: preset.startProperties.rotation,
-        opacity: preset.startProperties.opacity
-      };
-    }
-    
-    if (time >= animationEnd) {
-      // After animation ends - use end properties
-      return {
-        x: originalX + preset.endProperties.x,
-        y: originalY + preset.endProperties.y,
-        scaleX: preset.endProperties.scaleX,
-        scaleY: preset.endProperties.scaleY,
-        rotation: preset.endProperties.rotation,
-        opacity: preset.endProperties.opacity
-      };
+    if (element) {
+      baseX = element.x;
+      baseY = element.y;
+    } else {
+      // Fallback to original PSD position
+      const psdLayer = psdLayers?.find(l => l.id === layer.layerId);
+      baseX = psdLayer?.bounds?.left || 0;
+      baseY = psdLayer?.bounds?.top || 0;
     }
 
-    // During animation - interpolate
-    const progress = (time - animationStart) / layer.duration;
-    const easedProgress = applyEasing(progress, layer.easing);
-
-    return {
-      x: originalX + lerp(preset.startProperties.x, preset.endProperties.x, easedProgress),
-      y: originalY + lerp(preset.startProperties.y, preset.endProperties.y, easedProgress),
-      scaleX: lerp(preset.startProperties.scaleX, preset.endProperties.scaleX, easedProgress),
-      scaleY: lerp(preset.startProperties.scaleY, preset.endProperties.scaleY, easedProgress),
-      rotation: lerp(preset.startProperties.rotation, preset.endProperties.rotation, easedProgress),
-      opacity: lerp(preset.startProperties.opacity, preset.endProperties.opacity, easedProgress)
+    // Start with base properties from generated layout
+    const finalProperties: AnimationProperties = {
+      x: baseX,
+      y: baseY,
+      scaleX: 1,
+      scaleY: 1,
+      rotation: 0,
+      opacity: 1
     };
-  };
+
+    // Apply all active animations at current time
+    layer.animations.forEach(animation => {
+      const preset = ANIMATION_PRESETS[animation.animationType as keyof typeof ANIMATION_PRESETS];
+      if (!preset) return;
+
+      const animationStart = animation.startTime;
+      const animationEnd = animation.startTime + animation.duration;
+      
+      if (time >= animationStart && time <= animationEnd) {
+        // Animation is active - interpolate
+        const progress = (time - animationStart) / animation.duration;
+        const easedProgress = applyEasing(progress, animation.easing);
+
+        // Apply animation transformations relative to base position
+        finalProperties.x = baseX + lerp(preset.startProperties.x, preset.endProperties.x, easedProgress);
+        finalProperties.y = baseY + lerp(preset.startProperties.y, preset.endProperties.y, easedProgress);
+        finalProperties.scaleX = lerp(preset.startProperties.scaleX, preset.endProperties.scaleX, easedProgress);
+        finalProperties.scaleY = lerp(preset.startProperties.scaleY, preset.endProperties.scaleY, easedProgress);
+        finalProperties.rotation = lerp(preset.startProperties.rotation, preset.endProperties.rotation, easedProgress);
+        finalProperties.opacity = lerp(preset.startProperties.opacity, preset.endProperties.opacity, easedProgress);
+      } else if (time > animationEnd) {
+        // Animation has finished - use end properties relative to base position
+        finalProperties.x = baseX + preset.endProperties.x;
+        finalProperties.y = baseY + preset.endProperties.y;
+        finalProperties.scaleX = preset.endProperties.scaleX;
+        finalProperties.scaleY = preset.endProperties.scaleY;
+        finalProperties.rotation = preset.endProperties.rotation;
+        finalProperties.opacity = preset.endProperties.opacity;
+      }
+      // If time < animationStart, keep current properties (no change)
+    });
+
+    return finalProperties;
+  }, [psdLayers]);
 
   // Linear interpolation
   const lerp = (start: number, end: number, t: number) => {
@@ -754,6 +747,376 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
     }
   };
 
+  // Render canvas at current time with proper aspect ratio handling - updated to sync with AdvancedLayoutGenerator
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !psdLayers) return;
+
+    // Don't render until layout is ready (all selections made in AdvancedLayoutGenerator)
+    if (!isLayoutReady || !currentLayoutOption) {
+      const canvas = fabricCanvasRef.current;
+      canvas.clear();
+      
+      // Add a message indicating layout selection is needed
+      const background = new Rect({
+        left: 0,
+        top: 0,
+        width: canvas.getWidth(),
+        height: canvas.getHeight(),
+        fill: '#f9f9f9',
+        selectable: false,
+        evented: false
+      });
+      canvas.add(background);
+      
+      // Add text message
+      const textCanvas = document.createElement('canvas');
+      textCanvas.width = 400;
+      textCanvas.height = 100;
+      const textCtx = textCanvas.getContext('2d');
+      
+      if (textCtx) {
+        textCtx.fillStyle = '#6b7280';
+        textCtx.font = '16px sans-serif';
+        textCtx.textAlign = 'center';
+        textCtx.fillText('Please generate a layout in the Layout Generator first', 200, 40);
+        textCtx.fillText('to see the animation preview', 200, 65);
+        
+        const textImage = new FabricImage(textCanvas, {
+          left: (canvas.getWidth() - 400) / 2,
+          top: (canvas.getHeight() - 100) / 2,
+          selectable: false,
+          evented: false,
+          opacity: 0.7
+        });
+        canvas.add(textImage);
+      }
+      
+      canvas.renderAll();
+      return;
+    }
+
+    // Check if we have a generated layout from AdvancedLayoutGenerator
+    const storedGeneratedLayout = sessionStorage.getItem('generated_layout');
+    if (!storedGeneratedLayout) {
+      const canvas = fabricCanvasRef.current;
+      canvas.clear();
+      
+      // Add a message indicating layout generation is needed
+      const background = new Rect({
+        left: 0,
+        top: 0,
+        width: canvas.getWidth(),
+        height: canvas.getHeight(),
+        fill: '#f9f9f9',
+        selectable: false,
+        evented: false
+      });
+      canvas.add(background);
+      
+      // Add text message
+      const textCanvas = document.createElement('canvas');
+      textCanvas.width = 400;
+      textCanvas.height = 100;
+      const textCtx = textCanvas.getContext('2d');
+      
+      if (textCtx) {
+        textCtx.fillStyle = '#6b7280';
+        textCtx.font = '16px sans-serif';
+        textCtx.textAlign = 'center';
+        textCtx.fillText('Please click "Generate Layout" in the Layout Generator', 200, 40);
+        textCtx.fillText('to see the animation preview', 200, 65);
+        
+        const textImage = new FabricImage(textCanvas, {
+          left: (canvas.getWidth() - 400) / 2,
+          top: (canvas.getHeight() - 100) / 2,
+          selectable: false,
+          evented: false,
+          opacity: 0.7
+        });
+        canvas.add(textImage);
+      }
+      
+      canvas.renderAll();
+      return;
+    }
+
+    let generatedLayout;
+    try {
+      generatedLayout = JSON.parse(storedGeneratedLayout);
+    } catch (error) {
+      console.error('Error parsing generated layout:', error);
+      return;
+    }
+
+    const canvas = fabricCanvasRef.current;
+    canvas.clear();
+
+    // Get layer labels from session storage
+    const storedLabels = sessionStorage.getItem('psd_layer_labels');
+    if (!storedLabels) {
+      return;
+    }
+
+    let labels: Record<string, string>;
+    try {
+      labels = JSON.parse(storedLabels);
+    } catch (error) {
+      console.error('Error parsing layer labels:', error);
+      return;
+    }
+
+    // Get container dimensions
+    const containerEl = canvas.getElement().parentElement;
+    if (!containerEl) return;
+
+    // Use the same canvas sizing logic as AdvancedLayoutGenerator
+    const containerWidth = containerEl.clientWidth || 800;
+    const layoutAspectRatio = generatedLayout.width / generatedLayout.height;
+    const canvasWidth = containerWidth;
+    const canvasHeight = containerWidth / layoutAspectRatio;
+    
+    // Update container and canvas
+    containerEl.style.minHeight = `${canvasHeight}px`;
+    canvas.setDimensions({
+      width: canvasWidth,
+      height: canvasHeight
+    });
+    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    
+    // Calculate scale - same as AdvancedLayoutGenerator
+    const scaleX = canvasWidth / generatedLayout.width;
+    const scaleY = canvasHeight / generatedLayout.height;
+    const scale = Math.min(scaleX, scaleY);
+
+    // Add background - same as AdvancedLayoutGenerator
+    const background = new Rect({
+      left: 0,
+      top: 0,
+      width: canvasWidth,
+      height: canvasHeight,
+      fill: 'white',
+      stroke: '#cccccc',
+      strokeWidth: 1,
+      selectable: false,
+      evented: false,
+      excludeFromExport: true
+    });
+    canvas.add(background);
+
+    // Add safezone boundaries - same as AdvancedLayoutGenerator
+    const safezone = new Rect({
+      left: canvasWidth * safezoneMargin,
+      top: canvasHeight * safezoneMargin,
+      width: canvasWidth * (1 - 2 * safezoneMargin),
+      height: canvasHeight * (1 - 2 * safezoneMargin),
+      fill: 'transparent',
+      stroke: '#2563eb',
+      strokeWidth: 1,
+      strokeDashArray: [5, 5],
+      selectable: false,
+      evented: false,
+      excludeFromExport: true
+    });
+    canvas.add(safezone);
+
+    // Add layout info text
+    if (layoutGeneratorSelections.channelId && layoutGeneratorSelections.aspectRatio) {
+      const layoutInfo = `${layoutGeneratorSelections.aspectRatio} (${generatedLayout.width}x${generatedLayout.height})`;
+      
+      const textCanvas = document.createElement('canvas');
+      textCanvas.width = 300;
+      textCanvas.height = 25;
+      const textCtx = textCanvas.getContext('2d');
+      
+      if (textCtx) {
+        textCtx.fillStyle = '#6b7280';
+        textCtx.font = '11px sans-serif';
+        textCtx.textAlign = 'center';
+        textCtx.fillText(layoutInfo, 150, 15);
+        
+        const textImage = new FabricImage(textCanvas, {
+          left: (canvasWidth - 300) / 2,
+          top: 8,
+          selectable: false,
+          evented: false,
+          excludeFromExport: true,
+          opacity: 0.7
+        });
+        canvas.add(textImage);
+      }
+    }
+
+    // Sort elements based on render order - same as AdvancedLayoutGenerator
+    let elementsToRender = [...generatedLayout.elements];
+    if (currentLayoutOption?.rules.renderOrder) {
+      const renderOrder = currentLayoutOption.rules.renderOrder;
+      
+      const elementsByLabel = new Map();
+      elementsToRender.forEach(element => {
+        if (!elementsByLabel.has(element.label)) {
+          elementsByLabel.set(element.label, []);
+        }
+        elementsByLabel.get(element.label).push(element);
+      });
+
+      elementsToRender = renderOrder.flatMap(label => 
+        elementsByLabel.get(label) || []
+      );
+
+      const remainingElements = elementsToRender.filter(element => 
+        !renderOrder.includes(element.label)
+      );
+      elementsToRender = [...elementsToRender, ...remainingElements];
+    } else {
+      elementsToRender.sort((a, b) => {
+        if (a.label === 'background') return -1;
+        if (b.label === 'background') return 1;
+        return 0;
+      });
+    }
+
+    // Render elements with animation properties applied
+    for (const element of elementsToRender) {
+      if (!element.visible) continue;
+
+      // Find corresponding animation layer
+      const animationLayer = project.layers.find(layer => layer.layerId === element.id);
+      
+      // Get any custom positions for this layout from AdvancedLayoutGenerator
+      const layoutCustomPositions = customPositions[generatedLayout.name] || {};
+      const customPosition = layoutCustomPositions[element.id];
+      
+      // Apply custom position if available, otherwise use original element position
+      const baseElement = customPosition ? {
+        ...element,
+        x: customPosition.x,
+        y: customPosition.y,
+        width: customPosition.width,
+        height: customPosition.height
+      } : element;
+      
+      // Get animated properties at current time
+      let animatedProperties = { x: baseElement.x, y: baseElement.y, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1 };
+      if (animationLayer) {
+        const interpolated = interpolateProperties(animationLayer, currentTime, baseElement);
+        animatedProperties = {
+          x: interpolated.x,
+          y: interpolated.y,
+          scaleX: interpolated.scaleX,
+          scaleY: interpolated.scaleY,
+          rotation: interpolated.rotation,
+          opacity: interpolated.opacity
+        };
+      }
+
+      try {
+        // Create temporary canvas for the layer - same as AdvancedLayoutGenerator
+        const tempCanvas = document.createElement('canvas');
+        const elementWidth = baseElement.width;
+        const elementHeight = baseElement.height;
+        
+        tempCanvas.width = Math.max(1, elementWidth);
+        tempCanvas.height = Math.max(1, elementHeight);
+        const ctx = tempCanvas.getContext('2d');
+        
+        if (ctx) {
+          const imageData = layerImages.get(baseElement.name);
+          
+          if (imageData && imageData.width > 0 && imageData.height > 0) {
+            const originalCanvas = document.createElement('canvas');
+            originalCanvas.width = Math.max(1, imageData.width);
+            originalCanvas.height = Math.max(1, imageData.height);
+            const originalCtx = originalCanvas.getContext('2d');
+            
+            if (originalCtx) {
+              originalCtx.putImageData(imageData, 0, 0);
+              
+              try {
+                ctx.drawImage(
+                  originalCanvas,
+                  0, 0, imageData.width, imageData.height,
+                  0, 0, elementWidth, elementHeight
+                );
+              } catch (error) {
+                console.error(`Error drawing image for layer ${baseElement.name}:`, error);
+                ctx.fillStyle = getLabelColor(baseElement.label);
+                ctx.fillRect(0, 0, elementWidth, elementHeight);
+              }
+            }
+          } else {
+            ctx.fillStyle = getLabelColor(baseElement.label);
+            ctx.fillRect(0, 0, elementWidth, elementHeight);
+            
+            // Add label text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(baseElement.label, elementWidth / 2, elementHeight / 2);
+          }
+        }
+        
+        // Calculate final position with scale and safezone - same as AdvancedLayoutGenerator
+        let left = animatedProperties.x * scale;
+        let top = animatedProperties.y * scale;
+
+        // Apply safezone if enabled for this element's label
+        const elementLabel = labels[baseElement.id] || labels[`layer_${baseElement.id}`];
+        const positioningRules = currentLayoutOption?.rules.positioning[elementLabel];
+        const shouldApplySafezone = positioningRules?.applySafezone !== false;
+
+        if (shouldApplySafezone) {
+          const safeLeft = canvasWidth * safezoneMargin;
+          const safeTop = canvasHeight * safezoneMargin;
+          const safeWidth = canvasWidth * (1 - 2 * safezoneMargin);
+          const safeHeight = canvasHeight * (1 - 2 * safezoneMargin);
+
+          left = Math.max(safeLeft, Math.min(safeLeft + safeWidth - elementWidth * scale, left));
+          top = Math.max(safeTop, Math.min(safeTop + safeHeight - elementHeight * scale, top));
+        }
+        
+        // Create fabric image with animated properties
+        const fabricImage = new FabricImage(tempCanvas, {
+          left: left,
+          top: top,
+          width: elementWidth,
+          height: elementHeight,
+          scaleX: animatedProperties.scaleX * scale,
+          scaleY: animatedProperties.scaleY * scale,
+          angle: animatedProperties.rotation,
+          opacity: animatedProperties.opacity,
+          selectable: true,
+          evented: true,
+          originX: 'left',
+          originY: 'top'
+        });
+        
+        // Add custom properties for identification
+        fabricImage.set('elementId', baseElement.id);
+        fabricImage.set('elementName', baseElement.name);
+        fabricImage.set('elementLabel', baseElement.label);
+        
+        // Add event handlers for interaction
+        fabricImage.on('moving', () => {
+          // Update the element position in real-time during animation
+          // This will be useful for interactive positioning
+        });
+        
+        fabricImage.on('modified', () => {
+          // Handle position/scale changes
+          // This could be used to update animation keyframes
+        });
+        
+        canvas.add(fabricImage);
+        
+      } catch (error) {
+        console.error(`Error rendering element ${baseElement.name}:`, error);
+      }
+    }
+
+    canvas.renderAll();
+  }, [currentTime, project, psdLayers, layerImages, layoutGeneratorSelections, currentLayoutOption, safezoneMargin, isLayoutReady, customPositions, interpolateProperties]);
+
   // Playback controls
   const handlePlay = () => {
     setIsPlaying(true);
@@ -782,10 +1145,18 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
     }));
   };
 
-  // Apply animation preset
+  // Apply animation preset - updated to add multiple animations
   const applyPreset = (layerId: string, presetKey: string) => {
     const preset = ANIMATION_PRESETS[presetKey as keyof typeof ANIMATION_PRESETS];
     if (!preset) return;
+
+    const newAnimation: AnimationBlock = {
+      id: `${layerId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      animationType: presetKey,
+      startTime: currentTime, // Start at current time
+      duration: preset.duration,
+      easing: 'ease-out'
+    };
 
     setProject(prev => ({
       ...prev,
@@ -793,24 +1164,27 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
         l.layerId === layerId
           ? { 
               ...l, 
-              animationType: presetKey,
-              duration: preset.duration,
-              easing: 'ease-out'
+              animations: [...l.animations, newAnimation]
             }
           : l
       )
     }));
 
-    toast.success(`Applied ${preset.name} animation`);
+    toast.success(`Added ${preset.name} animation`);
   };
 
-  // Remove animation from layer
-  const removeAnimation = (layerId: string) => {
+  // Remove animation from layer - updated to handle specific animation blocks
+  const removeAnimation = (layerId: string, animationId?: string) => {
     setProject(prev => ({
       ...prev,
       layers: prev.layers.map(layer =>
         layer.layerId === layerId
-          ? { ...layer, animationType: null }
+          ? { 
+              ...layer, 
+              animations: animationId 
+                ? layer.animations.filter(anim => anim.id !== animationId)
+                : [] // Remove all animations if no specific ID
+            }
           : layer
       )
     }));
@@ -1139,8 +1513,8 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
                       size="sm"
                       onClick={() => removeAnimation(layer.layerId)}
                       className="p-1 h-5 w-5"
-                      title="Remove animation"
-                      disabled={!layer.animationType}
+                      title="Remove all animations"
+                      disabled={layer.animations.length === 0}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -1157,19 +1531,27 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
               ref={timelineRef}
               className="overflow-x-auto overflow-y-hidden"
               onWheel={handleTimelineScroll}
-              onScroll={() => {
-                // Scroll handling is now managed by the browser's native scrolling
-              }}
             >
               {/* Container with consistent width for both header and tracks */}
               <div style={{ width: Math.max(totalWidth, 600), minWidth: '100%' }}>
                 {/* Time ruler header - synchronized with timeline */}
-                <div className="h-10 bg-gray-750 border-b border-gray-600 relative">
+                <div 
+                  className="h-10 bg-gray-750 border-b border-gray-600 relative cursor-pointer"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const scrollContainer = timelineRef.current;
+                    const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+                    const x = e.clientX - rect.left + scrollLeft;
+                    const time = x / pixelsPerSecond;
+                    const snappedTime = Math.round(time * 10) / 10; // Snap to 0.1s grid
+                    handleSeek(Math.max(0, Math.min(project.duration, snappedTime)));
+                  }}
+                >
                   {/* Time markers */}
                   {Array.from({ length: Math.ceil(project.duration) + 1 }, (_, i) => (
                     <div
                       key={i}
-                      className="absolute top-0 h-full border-l border-gray-600 flex items-center pl-2"
+                      className="absolute top-0 h-full border-l border-gray-600 flex items-center pl-2 pointer-events-none"
                       style={{ left: `${i * pixelsPerSecond}px` }}
                     >
                       <span className="text-xs text-gray-400">{i}s</span>
@@ -1199,15 +1581,16 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
                         handleSeek(Math.max(0, Math.min(project.duration, snappedTime)));
                       }}
                     >
-                      {/* Animation blocks */}
-                      {layer.animationType && (
+                      {/* Animation blocks - render all animations for this layer */}
+                      {layer.animations.map((animation) => (
                         <div
-                          className="absolute top-2 h-8 bg-blue-500 bg-opacity-30 border border-blue-400 rounded cursor-move flex items-center"
+                          key={animation.id}
+                          className="absolute top-2 h-8 bg-blue-500 bg-opacity-30 border border-blue-400 rounded cursor-move flex items-center group"
                           style={{
-                            left: `${layer.startTime * pixelsPerSecond}px`,
-                            width: `${Math.max(layer.duration * pixelsPerSecond, 20)}px` // Minimum width for visibility
+                            left: `${animation.startTime * pixelsPerSecond}px`,
+                            width: `${Math.max(animation.duration * pixelsPerSecond, 20)}px` // Minimum width for visibility
                           }}
-                          title={`${layer.animationType}: ${layer.startTime.toFixed(1)}s - ${(layer.startTime + layer.duration).toFixed(1)}s`}
+                          title={`${animation.animationType}: ${animation.startTime.toFixed(1)}s - ${(animation.startTime + animation.duration).toFixed(1)}s`}
                           onMouseDown={(e) => {
                             e.stopPropagation();
                             const timelineRect = e.currentTarget.parentElement!.getBoundingClientRect();
@@ -1217,18 +1600,33 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
                             setDragState({
                               type: 'animation',
                               layerId: layer.layerId,
-                              startTime: layer.startTime,
+                              animationId: animation.id,
+                              startTime: animation.startTime,
                               startX: e.clientX + scrollLeft,
                               timelineRect: timelineRect,
                               pixelsPerSecond: pixelsPerSecond
                             });
                           }}
                         >
-                          <div className="flex items-center justify-center h-full px-2 min-w-0">
+                          <div className="flex items-center justify-center h-full px-2 min-w-0 flex-1">
                             <span className="text-xs text-blue-200 truncate">
-                              {ANIMATION_PRESETS[layer.animationType as keyof typeof ANIMATION_PRESETS]?.name || layer.animationType}
+                              {ANIMATION_PRESETS[animation.animationType as keyof typeof ANIMATION_PRESETS]?.name || animation.animationType}
                             </span>
                           </div>
+                          
+                          {/* Delete button - only show on hover */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeAnimation(layer.layerId, animation.id);
+                            }}
+                            className="p-0 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full mr-1"
+                            title="Remove this animation"
+                          >
+                            <Trash2 className="h-2 w-2" />
+                          </Button>
                           
                           {/* Resize handles */}
                           <div
@@ -1242,10 +1640,12 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
                               setDragState({
                                 type: 'resize',
                                 layerId: layer.layerId,
-                                startTime: layer.startTime,
+                                animationId: animation.id,
+                                startTime: animation.startTime,
                                 startX: e.clientX + scrollLeft,
                                 timelineRect: timelineRect,
-                                pixelsPerSecond: pixelsPerSecond
+                                pixelsPerSecond: pixelsPerSecond,
+                                resizeHandle: 'start'
                               });
                             }}
                           />
@@ -1260,15 +1660,17 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
                               setDragState({
                                 type: 'resize',
                                 layerId: layer.layerId,
-                                startTime: layer.startTime + layer.duration,
+                                animationId: animation.id,
+                                startTime: animation.startTime + animation.duration,
                                 startX: e.clientX + scrollLeft,
                                 timelineRect: timelineRect,
-                                pixelsPerSecond: pixelsPerSecond
+                                pixelsPerSecond: pixelsPerSecond,
+                                resizeHandle: 'end'
                               });
                             }}
                           />
                         </div>
-                      )}
+                      ))}
                     </div>
                   ))}
                 </div>
@@ -1297,111 +1699,23 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
     );
   };
 
-  // Improved global mouse event handlers for dragging with grid snapping and better precision
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!dragState) return;
+  // Skip to start
+  const handleSkipToStart = () => {
+    setCurrentTime(0);
+    setIsPlaying(false);
+  };
 
-      // Calculate delta with scroll compensation
-      const scrollContainer = timelineRef.current;
-      const currentScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
-      const deltaX = e.clientX + currentScrollLeft - dragState.startX;
-      
-      // Apply sensitivity and grid snapping
-      const sensitivity = 1.0;
-      const adjustedDeltaX = deltaX * sensitivity;
-      const deltaTime = adjustedDeltaX / dragState.pixelsPerSecond;
-      
-      // Grid snapping to 0.1 second intervals
-      const gridSize = 0.1;
-      const snappedDeltaTime = Math.round(deltaTime / gridSize) * gridSize;
+  // Skip to end
+  const handleSkipToEnd = () => {
+    setCurrentTime(project.duration);
+    setIsPlaying(false);
+  };
 
-      switch (dragState.type) {
-        case 'animation':
-          // Move entire animation with grid snapping
-          const newStartTime = Math.max(0, Math.min(project.duration - 0.1, dragState.startTime + snappedDeltaTime));
-          const roundedStartTime = Math.round(newStartTime * 10) / 10; // Round to 1 decimal place
-          
-          if (Math.abs(roundedStartTime - dragState.startTime) >= gridSize) {
-            setProject(prev => ({
-              ...prev,
-              layers: prev.layers.map(layer =>
-                layer.layerId === dragState.layerId
-                  ? { ...layer, startTime: roundedStartTime }
-                  : layer
-              )
-            }));
-          }
-          break;
-          
-        case 'resize':
-          // Resize animation duration with grid snapping
-          const layer = project.layers.find(l => l.layerId === dragState.layerId);
-          if (layer) {
-            const newDuration = Math.max(0.1, Math.min(project.duration - layer.startTime, layer.duration + snappedDeltaTime));
-            const roundedDuration = Math.round(newDuration * 10) / 10; // Round to 1 decimal place
-            
-            if (Math.abs(roundedDuration - layer.duration) >= gridSize) {
-              setProject(prev => ({
-                ...prev,
-                layers: prev.layers.map(l =>
-                  l.layerId === dragState.layerId
-                    ? { ...l, duration: roundedDuration }
-                    : l
-                )
-              }));
-            }
-          }
-          break;
-      }
-    };
-
-    const handleMouseUp = () => {
-      setDragState(null);
-    };
-
-    if (dragState) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [dragState, project.duration, project.layers]);
-
-  // Canvas resize handler
-  const handleCanvasResize = useCallback((e: MouseEvent) => {
-    if (!isResizing || !canvasContainerRef.current) return;
-    
-    const container = canvasContainerRef.current;
-    const rect = container.getBoundingClientRect();
-    const newWidth = Math.max(400, e.clientX - rect.left);
-    const newHeight = Math.max(300, e.clientY - rect.top);
-    
-    setCanvasSize({ width: newWidth, height: newHeight });
-    
-    if (fabricCanvasRef.current) {
-      fabricCanvasRef.current.setDimensions({
-        width: newWidth,
-        height: newHeight
-      });
-    }
-  }, [isResizing]);
-
-  // Canvas resize mouse events
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleCanvasResize);
-      document.addEventListener('mouseup', () => setIsResizing(false));
-      
-      return () => {
-        document.removeEventListener('mousemove', handleCanvasResize);
-        document.removeEventListener('mouseup', () => setIsResizing(false));
-      };
-    }
-  }, [isResizing, handleCanvasResize]);
+  // Timeline scroll handler
+  const handleTimelineScroll = (e: React.WheelEvent) => {
+    e.preventDefault();
+    // Let the browser handle horizontal scrolling naturally
+  };
 
   // Helper function to create video from frames
   const createVideoFromFrames = async (frames: string[], fps: number): Promise<Blob> => {
@@ -1454,176 +1768,227 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
     });
   };
 
-  // Skip to start
-  const handleSkipToStart = () => {
-    setCurrentTime(0);
-    setIsPlaying(false);
-  };
-
-  // Skip to end
-  const handleSkipToEnd = () => {
-    setCurrentTime(project.duration);
-    setIsPlaying(false);
-  };
-
-  // Timeline scroll handler
-  const handleTimelineScroll = (e: React.WheelEvent) => {
-    e.preventDefault();
-    // Let the browser handle horizontal scrolling naturally
-  };
-
-  // Load available channels
-  useEffect(() => {
-    const fetchLayoutRules = async () => {
-      try {
-        const response = await fetch('/api/layout-rules');
-        const data: ApiResponse = await response.json();
-        setAvailableChannels(data.channels.map((channel: ChannelResponse) => ({
-          id: channel.id,
-          name: channel.name,
-          layouts: channel.layouts.map(layout => ({
-            aspectRatio: layout.aspectRatio,
-            width: layout.width,
-            height: layout.height,
-            options: layout.options || []
-          }))
-        })));
-      } catch (error) {
-        console.error('Error loading channels:', error);
-        toast.error('Failed to load channels');
+  // Function to read layout generator selections from localStorage
+  const readLayoutGeneratorSelections = useCallback(() => {
+    try {
+      const stored = localStorage.getItem('layout_generator_selections');
+      if (stored) {
+        const selections = JSON.parse(stored);
+        setLayoutGeneratorSelections(selections);
+        
+        // Check if all required selections are made
+        const isReady = selections.channelId && selections.aspectRatio && selections.option;
+        setIsLayoutReady(!!isReady);
+        
+        return selections;
       }
-    };
-    
-    fetchLayoutRules();
+    } catch (error) {
+      console.error('Error reading layout generator selections:', error);
+    }
+    setIsLayoutReady(false);
+    return null;
   }, []);
 
-  // Load available layouts when channel changes
-  useEffect(() => {
-    if (!selectedChannelId) {
-      setAvailableLayouts([]);
-      return;
-    }
-    
-    const fetchLayouts = async () => {
-      try {
-        const response = await fetch('/api/layout-rules');
-        const data: ApiResponse = await response.json();
-        const channel = data.channels.find((c: ChannelResponse) => c.id === selectedChannelId);
-        
-        if (channel) {
-          setAvailableLayouts(channel.layouts.map(layout => ({
-            aspectRatio: layout.aspectRatio,
-            width: layout.width,
-            height: layout.height,
-            options: layout.options || []
-          })));
-        } else {
-          setAvailableLayouts([]);
-        }
-      } catch (error) {
-        console.error('Error loading layout ratios:', error);
-        toast.error('Failed to load layout ratios');
-      }
-    };
-    
-    fetchLayouts();
-  }, [selectedChannelId]);
-  
-  // Load available options when aspect ratio changes
-  useEffect(() => {
-    if (!selectedChannelId || !selectedAspectRatio) {
-      setAvailableOptions([]);
-      return;
-    }
-    
-    const fetchOptions = async () => {
-      try {
-        const response = await fetch('/api/layout-rules');
-        const data: ApiResponse = await response.json();
-        const channel = data.channels.find((c: ChannelResponse) => c.id === selectedChannelId);
-        
-        if (channel) {
-          const layout = channel.layouts.find((l: LayoutResponse) => l.aspectRatio === selectedAspectRatio);
-          
-          if (layout && layout.options) {
-            setAvailableOptions(layout.options);
-          } else {
-            setAvailableOptions([]);
-          }
-        } else {
-          setAvailableOptions([]);
-        }
-      } catch (error) {
-        console.error('Error loading layout options:', error);
-        toast.error('Failed to load layout options');
-      }
-    };
-    
-    fetchOptions();
-  }, [selectedChannelId, selectedAspectRatio]);
-
-  // Calculate source ratio when PSD layers are loaded
-  useEffect(() => {
-    if (psdLayers && psdLayers.length > 0) {
-      // Find a reference layer with bounds for source ratio calculation
-      const referenceLayer = psdLayers.find(layer => layer.bounds) || psdLayers[0];
-      if (referenceLayer.bounds) {
-        const width = referenceLayer.bounds.right - referenceLayer.bounds.left;
-        const height = referenceLayer.bounds.bottom - referenceLayer.bounds.top;
-        const ratio = `${width}:${height}`;
-        setSourceRatio(ratio);
-      }
-    }
-  }, [psdLayers]);
-
-  // Update project dimensions when layout is selected
-  useEffect(() => {
-    if (selectedChannelId && selectedAspectRatio) {
-      const channel = availableChannels.find(c => c.id === selectedChannelId);
+  // Function to fetch current layout option data
+  const fetchCurrentLayoutOption = useCallback(async (channelId: string, aspectRatio: string, optionName: string) => {
+    try {
+      const response = await fetch('/api/layout-rules');
+      const data: ApiResponse = await response.json();
+      
+      const channel = data.channels.find(c => c.id === channelId);
       if (channel) {
-        const layout = channel.layouts.find((l: Layout) => l.aspectRatio === selectedAspectRatio);
+        const layout = channel.layouts.find(l => l.aspectRatio === aspectRatio);
         if (layout) {
-          setProject(prev => ({
-            ...prev,
-            width: layout.width,
-            height: layout.height,
-            aspectRatio: layout.aspectRatio
-          }));
+          const option = layout.options?.find(o => o.name === optionName);
+          if (option) {
+            setCurrentLayoutOption(option);
+            setSafezoneMargin(option.safezoneMargin || 0.043);
+            
+            // Update project dimensions
+            setProject(prev => ({
+              ...prev,
+              width: layout.width,
+              height: layout.height,
+              aspectRatio: layout.aspectRatio
+            }));
+            
+            setIsLayoutReady(true);
+            return option;
+          }
         }
       }
+    } catch (error) {
+      console.error('Error fetching layout option:', error);
     }
-  }, [selectedChannelId, selectedAspectRatio, availableChannels]);
+    setIsLayoutReady(false);
+    return null;
+  }, []);
 
-  // Handle channel selection
-  const handleChannelSelect = (channelId: string) => {
-    setSelectedChannelId(channelId);
-    setSelectedAspectRatio(null);
-    setSelectedOption(null);
-  };
-
-  // Handle aspect ratio selection
-  const handleAspectRatioSelect = (aspectRatio: string) => {
-    setSelectedAspectRatio(aspectRatio);
-    setSelectedOption(null);
-  };
-
-  // Handle option selection
-  const handleOptionSelect = (optionName: string) => {
-    setSelectedOption(optionName);
-  };
-
-  // Filter aspect ratios by selected channel and compatible ratios
-  const filteredAspectRatios = availableLayouts.filter((layout: Layout) => {
-    // Skip layouts that have the same aspect ratio as the source
-    if (!sourceRatio) return true;
+  // Listen for layout generator selection changes
+  useEffect(() => {
+    // Initial read
+    readLayoutGeneratorSelections();
     
-    // Simple ratio comparison - you might want to implement areRatiosEquivalent function
-    if (layout.aspectRatio === sourceRatio) {
-      return false;
+    // Listen for changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'layout_generator_selections') {
+        readLayoutGeneratorSelections();
+      }
+    };
+
+    // Listen for custom events from the same tab
+    const handleCustomChange = () => {
+      readLayoutGeneratorSelections();
+    };
+
+    // Listen for layout generation events
+    const handleLayoutGenerated = () => {
+      // Load layers from the newly generated layout
+      loadLabeledLayers();
+      // Force canvas re-render when a new layout is generated
+      setCurrentTime(prev => prev); // Trigger re-render
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('layout_generator_change', handleCustomChange);
+    window.addEventListener('layout_generated', handleLayoutGenerated);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('layout_generator_change', handleCustomChange);
+      window.removeEventListener('layout_generated', handleLayoutGenerated);
+    };
+  }, [readLayoutGeneratorSelections, loadLabeledLayers]);
+
+  // Load custom positions from sessionStorage and listen for position synchronization events
+  useEffect(() => {
+    // Load initial custom positions from sessionStorage
+    const loadCustomPositions = () => {
+      const storedPositions = sessionStorage.getItem('layout_custom_positions');
+      if (storedPositions) {
+        try {
+          const positions = JSON.parse(storedPositions);
+          setCustomPositions(positions);
+        } catch (error) {
+          console.error('Error parsing stored custom positions:', error);
+        }
+      }
+    };
+
+    // Load positions on mount
+    loadCustomPositions();
+
+    // Listen for position changes from AdvancedLayoutGenerator
+    const handlePositionChanged = (event: CustomEvent) => {
+      const { allPositions } = event.detail;
+      setCustomPositions(allPositions);
+      // Force canvas re-render
+      setCurrentTime(prev => prev);
+    };
+
+    // Listen for position resets from AdvancedLayoutGenerator
+    const handlePositionReset = (event: CustomEvent) => {
+      const { allPositions } = event.detail;
+      setCustomPositions(allPositions);
+      // Force canvas re-render
+      setCurrentTime(prev => prev);
+    };
+
+    // Add event listeners
+    window.addEventListener('layout_position_changed', handlePositionChanged as EventListener);
+    window.addEventListener('layout_position_reset', handlePositionReset as EventListener);
+
+    return () => {
+      window.removeEventListener('layout_position_changed', handlePositionChanged as EventListener);
+      window.removeEventListener('layout_position_reset', handlePositionReset as EventListener);
+    };
+  }, []);
+
+  // Fetch layout option when selections change
+  useEffect(() => {
+    if (layoutGeneratorSelections.channelId && layoutGeneratorSelections.aspectRatio && layoutGeneratorSelections.option) {
+      fetchCurrentLayoutOption(
+        layoutGeneratorSelections.channelId,
+        layoutGeneratorSelections.aspectRatio,
+        layoutGeneratorSelections.option
+      );
+    } else {
+      setIsLayoutReady(false);
     }
+  }, [layoutGeneratorSelections, fetchCurrentLayoutOption]);
+
+  // Function to load all layout combinations from AdvancedLayoutGenerator
+  const loadAllLayoutCombinations = useCallback(() => {
+    setIsLoadingCombinations(true);
     
-    return true;
-  });
+    // Listen for multiple layouts from AdvancedLayoutGenerator
+    const handleMultipleLayouts = (event: CustomEvent) => {
+      const layouts = event.detail;
+      if (layouts && Array.isArray(layouts)) {
+        setAllLayoutCombinations(layouts.map((layout: { elements: { id: string; name: string; label: string; visible: boolean; x: number; y: number; width: number; height: number }[]; width: number; height: number; aspectRatio: string; name: string }, index: number) => ({
+          layout,
+          name: `Combination ${index + 1}`
+        })));
+        setShowCombinationPreview(true);
+      }
+      setIsLoadingCombinations(false);
+    };
+
+    // Dispatch event to request all combinations
+    window.dispatchEvent(new CustomEvent('request_all_combinations'));
+    
+    // Listen for the response
+    window.addEventListener('multiple_layouts_generated', handleMultipleLayouts as EventListener);
+    
+    // Cleanup listener after timeout
+    setTimeout(() => {
+      window.removeEventListener('multiple_layouts_generated', handleMultipleLayouts as EventListener);
+      setIsLoadingCombinations(false);
+    }, 5000);
+  }, []);
+
+  // Function to reset custom positions and synchronize with AdvancedLayoutGenerator
+  const handleResetPositions = useCallback(() => {
+    // Get current layout name from session storage
+    const storedGeneratedLayout = sessionStorage.getItem('generated_layout');
+    if (!storedGeneratedLayout) {
+      toast.error('No layout found to reset');
+      return;
+    }
+
+    let generatedLayout;
+    try {
+      generatedLayout = JSON.parse(storedGeneratedLayout);
+    } catch (error) {
+      console.error('Error parsing generated layout:', error);
+      toast.error('Error parsing layout data');
+      return;
+    }
+
+    // Reset custom positions for current layout
+    setCustomPositions(prev => {
+      const newPositions = { ...prev };
+      delete newPositions[generatedLayout.name];
+      
+      // Store updated positions in sessionStorage for AdvancedLayoutGenerator synchronization
+      sessionStorage.setItem('layout_custom_positions', JSON.stringify(newPositions));
+      
+      // Dispatch event to notify AdvancedLayoutGenerator of position reset
+      window.dispatchEvent(new CustomEvent('layout_position_reset', {
+        detail: {
+          layoutName: generatedLayout.name,
+          allPositions: newPositions
+        }
+      }));
+      
+      return newPositions;
+    });
+
+    // Force canvas re-render
+    setCurrentTime(prev => prev);
+    
+    toast.success('Positions reset successfully');
+  }, []);
 
   // If no layers, show upload message
   if (!psdLayers) {
@@ -1650,86 +2015,6 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
         </div>
         
         <CollapsibleContent className="space-y-4">
-          {/* Layout Selection Controls */}
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-end gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              {/* Channel selection */}
-              <div>
-                <Label className="text-sm font-medium mb-2">Channel</Label>
-                <Select value={selectedChannelId || ''} onValueChange={handleChannelSelect}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select channel" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableChannels.length === 0 ? (
-                      <SelectItem value="none" disabled>No channels available</SelectItem>
-                    ) : (
-                      availableChannels.map((channel) => (
-                        <SelectItem key={channel.id} value={channel.id}>
-                          {channel.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Aspect Ratio selection */}
-              <div>
-                <Label className="text-sm font-medium mb-2">Aspect Ratio</Label>
-                <Select 
-                  value={selectedAspectRatio || ''} 
-                  onValueChange={handleAspectRatioSelect}
-                  disabled={!selectedChannelId}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select aspect ratio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredAspectRatios.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        {sourceRatio ? `No ratios available (Source: ${sourceRatio})` : 'No ratios available'}
-                      </SelectItem>
-                    ) : (
-                      filteredAspectRatios.map((layout) => (
-                        <SelectItem key={layout.aspectRatio} value={layout.aspectRatio}>
-                          <div className="flex items-center gap-2">
-                            {layout.aspectRatio} ({layout.width}x{layout.height})
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Option selection */}
-              <div>
-                <Label className="text-sm font-medium mb-2">Layout Option</Label>
-                <Select 
-                  value={selectedOption || ''} 
-                  onValueChange={handleOptionSelect}
-                  disabled={!selectedChannelId || !selectedAspectRatio}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select layout option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableOptions.length === 0 ? (
-                      <SelectItem value="none" disabled>No options available</SelectItem>
-                    ) : (
-                      availableOptions.map((option) => (
-                        <SelectItem key={option.name} value={option.name}>
-                          {option.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
           {/* Refresh button for labeled layers */}
           <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div>
@@ -1740,6 +2025,11 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
                   : "No labeled layers found. Please label your layers in the Layer Tree first."
                 }
               </p>
+              {layoutGeneratorSelections.channelId && layoutGeneratorSelections.aspectRatio && layoutGeneratorSelections.option && (
+                <p className="text-xs text-blue-600 mt-1">
+                  Using layout: {layoutGeneratorSelections.aspectRatio} - {layoutGeneratorSelections.option}
+                </p>
+              )}
             </div>
             <Button
               variant="outline"
@@ -1890,27 +2180,36 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
                   <Download className="h-4 w-4" />
                   Export MP4
                 </Button>
+                
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleResetPositions}
+                  className="flex items-center gap-1"
+                  disabled={!isLayoutReady}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Reset Positions
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadAllLayoutCombinations}
+                  disabled={isLoadingCombinations || !isLayoutReady}
+                  className="flex items-center gap-1"
+                >
+                  <Eye className="h-4 w-4" />
+                  {isLoadingCombinations ? 'Loading...' : 'Preview All Combinations'}
+                </Button>
               </div>
             </div>
           </div>
 
-          {/* Canvas with resize handle */}
-          <div 
-            ref={canvasContainerRef}
-            className="border overflow-hidden bg-white shadow-sm rounded-lg relative"
-            style={{ width: canvasSize.width, height: canvasSize.height }}
-          >
-            <div className="w-full h-full flex items-center justify-center p-4">
+          {/* Canvas container */}
+          <div className="border overflow-hidden bg-white shadow-sm rounded-lg relative max-w-2xl mx-auto">
+            <div className="w-full h-full flex items-center justify-center p-2">
               <canvas ref={canvasRef} className="w-full h-full" />
-            </div>
-            
-            {/* Resize handle */}
-            <div
-              className="absolute bottom-0 right-0 w-4 h-4 bg-gray-400 cursor-se-resize hover:bg-gray-600 transition-colors"
-              onMouseDown={() => setIsResizing(true)}
-              title="Drag to resize canvas"
-            >
-              <div className="absolute bottom-1 right-1 w-2 h-2 border-r border-b border-white"></div>
             </div>
           </div>
 
@@ -1918,6 +2217,39 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
           {renderTimeline()}
         </CollapsibleContent>
       </Collapsible>
+
+      {/* Combination Preview Modal */}
+      <Dialog open={showCombinationPreview} onOpenChange={setShowCombinationPreview}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>All Layout Combinations with Animation Preview</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+            {allLayoutCombinations.map((combination, index) => (
+              <div key={index} className="border rounded-lg p-2 hover:shadow-lg transition-shadow">
+                <h4 className="text-sm font-medium mb-2">{combination.name}</h4>
+                <div className="aspect-video bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500">
+                  {combination.layout.aspectRatio} - {combination.layout.elements.length} layers
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    // Switch to this layout combination
+                    sessionStorage.setItem('generated_layout', JSON.stringify(combination.layout));
+                    window.dispatchEvent(new CustomEvent('layout_generated'));
+                    setShowCombinationPreview(false);
+                    toast.success(`Switched to ${combination.name}`);
+                  }}
+                >
+                  Use This Layout
+                </Button>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
