@@ -185,7 +185,76 @@ export function LayoutRulesManager() {
       const response = await labelsApi.getAll();
       const data = await response.json();
       if (response.ok) {
-        setLabelTypes(data.labels);
+        const newLabels = data.labels;
+        setLabelTypes(newLabels);
+        
+        // Auto-setup default layout rules for new labels
+        if (selectedChannelId && selectedAspectRatio && selectedOption && currentOption) {
+          const existingLabels = Object.keys(currentOption.rules.visibility);
+          const labelsToAdd = newLabels.filter((label: string) => !existingLabels.includes(label));
+          
+          if (labelsToAdd.length > 0) {
+            const updatedChannels = channels.map(channel => {
+              if (channel.id === selectedChannelId) {
+                return {
+                  ...channel,
+                  layouts: channel.layouts.map(layout => {
+                    if (layout.aspectRatio === selectedAspectRatio) {
+                      return {
+                        ...layout,
+                        options: layout.options.map(option => {
+                          if (option.name === selectedOption) {
+                            const newVisibility = { ...option.rules.visibility };
+                            const newPositioning = { ...option.rules.positioning };
+                            const newRenderOrder = [...(option.rules.renderOrder || [])];
+                            
+                            // Add default rules for new labels
+                            labelsToAdd.forEach((label: string) => {
+                              // Set default visibility to true
+                              newVisibility[label] = true;
+                              
+                              // Set default positioning: center, middle, 50% width/height, safezone enabled
+                              newPositioning[label] = {
+                                maxWidthPercent: 0.5, // 50%
+                                maxHeightPercent: 0.5, // 50%
+                                applySafezone: true,
+                                coordinatePosition: createCoordinatePosition('center', 'middle')
+                              };
+                              
+                              // Add to render order if not already present
+                              if (!newRenderOrder.includes(label)) {
+                                newRenderOrder.push(label);
+                              }
+                            });
+                            
+                            return {
+                              ...option,
+                              rules: {
+                                ...option.rules,
+                                visibility: newVisibility,
+                                positioning: newPositioning,
+                                renderOrder: newRenderOrder
+                              }
+                            };
+                          }
+                          return option;
+                        })
+                      };
+                    }
+                    return layout;
+                  })
+                };
+              }
+              return channel;
+            });
+            
+            setChannels(updatedChannels);
+            addToHistory(updatedChannels);
+            setIsDirty(true);
+            
+            toast.success(`Added default rules for ${labelsToAdd.length} new label(s): ${labelsToAdd.join(', ')}`);
+          }
+        }
       } else {
         throw new Error(data.error);
       }

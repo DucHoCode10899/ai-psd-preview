@@ -1,5 +1,6 @@
 // API utility for switching between Next.js API routes and Flask backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:5001';
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://duchominh10899.pythonanywhere.com/';
+const API_BASE_URL = 'https://duchominh10899.pythonanywhere.com/';
 
 export const apiCall = async (endpoint: string, options?: RequestInit) => {
   const url = API_BASE_URL ? `${API_BASE_URL}${endpoint}` : endpoint;
