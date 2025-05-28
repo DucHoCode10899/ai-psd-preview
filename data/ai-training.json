@@ -2584,69 +2584,79 @@
   },
   {
     "layerName": "CXP - Khoanh tron de tiem kiem",
-    "correctLabel": "sub-content-1",
+    "correctLabel": "sub-content-2",
     "patterns": [
       {
         "pattern": "cxp - khoanh tron de tiem kiem",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "cxp",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "khoanh",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "tron",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "tiem",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "kiem",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "cxp khoanh",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "khoanh tron",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "tron de",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "de tiem",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       },
       {
         "pattern": "tiem kiem",
         "confidence": 0.6,
-        "matches": 1
+        "matches": 3
       }
     ],
-    "lastUpdated": "2025-05-27T02:39:50.526Z",
+    "lastUpdated": "2025-05-28T07:24:42.155Z",
     "history": [
       {
         "label": "sub-content-1",
         "timestamp": "2025-05-27T02:39:50.526Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "sub-content-1",
+        "timestamp": "2025-05-28T07:24:37.973Z",
+        "confidence": 0.6
+      },
+      {
+        "label": "sub-content-2",
+        "timestamp": "2025-05-28T07:24:42.155Z",
         "confidence": 0.6
       }
     ]

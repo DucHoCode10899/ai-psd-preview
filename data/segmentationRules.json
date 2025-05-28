@@ -33,6 +33,14 @@
         {
           "id": "food",
           "label": "Food & Dining"
+        },
+        {
+          "id": "gaming",
+          "label": "Gaming"
+        },
+        {
+          "id": "photography",
+          "label": "Photography"
         }
       ]
     },

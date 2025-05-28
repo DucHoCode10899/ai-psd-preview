@@ -408,9 +408,6 @@ export function AnimationStudio({ psdLayers, psdBuffer }: AnimationStudioProps) 
       layers: animationLayers
     }));
 
-    if (animationLayers.length > 0) {
-      toast.success(`Loaded ${animationLayers.length} layers from generated layout for animation`);
-    }
   }, [psdLayers]);
 
   // Function to refresh layers (force reload from session storage)

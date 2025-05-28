@@ -2419,10 +2419,9 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         </div>
       )}
 
-      {/* Replace Dialog with custom floating modal */}
+      {/* Replace Dialog with default Tailwind modal */}
       {showGallery && (
-        <>
-          {/* Floating Modal */}
+        <div className="fixed inset-0 z-50 pointer-events-none">
           <Rnd
             default={{
               x: modalPosition.x,
@@ -2436,7 +2435,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             minHeight={300}
             bounds="window"
             className={cn(
-              "z-50",
+              "pointer-events-auto",
               isFullscreen ? "!fixed !inset-0" : "absolute"
             )}
             onDragStop={(e, d) => {
@@ -2453,28 +2452,28 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             dragHandleClassName="handle"
           >
             <div className={cn(
-              "w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden",
+              "w-full h-full flex flex-col bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden",
               isFullscreen && "rounded-none"
             )}>
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-white border-b handle">
+              <div className="sticky top-0 z-10 bg-white border-b border-gray-200 handle cursor-move">
                 <div className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold">Combination Layout Gallery</p>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <h2 className="text-xl font-semibold text-gray-900">Combination Layout Gallery</h2>
+                      <p className="text-sm text-gray-500 mt-1">
                         {multipleLayouts.length} layouts generated • Click on a layout to select it
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border">
-                        <span className="text-sm font-medium">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
+                        <span className="text-sm font-medium text-gray-700">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
                         <div className="flex gap-1">
                           <Button
                             onClick={showPreviousLayout}
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 hover:bg-gray-200"
                           >
                             <ChevronUpIcon className="h-4 w-4" />
                           </Button>
@@ -2482,7 +2481,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                             onClick={showNextLayout}
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 hover:bg-gray-200"
                           >
                             <ChevronDownIcon className="h-4 w-4" />
                           </Button>
@@ -2492,7 +2491,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         onClick={toggleFullscreen}
                         variant="outline"
                         size="sm"
-                        className="w-8 h-8 p-0"
+                        className="w-8 h-8 p-0 border-gray-300 hover:bg-gray-50"
                       >
                         {isFullscreen ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2514,6 +2513,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         onClick={() => setShowGallery(false)}
                         variant="outline"
                         size="sm"
+                        className="border-gray-300 hover:bg-gray-50"
                       >
                         Close Gallery
                       </Button>
@@ -2523,19 +2523,19 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               </div>
 
               {/* Grid Layout - Scrollable Content */}
-              <div className="flex-1 overflow-auto p-6">
+              <div className="flex-1 overflow-auto p-6 bg-gray-50">
                 <div className={cn(
-                  "grid gap-6",
+                  "grid gap-6", 
                   isFullscreen ? "grid-cols-4" : `grid-cols-${gridColumns}`
                 )} key={`gallery-${galleryRenderKey}`}>
                   {multipleLayouts.map((layout, index) => (
                     <div 
                       key={index}
                       className={cn(
-                        "relative overflow-hidden transition-all duration-200 hover:shadow-lg",
+                        "relative overflow-hidden transition-all duration-200 hover:shadow-lg cursor-pointer bg-white",
                         currentLayoutIndex === index 
-                          ? "border-primary ring-2 ring-primary/20 shadow-xl" 
-                          : "border-border hover:border-primary/50"
+                          ? "border-2 border-blue-500 ring-2 ring-blue-200 shadow-xl" 
+                          : "border border-gray-200 hover:border-blue-300"
                       )}
                       onClick={() => {
                         setCurrentLayoutIndex(index);
@@ -2546,7 +2546,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         window.dispatchEvent(new CustomEvent('layout_generated'));
                       }}
                     >
-                      <div className="relative overflow-hidden cursor-pointer flex items-center justify-center" style={{
+                      <div className="relative overflow-hidden flex items-center justify-center p-2" style={{
                         aspectRatio: `${layout.width} / ${layout.height}`,
                         width: '100%'
                       }}>
@@ -2572,13 +2572,12 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               </div>
             </div>
           </Rnd>
-        </>
+        </div>
       )}
 
       {/* Update sync gallery modal with the same improvements */}
       {showSyncGallery && (
-        <>
-          {/* Floating Modal */}
+        <div className="fixed inset-0 z-50 pointer-events-none">
           <Rnd
             default={{
               x: modalPosition.x,
@@ -2592,7 +2591,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             minHeight={300}
             bounds="window"
             className={cn(
-              "z-50",
+              "pointer-events-auto",
               isFullscreen ? "!fixed !inset-0" : "absolute"
             )}
             onDragStop={(e, d) => {
@@ -2609,28 +2608,28 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             dragHandleClassName="handle"
           >
             <div className={cn(
-              "w-full h-full flex flex-col bg-white rounded-lg shadow-2xl border overflow-hidden",
+              "w-full h-full flex flex-col bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden",
               isFullscreen && "rounded-none"
             )}>
               {/* Header */}
-              <div className="sticky top-0 z-10 bg-white border-b handle">
+              <div className="sticky top-0 z-10 bg-white border-b border-gray-200 handle cursor-move">
                 <div className="px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-2xl font-bold">Sync Layout Gallery</h2>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <h2 className="text-xl font-semibold text-gray-900">Sync Layout Gallery</h2>
+                      <p className="text-sm text-gray-500 mt-1">
                         {multipleLayouts.length} synchronized layouts generated • Click on a layout to select it
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border">
-                        <span className="text-sm font-medium">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
+                        <span className="text-sm font-medium text-gray-700">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
                         <div className="flex gap-1">
                           <Button
                             onClick={showPreviousLayout}
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 hover:bg-gray-200"
                           >
                             <ChevronUpIcon className="h-4 w-4" />
                           </Button>
@@ -2638,7 +2637,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                             onClick={showNextLayout}
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 hover:bg-gray-200"
                           >
                             <ChevronDownIcon className="h-4 w-4" />
                           </Button>
@@ -2648,7 +2647,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         onClick={toggleFullscreen}
                         variant="outline"
                         size="sm"
-                        className="w-8 h-8 p-0"
+                        className="w-8 h-8 p-0 border-gray-300 hover:bg-gray-50"
                       >
                         {isFullscreen ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2670,6 +2669,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         onClick={() => setShowSyncGallery(false)}
                         variant="outline"
                         size="sm"
+                        className="border-gray-300 hover:bg-gray-50"
                       >
                         Close Gallery
                       </Button>
@@ -2679,7 +2679,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               </div>
 
               {/* Grid Layout - Scrollable Content */}
-              <div className="flex-1 overflow-auto p-6">
+              <div className="flex-1 overflow-auto p-6 bg-gray-50">
                 <div className={cn(
                   "grid gap-6",
                   isFullscreen ? "grid-cols-6" : `grid-cols-${gridColumns}`
@@ -2688,10 +2688,10 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                     <div 
                       key={index}
                       className={cn(
-                        "relative overflow-hidden transition-all duration-200 hover:shadow-lg",
+                        "relative overflow-hidden transition-all duration-200 hover:shadow-lg cursor-pointer bg-white",
                         currentLayoutIndex === index 
-                          ? "border-primary ring-2 ring-primary/20 shadow-xl" 
-                          : "border-border hover:border-primary/50"
+                          ? "border-2 border-blue-500 ring-2 ring-blue-200 shadow-xl" 
+                          : "border border-gray-200 hover:border-blue-300"
                       )}
                       onClick={() => {
                         setCurrentLayoutIndex(index);
@@ -2702,7 +2702,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         window.dispatchEvent(new CustomEvent('layout_generated'));
                       }}
                     >
-                      <div className="relative overflow-hidden cursor-pointer flex items-center justify-center" style={{
+                      <div className="relative overflow-hidden flex items-center justify-center p-2" style={{
                         aspectRatio: `${layout.width} / ${layout.height}`,
                         width: '100%'
                       }}>
@@ -2728,7 +2728,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
               </div>
             </div>
           </Rnd>
-        </>
+        </div>
       )}
     </div>
   );
