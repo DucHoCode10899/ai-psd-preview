@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import React from 'react';
+import { segmentationRulesApi } from '@/utils/api';
 
 // Types for segmentation data
 interface SegmentationValue {
@@ -93,7 +94,7 @@ export default function SegmentationsPage() {
   useEffect(() => {
     const loadSegmentationRules = async () => {
       try {
-        const response = await fetch('/api/segmentation-rules');
+        const response = await segmentationRulesApi.get();
         const data = await response.json();
         setSegmentationRules(data);
       } catch (error) {
@@ -119,13 +120,7 @@ export default function SegmentationsPage() {
   // Save segmentation rules
   const saveSegmentationRules = async (newRules: SegmentationRules) => {
     try {
-      const response = await fetch('/api/segmentation-rules', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newRules),
-      });
+      const response = await segmentationRulesApi.update(newRules);
 
       if (!response.ok) {
         throw new Error('Failed to save segmentation rules');

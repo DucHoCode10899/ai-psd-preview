@@ -50,6 +50,7 @@ import { useSegmentationRules } from '@/hooks/useSegmentationRules';
 import { useAutoAI } from '@/hooks/useAutoAI';
 import { toast } from 'sonner';
 import { Label } from "@/components/ui/label";
+import { aiTrainingApi, labelsApi } from '@/utils/api';
 
 // Update type to use string instead of union
 type SegmentationType = string;
@@ -1937,17 +1938,11 @@ export function LayerTree({
         // Calculate confidence based on user interaction
         const confidence = 0.6;
         
-        fetch('/api/ai-training/save', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify([{
-            layerName: layer.name,
-            correctLabel: newLabel,
-            confidence
-          }])
-        }).then(() => {
+        aiTrainingApi.save([{
+          layerName: layer.name,
+          correctLabel: newLabel,
+          confidence
+        }]).then(() => {
           // Reload training data to include the new example
           loadTrainingData();
           
@@ -1974,16 +1969,7 @@ export function LayerTree({
       // When a label is removed, remove it from training data
       const layer = flattenLayers(Array.isArray(layersState) ? layersState : []).find(l => l.id === layerId);
       if (layer) {
-        fetch('/api/ai-training/remove', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            layerName: layer.name,
-            shouldRemove: false // Don't remove, just update history
-          })
-        }).then(() => {
+        aiTrainingApi.remove(layer.name, false).then(() => {
           loadTrainingData();
         }).catch(error => {
           console.error('Error removing training data:', error);
@@ -2006,7 +1992,7 @@ export function LayerTree({
   const fetchLabels = useCallback(async () => {
     try {
       setIsLoadingLabels(true);
-      const response = await fetch('/api/labels');
+      const response = await labelsApi.getAll();
       const data = await response.json();
       if (response.ok) {
         // Map the labels to include colors

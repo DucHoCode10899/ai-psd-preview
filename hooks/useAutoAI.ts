@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { TrainingExample, AutoAIResult, Pattern, DefaultPattern } from '../types/ai';
 import { predictLabelWithContext } from '../utils/nlp';
+import { aiTrainingApi } from '../utils/api';
 
 // Default patterns for initial AI behavior
 const DEFAULT_PATTERNS: Record<string, DefaultPattern> = {
@@ -27,7 +28,7 @@ export function useAutoAI() {
   // Load training data
   const loadTrainingData = useCallback(async () => {
     try {
-      const response = await fetch('/api/ai-training/load');
+      const response = await aiTrainingApi.load();
       const data = await response.json();
       setTrainingData(data);
     } catch (err) {

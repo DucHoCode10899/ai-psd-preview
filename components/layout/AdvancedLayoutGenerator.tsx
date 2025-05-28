@@ -35,6 +35,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { Rnd } from 'react-rnd';
 import { Switch } from "@/components/ui/switch";
+import { layoutRulesApi } from '@/utils/api';
 
 // Personalization types
 type SegmentationType = string;
@@ -381,7 +382,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   useEffect(() => {
     const fetchLayoutRules = async () => {
       try {
-        const response = await fetch('/api/layout-rules');
+        const response = await layoutRulesApi.get();
         const data = await response.json() as LayoutRuleResponse;
         setAvailableChannels(data.channels.map(channel => ({
           id: channel.id,
@@ -406,7 +407,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     
     const fetchLayouts = async () => {
       try {
-        const response = await fetch('/api/layout-rules');
+        const response = await layoutRulesApi.get();
         const data = await response.json() as LayoutRuleResponse;
         const channel = data.channels.find(c => c.id === selectedChannelId);
         
@@ -433,7 +434,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     
     const fetchOptions = async () => {
       try {
-        const response = await fetch('/api/layout-rules');
+        const response = await layoutRulesApi.get();
         const data = await response.json() as LayoutRuleResponse;
         const channel = data.channels.find(c => c.id === selectedChannelId);
         
@@ -986,7 +987,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
     try {
       // Fetch latest layout rules data
-      const response = await fetch('/api/layout-rules');
+      const response = await layoutRulesApi.get();
       const layoutRulesData = await response.json() as LayoutRuleResponse;
       
       // Find current channel and layout option to get latest render order and safezone settings
@@ -1100,7 +1101,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
       // Filter visible layers and generate layout
       const visibleLayers = processedLayers.filter(layer => layer.visible) as PsdLayerMetadataWithSafezone[];
 
-      const generatedLayoutResult = generateLayout(visibleLayers, selectedOption, {
+      const generatedLayoutResult = await generateLayout(visibleLayers, selectedOption, {
         safezone: safezoneMargin,
         margin: safezoneMargin,
         applySafezoneByLayer: true
@@ -1612,7 +1613,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
     try {
       // Fetch latest layout rules data
-      const response = await fetch('/api/layout-rules');
+      const response = await layoutRulesApi.get();
       const layoutRulesData = await response.json() as LayoutRuleResponse;
       
       // Find current channel and layout option to get latest render order and safezone settings
@@ -1677,30 +1678,22 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
       // Generate all possible combinations
       const layouts: GeneratedLayout[] = [];
-      const generateCombinations = (
+      const generateCombinations = async (
         currentLabel: string | undefined,
         selectedLayers: Map<string, string>,
         remainingLabels: string[]
       ) => {
+        // Base case: all labels have been processed
         if (!currentLabel) {
-          // Base case: generate layout from current combination
-          const visibleLayerIds = new Set<string>();
-          
-          // Add selected layers to visible set
-          selectedLayers.forEach((layerId) => {
-            visibleLayerIds.add(layerId);
-            visibleLayerIds.add(layerId.replace('layer_', ''));
-          });
-
-          // Generate layout with current visible layers
-          const visibleLayers = psdLayers.filter(layer =>
-            visibleLayerIds.has(layer.id) || visibleLayerIds.has(`layer_${layer.id}`)
-          ).map(layer => ({
+          // Create visible layers array based on selected layers
+          const visibleLayers = psdLayers.filter(layer => {
+            return selectedLayers.has(layer.id) || Array.from(selectedLayers.values()).includes(layer.id);
+          }).map(layer => ({
             ...layer,
             visible: true
           }));
 
-          const layout = generateLayout(visibleLayers, selectedOption, {
+          const layout = await generateLayout(visibleLayers, selectedOption, {
             safezone: safezoneMargin,
             margin: safezoneMargin
           });
@@ -1747,24 +1740,24 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         const nextRemainingLabels = remainingLabels.slice(1);
 
         // Try each layer in the current label group
-        currentLayers.forEach(layer => {
+        for (const layer of currentLayers) {
           // Check if layer matches personalization rules
           if (hasPersonalization) {
             if (!doesLayerMatchRules(layer.id, personalizationRules)) {
-              return; // Skip this layer if it doesn't match rules
+              continue; // Skip this layer if it doesn't match rules
             }
           }
 
           // Create new combination with this layer
           const newSelectedLayers = new Map(selectedLayers);
           newSelectedLayers.set(currentLabel, layer.id);
-          generateCombinations(nextLabel, newSelectedLayers, nextRemainingLabels);
-        });
+          await generateCombinations(nextLabel, newSelectedLayers, nextRemainingLabels);
+        }
       };
 
       // Start generating combinations
       const labelKeys = Array.from(layersByLabel.keys());
-      generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
+      await generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
 
       description.push(`Generated ${layouts.length} layout combinations`);
       setGenerationDescription(description.join('\n'));
@@ -1869,7 +1862,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
     try {
       // Fetch latest layout rules data
-      const response = await fetch('/api/layout-rules');
+      const response = await layoutRulesApi.get();
       const layoutRulesData = await response.json() as LayoutRuleResponse;
       
       // Find current channel and layout option to get latest render order and safezone settings
@@ -1969,11 +1962,12 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
 
       // Generate all possible combinations
       const layouts: GeneratedLayout[] = [];
-      const generateCombinations = (
+      const generateCombinations = async (
         currentLabel: string | undefined,
         selectedSets: Map<string, { mainLayer: string; selectedGroup: string[] }>,
         remainingLabels: string[]
       ) => {
+        // Base case: all labels have been processed
         if (!currentLabel) {
           // Base case: generate layout from current combination
           const visibleLayerIds = new Set<string>();
@@ -2035,7 +2029,7 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
             visibleLayerIds.has(layer.id) || visibleLayerIds.has(`layer_${layer.id}`)
           );
 
-          const layout = generateLayout(visibleLayers, selectedOption, {
+          const layout = await generateLayout(visibleLayers, selectedOption, {
             safezone: safezoneMargin,
             margin: safezoneMargin
           });
@@ -2082,18 +2076,18 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
         const nextRemainingLabels = remainingLabels.slice(1);
 
         // Try each valid set and each alternative group
-        validSets.forEach(set => {
-          set.syncedLayers.forEach(group => {
+        for (const set of validSets) {
+          for (const group of set.syncedLayers) {
             const newSelectedSets = new Map(selectedSets);
             newSelectedSets.set(currentLabel, { mainLayer: set.mainLayer, selectedGroup: group });
-            generateCombinations(nextLabel, newSelectedSets, nextRemainingLabels);
-          });
-        });
+            await generateCombinations(nextLabel, newSelectedSets, nextRemainingLabels);
+          }
+        }
       };
 
       // Start generating combinations
       const labelKeys = Array.from(validSetsByLabel.keys());
-      generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
+      await generateCombinations(labelKeys[0], new Map(), labelKeys.slice(1));
 
       description.push(`\nGenerated ${layouts.length} layout combinations`);
       setGenerationDescription(description.join('\n'));

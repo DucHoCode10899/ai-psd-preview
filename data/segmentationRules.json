@@ -41,6 +41,10 @@
         {
           "id": "photography",
           "label": "Photography"
+        },
+        {
+          "id": "test",
+          "label": "test"
         }
       ]
     },

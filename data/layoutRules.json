@@ -453,7 +453,7 @@
                     "maxHeightPercent": 0.2,
                     "applySafezone": true,
                     "coordinatePosition": {
-                      "horizontalAlignment": "center",
+                      "horizontalAlignment": "left",
                       "verticalAlignment": "top",
                       "verticalOffset": 9
                     }

@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { HorizontalAlignment, VerticalAlignment, CoordinatePosition, createCoordinatePosition } from '@/utils/position-calculator';
+import { layoutRulesApi, labelsApi } from '@/utils/api';
 
 // Types for layout rules
 interface LayoutOption {
@@ -118,7 +119,6 @@ export function LayoutRulesManager() {
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [labelTypes, setLabelTypes] = useState<string[]>([]);
-  const [isLoadingLabels, setIsLoadingLabels] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<Canvas | null>(null);
   
@@ -182,19 +182,16 @@ export function LayoutRulesManager() {
   // Add fetchLabels function
   const fetchLabels = async () => {
     try {
-      setIsLoadingLabels(true);
-      const response = await fetch('/api/labels');
+      const response = await labelsApi.getAll();
       const data = await response.json();
       if (response.ok) {
         setLabelTypes(data.labels);
       } else {
         throw new Error(data.error);
       }
-    } catch (err) {
-      console.error('Error fetching labels:', err);
+    } catch (error) {
+      console.error('Error fetching labels:', error);
       toast.error('Failed to fetch labels');
-    } finally {
-      setIsLoadingLabels(false);
     }
   };
 
@@ -203,8 +200,8 @@ export function LayoutRulesManager() {
     const loadData = async () => {
       try {
         const [layoutResponse, labelsResponse] = await Promise.all([
-          fetch('/api/layout-rules'),
-          fetch('/api/labels')
+          layoutRulesApi.get(),
+          labelsApi.getAll()
         ]);
         
         const layoutData = await layoutResponse.json();
@@ -305,8 +302,6 @@ export function LayoutRulesManager() {
     addToHistory(updatedChannels);
     setIsDirty(true);
   };
-
-
 
   // Handle coordinate position change
   const handleCoordinatePositionChange = (
@@ -482,18 +477,14 @@ export function LayoutRulesManager() {
   // Save changes
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/layout-rules', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ channels })
-      });
+      const response = await layoutRulesApi.save(channels);
       
-      if (!response.ok) throw new Error('Failed to save');
-      
-      setIsDirty(false);
-      toast.success('Layout rules saved successfully');
+      if (response.ok) {
+        setIsDirty(false);
+        toast.success('Layout rules saved successfully');
+      } else {
+        throw new Error('Failed to save layout rules');
+      }
     } catch (error) {
       console.error('Error saving layout rules:', error);
       toast.error('Failed to save layout rules');
@@ -797,27 +788,17 @@ export function LayoutRulesManager() {
       
       // Save changes to the server immediately
       try {
-        const response = await fetch('/api/layout-rules', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ channels: updatedChannels })
-        });
+        const response = await layoutRulesApi.save(updatedChannels);
         
-        if (!response.ok) throw new Error('Failed to save');
-        
-        setIsDirty(false);
-        
-        // Update selected option
-        setSelectedOption(editOptionName.trim());
-        
-        // Close dialog and reset state
-        setIsEditOptionDialogOpen(false);
-        setEditOptionName('');
-        setIsEditingOption(false);
-        
-        toast.success('Option name updated and saved successfully');
+        if (response.ok) {
+          setIsDirty(false);
+          setSelectedOption(editOptionName.trim());
+          setIsEditingOption(false);
+          setEditOptionName('');
+          toast.success('Option name updated and saved successfully');
+        } else {
+          throw new Error('Failed to save layout rules');
+        }
       } catch (error) {
         console.error('Error saving layout rules:', error);
         toast.error('Failed to save layout rules');
@@ -863,29 +844,18 @@ export function LayoutRulesManager() {
     
     // Save changes to the server immediately
     try {
-      const response = await fetch('/api/layout-rules', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ channels: updatedChannels })
-      });
+      const response = await layoutRulesApi.save(updatedChannels);
       
-      if (!response.ok) throw new Error('Failed to save');
-      
-      setIsDirty(false);
-      
-      // Reset selection if we deleted the selected option
-      if (selectedOption === optionToDelete) {
+      if (response.ok) {
+        setIsDirty(false);
         setSelectedOption(null);
         setSelectedLabel(null);
+        setIsDeleteOptionDialogOpen(false);
+        setOptionToDelete(null);
+        toast.success('Option deleted and saved successfully');
+      } else {
+        throw new Error('Failed to save layout rules');
       }
-      
-      // Close dialog
-      setIsDeleteOptionDialogOpen(false);
-      setOptionToDelete(null);
-      
-      toast.success('Option deleted and saved successfully');
     } catch (error) {
       console.error('Error saving layout rules:', error);
       toast.error('Failed to save layout rules');
@@ -1476,10 +1446,9 @@ const cloneTargetChannel = channels.find(c => c.id === cloneTargetChannelId);
                   variant="ghost"
                   size="sm"
                   onClick={fetchLabels}
-                  disabled={isLoadingLabels}
                   className="h-8 px-2"
                 >
-                  <RefreshCw className={`h-4 w-4 ${isLoadingLabels ? 'animate-spin' : ''}`} />
+                  <RefreshCw className="h-4 w-4" />
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-2">

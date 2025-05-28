@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { segmentationRulesApi } from '../utils/api';
 
 interface SegmentationType {
   id: string;
@@ -22,7 +23,7 @@ export function useSegmentationRules() {
   const fetchRules = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/segmentation-rules');
+      const response = await segmentationRulesApi.get();
       if (!response.ok) {
         throw new Error('Failed to fetch segmentation rules');
       }
@@ -61,13 +62,7 @@ export function useSegmentationRules() {
   // Update segmentation rules
   const updateRules = useCallback(async (newRules: SegmentationRules) => {
     try {
-      const response = await fetch('/api/segmentation-rules', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newRules),
-      });
+      const response = await segmentationRulesApi.update(newRules);
       
       if (!response.ok) {
         throw new Error('Failed to update segmentation rules');

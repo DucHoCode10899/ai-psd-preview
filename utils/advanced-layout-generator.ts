@@ -7,50 +7,58 @@ import {
 } from '@/types/layout';
 import { 
   calculateElementLayout,
-  PositionOptions,
-  CoordinatePosition
+  PositionOptions
 } from '@/utils/position-calculator';
-import layoutConfigData from '@/data/layoutRules.json';
-
-
+import { layoutRulesApi } from '@/utils/api';
 
 /**
- * Get fresh layout configuration data
+ * Get fresh layout configuration data from the Flask backend
  */
-export function getLayoutConfig(): LayoutConfig {
-  // Force a fresh copy to avoid caching issues
-  const rawConfig = JSON.parse(JSON.stringify(layoutConfigData));
-  
-  // Extract all layouts from all channels
-  const allLayouts = rawConfig.channels.reduce((layouts: Layout[], channel: { layouts: Layout[] }) => {
-    return layouts.concat(channel.layouts);
-  }, []);
-  
-  return {
-    layouts: allLayouts
-  };
+export async function getLayoutConfig(): Promise<LayoutConfig> {
+  try {
+    const response = await layoutRulesApi.get();
+    const data = await response.json();
+    
+    // Extract all layouts from all channels
+    const allLayouts = data.channels.reduce((layouts: Layout[], channel: { layouts: Layout[] }) => {
+      return layouts.concat(channel.layouts);
+    }, []);
+    
+    return {
+      layouts: allLayouts
+    };
+  } catch (error) {
+    console.error('Error fetching layout config:', error);
+    // Return empty config as fallback
+    return { layouts: [] };
+  }
 }
 
 /**
- * Get all available layouts
+ * Get all available layouts from the Flask backend
  */
-export function getAvailableLayouts(): { name: string; aspectRatio: string }[] {
-  const config = getLayoutConfig();
-  const result: { name: string; aspectRatio: string }[] = [];
+export async function getAvailableLayouts(): Promise<{ name: string; aspectRatio: string }[]> {
+  try {
+    const config = await getLayoutConfig();
+    const result: { name: string; aspectRatio: string }[] = [];
 
-  // Collect all options from all layouts
-  config.layouts.forEach(layout => {
-    if (layout.options) {
-      layout.options.forEach(option => {
-        result.push({
-          name: option.name,
-          aspectRatio: layout.aspectRatio
+    // Collect all options from all layouts
+    config.layouts.forEach(layout => {
+      if (layout.options) {
+        layout.options.forEach(option => {
+          result.push({
+            name: option.name,
+            aspectRatio: layout.aspectRatio
+          });
         });
-      });
-    }
-  });
+      }
+    });
 
-  return result;
+    return result;
+  } catch (error) {
+    console.error('Error fetching available layouts:', error);
+    return [];
+  }
 }
 
 /**
@@ -182,118 +190,123 @@ export function findLayersByLabel(
 /**
  * Generate a layout based on the specified layout option name
  */
-export function generateLayout(
+export async function generateLayout(
   psdLayers: PsdLayerMetadata[],
   optionName: string,
   options: PositionOptions = {}
-): GeneratedLayout | null {
-  // Get fresh layout config
-  const config = getLayoutConfig();
-  
-  // Find the layout and option
-  let selectedLayout = null;
-  let selectedOption = null;
-  
-  // Search for the option in all layouts
-  for (const layout of config.layouts) {
-    if (!layout.options) continue;
+): Promise<GeneratedLayout | null> {
+  try {
+    // Get fresh layout config from backend
+    const config = await getLayoutConfig();
     
-    const option = layout.options.find(opt => opt.name === optionName);
-    if (option) {
-      selectedLayout = layout;
-      selectedOption = option;
-      break;
+    // Find the layout and option
+    let selectedLayout = null;
+    let selectedOption = null;
+    
+    // Search for the option in all layouts
+    for (const layout of config.layouts) {
+      if (!layout.options) continue;
+      
+      const option = layout.options.find(opt => opt.name === optionName);
+      if (option) {
+        selectedLayout = layout;
+        selectedOption = option;
+        break;
+      }
     }
-  }
-  
-  if (!selectedLayout || !selectedOption) {
-    console.error(`Layout option "${optionName}" not found`);
+    
+    if (!selectedLayout || !selectedOption) {
+      console.error(`Layout option "${optionName}" not found`);
+      return null;
+    }
+    
+    // Get layer labels and visibility states
+    const labelMap = getLayerLabels();
+    const visibilityStates = getVisibilityStates();
+    
+    // Find layers by label
+    const labeledLayers = findLayersByLabel(psdLayers, labelMap);
+    
+    // Create the base layout result
+    const result: GeneratedLayout = {
+      name: selectedOption.name,
+      width: selectedLayout.width,
+      height: selectedLayout.height,
+      aspectRatio: selectedLayout.aspectRatio,
+      elements: []
+    };
+    
+    // Process each label type
+    Object.entries(labeledLayers).forEach(([label, layers]) => {
+      // Skip if there are no layers with this label
+      if (layers.length === 0) return;
+
+      // Check if this label should be visible in this layout
+      const isVisible = selectedOption.rules.visibility[label] !== false;
+      
+      // Get positioning rules for this label
+      const positioningRule = selectedOption.rules.positioning[label];
+      if (!positioningRule) return;
+      
+      // Get position and sizing info
+      const coordinatePosition = positioningRule.coordinatePosition || {
+        horizontalAlignment: 'center' as const,
+        verticalAlignment: 'middle' as const
+      };
+      const maxWidthPercent = positioningRule.maxWidthPercent;
+      const maxHeightPercent = positioningRule.maxHeightPercent;
+      
+      // Process each layer with this label
+      layers.forEach(layer => {
+        if (!layer.bounds) {
+          console.warn(`Layer ${layer.name} has no bounds, skipping`);
+          return;
+        }
+        
+        // Check if this specific layer should be visible
+        const layerVisible = isVisible && shouldLayerBeVisible(layer, visibilityStates, psdLayers);
+        if (!layerVisible) return;
+        
+        // Calculate layout for this element
+        const layout = calculateElementLayout(
+          coordinatePosition,
+          layer.bounds,
+          selectedLayout.width,
+          selectedLayout.height,
+          maxWidthPercent,
+          maxHeightPercent,
+          options,
+          label
+        );
+        
+        // Create the element
+        const element: GeneratedElement = {
+          id: layer.id,
+          name: layer.name,
+          label,
+          x: layout.position.x,
+          y: layout.position.y,
+          width: layout.dimensions.width,
+          height: layout.dimensions.height,
+          visible: true,
+          parent: layer.parent,
+          originalBounds: layer.bounds,
+          coordinatePosition
+        };
+        
+        // Add to result
+        result.elements.push(element);
+      });
+    });
+    
+    // Add rules to the generated layout for reference
+    result.rules = selectedOption.rules;
+    
+    return result;
+  } catch (error) {
+    console.error('Error generating layout:', error);
     return null;
   }
-  
-  // Get layer labels and visibility states
-  const labelMap = getLayerLabels();
-  const visibilityStates = getVisibilityStates();
-  
-  // Find layers by label
-  const labeledLayers = findLayersByLabel(psdLayers, labelMap);
-  
-  // Create the base layout result
-  const result: GeneratedLayout = {
-    name: selectedOption.name,
-    width: selectedLayout.width,
-    height: selectedLayout.height,
-    aspectRatio: selectedLayout.aspectRatio,
-    elements: []
-  };
-  
-  // Process each label type
-  Object.entries(labeledLayers).forEach(([label, layers]) => {
-    // Skip if there are no layers with this label
-    if (layers.length === 0) return;
-
-    // Check if this label should be visible in this layout
-    const isVisible = selectedOption.rules.visibility[label] !== false;
-    
-    // Get positioning rules for this label
-    const positioningRule = selectedOption.rules.positioning[label];
-    if (!positioningRule) return;
-    
-    // Get position and sizing info
-    const coordinatePosition = positioningRule.coordinatePosition || {
-      horizontalAlignment: 'center' as const,
-      verticalAlignment: 'middle' as const
-    };
-    const maxWidthPercent = positioningRule.maxWidthPercent;
-    const maxHeightPercent = positioningRule.maxHeightPercent;
-    
-    // Process each layer with this label
-    layers.forEach(layer => {
-      if (!layer.bounds) {
-        console.warn(`Layer ${layer.name} has no bounds, skipping`);
-        return;
-      }
-      
-      // Check if this specific layer should be visible
-      const layerVisible = isVisible && shouldLayerBeVisible(layer, visibilityStates, psdLayers);
-      if (!layerVisible) return;
-      
-      // Calculate layout for this element
-      const layout = calculateElementLayout(
-        coordinatePosition,
-        layer.bounds,
-        selectedLayout.width,
-        selectedLayout.height,
-        maxWidthPercent,
-        maxHeightPercent,
-        options,
-        label
-      );
-      
-      // Create the element
-      const element: GeneratedElement = {
-        id: layer.id,
-        name: layer.name,
-        label,
-        x: layout.position.x,
-        y: layout.position.y,
-        width: layout.dimensions.width,
-        height: layout.dimensions.height,
-        visible: true,
-        parent: layer.parent,
-        originalBounds: layer.bounds,
-        coordinatePosition
-      };
-      
-      // Add to result
-      result.elements.push(element);
-    });
-  });
-  
-  // Add rules to the generated layout for reference
-  result.rules = selectedOption.rules;
-  
-  return result;
 }
 
 /**

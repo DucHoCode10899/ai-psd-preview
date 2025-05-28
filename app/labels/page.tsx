@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { RefreshCw, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { labelsApi } from '@/utils/api';
 
 export default function LabelsPage() {
   const [labels, setLabels] = useState<string[]>([]);
@@ -22,7 +23,7 @@ export default function LabelsPage() {
   const fetchLabels = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/labels');
+      const response = await labelsApi.getAll();
       const data = await response.json();
       if (response.ok) {
         setLabels(data.labels);
@@ -45,11 +46,7 @@ export default function LabelsPage() {
   // Add new label
   const handleAddLabel = async () => {
     try {
-      const response = await fetch('/api/labels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: newLabel.trim() })
-      });
+      const response = await labelsApi.add(newLabel.trim());
       
       const data = await response.json();
       if (response.ok) {
@@ -72,14 +69,7 @@ export default function LabelsPage() {
   // Edit label
   const handleEditLabel = async () => {
     try {
-      const response = await fetch('/api/labels', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          oldLabel: editLabel.old,
-          newLabel: editLabel.new.trim()
-        })
-      });
+      const response = await labelsApi.update(editLabel.old, editLabel.new.trim());
       
       const data = await response.json();
       if (response.ok) {
@@ -102,11 +92,7 @@ export default function LabelsPage() {
   // Delete label
   const handleDeleteLabel = async () => {
     try {
-      const response = await fetch('/api/labels', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: labelToDelete })
-      });
+      const response = await labelsApi.delete(labelToDelete);
       
       const data = await response.json();
       if (response.ok) {
