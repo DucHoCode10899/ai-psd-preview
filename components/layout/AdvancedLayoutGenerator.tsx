@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { Rnd } from 'react-rnd';
 import { Switch } from "@/components/ui/switch";
 import { layoutRulesApi } from '@/utils/api';
+import JSZip from 'jszip';
 
 // Personalization types
 type SegmentationType = string;
@@ -293,6 +294,12 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   // Add state to force gallery re-renders when custom positions change
   const [galleryRenderKey, setGalleryRenderKey] = useState(0);
 
+  // Add new state variables for enhanced gallery functionality
+  const [selectedLayouts, setSelectedLayouts] = useState<Set<number>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [exportSize, setExportSize] = useState({ width: 1080, height: 1080 });
+  const [isExporting, setIsExporting] = useState(false);
+
   // Add function to calculate grid columns based on width
   const calculateGridColumns = (width: number) => {
     if (width < 768) return 1;
@@ -335,6 +342,19 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
   useEffect(() => {
     setGalleryRenderKey(prev => prev + 1);
   }, [customPositions]);
+
+  // Reset selection when galleries open/close
+  useEffect(() => {
+    if (!showGallery && !showSyncGallery) {
+      setSelectedLayouts(new Set());
+      setSelectAll(false);
+    }
+  }, [showGallery, showSyncGallery]);
+
+  // Update selectAll state when selection changes
+  useEffect(() => {
+    setSelectAll(selectedLayouts.size > 0 && selectedLayouts.size === multipleLayouts.length);
+  }, [selectedLayouts.size, multipleLayouts.length]);
 
   // Load custom positions from sessionStorage on mount for synchronization with AnimationStudio
   useEffect(() => {
@@ -2133,6 +2153,262 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
     }
   };
 
+  // Multi-selection and export functions
+  const toggleLayoutSelection = (index: number) => {
+    const newSelected = new Set(selectedLayouts);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedLayouts(newSelected);
+    setSelectAll(newSelected.size === multipleLayouts.length);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedLayouts(new Set());
+      setSelectAll(false);
+    } else {
+      setSelectedLayouts(new Set(Array.from({ length: multipleLayouts.length }, (_, i) => i)));
+      setSelectAll(true);
+    }
+  };
+
+  // Function to render a layout to canvas and get image data
+  const renderLayoutToCanvas = async (layout: GeneratedLayout, width: number, height: number): Promise<string> => {
+    return new Promise((resolve) => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = width;
+      tempCanvas.height = height;
+      
+      const fabricCanvas = new Canvas(tempCanvas, {
+        width: width,
+        height: height,
+        backgroundColor: 'white'
+      });
+
+      // Get layer labels from session storage
+      const storedLabels = sessionStorage.getItem('psd_layer_labels');
+      let labels: Record<string, string> = {};
+      try {
+        labels = storedLabels ? JSON.parse(storedLabels) : {};
+      } catch (error) {
+        console.error('Error parsing layer labels:', error);
+      }
+
+      // Calculate scale
+      const scaleX = width / layout.width;
+      const scaleY = height / layout.height;
+      const scale = Math.min(scaleX, scaleY);
+
+      // Get any custom positions for this layout
+      const layoutCustomPositions = customPositions[layout.name] || {};
+
+      // Sort elements based on render order (same as main canvas)
+      let elementsToRender = [...layout.elements];
+      if (currentRenderOrder) {
+        const elementsByLabel = new Map();
+        elementsToRender.forEach(element => {
+          if (!elementsByLabel.has(element.label)) {
+            elementsByLabel.set(element.label, []);
+          }
+          elementsByLabel.get(element.label).push(element);
+        });
+
+        elementsToRender = currentRenderOrder.flatMap(label => 
+          elementsByLabel.get(label) || []
+        );
+
+        const remainingElements = elementsToRender.filter(element => 
+          !currentRenderOrder.includes(element.label)
+        );
+        elementsToRender = [...elementsToRender, ...remainingElements];
+      } else {
+        elementsToRender.sort((a, b) => {
+          if (a.label === 'background') return -1;
+          if (b.label === 'background') return 1;
+          return 0;
+        });
+      }
+
+      let loadedCount = 0;
+      const totalElements = elementsToRender.filter(el => el.visible).length;
+
+      if (totalElements === 0) {
+        resolve(fabricCanvas.toDataURL());
+        fabricCanvas.dispose();
+        return;
+      }
+
+      // Render elements in order with safezone handling
+      elementsToRender.forEach((element) => {
+        if (!element.visible) return;
+
+        const imageData = layerImages.get(element.name);
+        
+        // Create temporary canvas for the layer
+        const elementTempCanvas = document.createElement('canvas');
+        const customPosition = layoutCustomPositions[element.id];
+        const elementWidth = customPosition?.width || element.width;
+        const elementHeight = customPosition?.height || element.height;
+        
+        elementTempCanvas.width = Math.max(1, elementWidth);
+        elementTempCanvas.height = Math.max(1, elementHeight);
+        const ctx = elementTempCanvas.getContext('2d');
+        
+        if (ctx) {
+          if (imageData && imageData.width > 0 && imageData.height > 0) {
+            const originalCanvas = document.createElement('canvas');
+            originalCanvas.width = Math.max(1, imageData.width);
+            originalCanvas.height = Math.max(1, imageData.height);
+            const originalCtx = originalCanvas.getContext('2d');
+            
+            if (originalCtx) {
+              originalCtx.putImageData(imageData, 0, 0);
+              
+              try {
+                ctx.drawImage(
+                  originalCanvas,
+                  0, 0, imageData.width, imageData.height,
+                  0, 0, elementWidth, elementHeight
+                );
+              } catch (error) {
+                console.error(`Error drawing image for layer ${element.name}:`, error);
+                ctx.fillStyle = getLabelColor(element.label);
+                ctx.fillRect(0, 0, elementWidth, elementHeight);
+              }
+            }
+          } else {
+            ctx.fillStyle = getLabelColor(element.label);
+            ctx.fillRect(0, 0, elementWidth, elementHeight);
+          }
+        }
+
+        // Calculate final position with scale and safezone (same logic as main canvas)
+        let left = (customPosition ? customPosition.x : element.x) * scale;
+        let top = (customPosition ? customPosition.y : element.y) * scale;
+
+        // Apply safezone if enabled for this element's label
+        const elementLabel = labels[element.id] || labels[`layer_${element.id}`];
+        if (safezoneByLabel[elementLabel] !== false) {
+          const safeLeft = width * margin;
+          const safeTop = height * margin;
+          const safeWidth = width * (1 - 2 * margin);
+          const safeHeight = height * (1 - 2 * margin);
+
+          // Ensure element stays within safezone
+          left = Math.max(safeLeft, Math.min(safeLeft + safeWidth - elementWidth * scale, left));
+          top = Math.max(safeTop, Math.min(safeTop + safeHeight - elementHeight * scale, top));
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+          FabricImage.fromURL(img.src)
+            .then((fabricImage) => {
+              if (fabricImage) {
+                fabricImage.set({
+                  left: left,
+                  top: top,
+                  width: elementWidth,
+                  height: elementHeight,
+                  scaleX: scale,
+                  scaleY: scale,
+                  angle: customPosition?.angle || 0,
+                  selectable: false,
+                  evented: false
+                });
+                fabricCanvas.add(fabricImage);
+              }
+              
+              loadedCount++;
+              if (loadedCount === totalElements) {
+                fabricCanvas.renderAll();
+                resolve(fabricCanvas.toDataURL());
+                fabricCanvas.dispose();
+              }
+            })
+            .catch(() => {
+              loadedCount++;
+              if (loadedCount === totalElements) {
+                fabricCanvas.renderAll();
+                resolve(fabricCanvas.toDataURL());
+                fabricCanvas.dispose();
+              }
+            });
+        };
+        img.onerror = () => {
+          loadedCount++;
+          if (loadedCount === totalElements) {
+            fabricCanvas.renderAll();
+            resolve(fabricCanvas.toDataURL());
+            fabricCanvas.dispose();
+          }
+        };
+        
+        img.src = elementTempCanvas.toDataURL();
+      });
+    });
+  };
+
+  // Function to export selected layouts as zip
+  const exportSelectedLayouts = async () => {
+    if (selectedLayouts.size === 0) {
+      toast.error('Please select at least one layout to export');
+      return;
+    }
+
+    setIsExporting(true);
+    const zip = new JSZip();
+    
+    try {
+      const selectedIndices = Array.from(selectedLayouts).sort((a, b) => a - b);
+      
+      for (const index of selectedIndices) {
+        const layout = multipleLayouts[index];
+        if (layout) {
+          const dataUrl = await renderLayoutToCanvas(layout, exportSize.width, exportSize.height);
+          const base64Data = dataUrl.split(',')[1];
+          zip.file(`layout_${index + 1}.png`, base64Data, { base64: true });
+        }
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = `layouts_export_${new Date().getTime()}.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      
+      toast.success(`Successfully exported ${selectedLayouts.size} layout(s)`);
+    } catch (error) {
+      console.error('Error exporting layouts:', error);
+      toast.error('Error exporting layouts');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Function to export single layout
+  const exportSingleLayout = async (layout: GeneratedLayout, index: number) => {
+    setIsExporting(true);
+    
+    try {
+      const dataUrl = await renderLayoutToCanvas(layout, exportSize.width, exportSize.height);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `layout_${index + 1}.png`;
+      link.click();
+      
+      toast.success('Layout exported successfully');
+    } catch (error) {
+      console.error('Error exporting layout:', error);
+      toast.error('Error exporting layout');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // If no layers, show upload message
   if (!psdLayers) {
     return (
@@ -2460,6 +2736,55 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
+                      {/* Export Size Controls */}
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
+                        <Label className="text-xs font-medium text-gray-700">Export Size:</Label>
+                        <Select
+                          value={`${exportSize.width}x${exportSize.height}`}
+                          onValueChange={(value) => {
+                            const [width, height] = value.split('x').map(Number);
+                            setExportSize({ width, height });
+                          }}
+                        >
+                          <SelectTrigger className="w-24 h-6 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1080x1080">1080×1080</SelectItem>
+                            <SelectItem value="1920x1080">1920×1080</SelectItem>
+                            <SelectItem value="1080x1920">1080×1920</SelectItem>
+                            <SelectItem value="2048x2048">2048×2048</SelectItem>
+                            <SelectItem value="4096x4096">4096×4096</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Selection Controls */}
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
+                        <Label className="text-xs font-medium text-gray-700">
+                          {selectedLayouts.size} selected
+                        </Label>
+                        <Button
+                          onClick={toggleSelectAll}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs hover:bg-gray-200"
+                        >
+                          {selectAll ? 'Deselect All' : 'Select All'}
+                        </Button>
+                      </div>
+
+                      {/* Export Button */}
+                      <Button
+                        onClick={exportSelectedLayouts}
+                        disabled={selectedLayouts.size === 0 || isExporting}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        {isExporting ? 'Exporting...' : `Export${selectedLayouts.size > 1 ? ' ZIP' : ''}`}
+                      </Button>
+
                       <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
                         <span className="text-sm font-medium text-gray-700">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
                         <div className="flex gap-1">
@@ -2540,6 +2865,35 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         window.dispatchEvent(new CustomEvent('layout_generated'));
                       }}
                     >
+                      {/* Checkbox for multi-selection */}
+                      <div className="absolute top-2 left-2 z-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedLayouts.has(index)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleLayoutSelection(index);
+                          }}
+                          className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                      </div>
+
+                      {/* Individual download button */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            exportSingleLayout(layout, index);
+                          }}
+                          size="sm"
+                          variant="ghost"
+                          className="w-8 h-8 p-0 bg-white/80 hover:bg-white shadow-sm"
+                          disabled={isExporting}
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
+
                       <div className="relative overflow-hidden flex items-center justify-center p-2" style={{
                         aspectRatio: `${layout.width} / ${layout.height}`,
                         width: '100%'
@@ -2616,6 +2970,55 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
+                      {/* Export Size Controls */}
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
+                        <Label className="text-xs font-medium text-gray-700">Export Size:</Label>
+                        <Select
+                          value={`${exportSize.width}x${exportSize.height}`}
+                          onValueChange={(value) => {
+                            const [width, height] = value.split('x').map(Number);
+                            setExportSize({ width, height });
+                          }}
+                        >
+                          <SelectTrigger className="w-24 h-6 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1080x1080">1080×1080</SelectItem>
+                            <SelectItem value="1920x1080">1920×1080</SelectItem>
+                            <SelectItem value="1080x1920">1080×1920</SelectItem>
+                            <SelectItem value="2048x2048">2048×2048</SelectItem>
+                            <SelectItem value="4096x4096">4096×4096</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Selection Controls */}
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
+                        <Label className="text-xs font-medium text-gray-700">
+                          {selectedLayouts.size} selected
+                        </Label>
+                        <Button
+                          onClick={toggleSelectAll}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs hover:bg-gray-200"
+                        >
+                          {selectAll ? 'Deselect All' : 'Select All'}
+                        </Button>
+                      </div>
+
+                      {/* Export Button */}
+                      <Button
+                        onClick={exportSelectedLayouts}
+                        disabled={selectedLayouts.size === 0 || isExporting}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        {isExporting ? 'Exporting...' : `Export${selectedLayouts.size > 1 ? ' ZIP' : ''}`}
+                      </Button>
+
                       <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
                         <span className="text-sm font-medium text-gray-700">Layout {currentLayoutIndex + 1} of {multipleLayouts.length}</span>
                         <div className="flex gap-1">
@@ -2696,6 +3099,35 @@ export function AdvancedLayoutGenerator({ psdLayers, psdBuffer }: AdvancedLayout
                         window.dispatchEvent(new CustomEvent('layout_generated'));
                       }}
                     >
+                      {/* Checkbox for multi-selection */}
+                      <div className="absolute top-2 left-2 z-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedLayouts.has(index)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleLayoutSelection(index);
+                          }}
+                          className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                      </div>
+
+                      {/* Individual download button */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            exportSingleLayout(layout, index);
+                          }}
+                          size="sm"
+                          variant="ghost"
+                          className="w-8 h-8 p-0 bg-white/80 hover:bg-white shadow-sm"
+                          disabled={isExporting}
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
+
                       <div className="relative overflow-hidden flex items-center justify-center p-2" style={{
                         aspectRatio: `${layout.width} / ${layout.height}`,
                         width: '100%'
